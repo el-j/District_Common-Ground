@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>District: Common Ground</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    /* Custom scrollbars for touch panes */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(100,116,139,0.3);
+      border-radius: 9999px;
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.02); }
+    }
+    .toast-anim {
+      animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideDown {
+      from { transform: translate(-50%, -100%); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex justify-center items-center p-0 sm:p-4 selection:bg-emerald-500 selection:text-white">
+
+  <div id="app" class="w-full max-w-md bg-slate-900 sm:border sm:border-slate-800 min-h-screen sm:min-h-[860px] sm:max-h-[920px] sm:rounded-3xl flex flex-col shadow-2xl relative overflow-hidden">
+    
+    <!-- Top Floating Toast / Notification -->
+    <div id="toast-banner" class="hidden fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-sm px-4 py-3 rounded-2xl shadow-xl border text-sm font-medium flex items-center gap-3 toast-anim">
+      <span id="toast-icon" class="text-xl">📢</span>
+      <div class="flex-1" id="toast-message">Notification message here</div>
+    </div>
+
+    <section id="screen-character-select" class="flex flex-col flex-1 p-5 overflow-y-auto">
+      <div class="text-center my-4">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-700/50 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span>🌱</span> Signal for Democracy Initiative
+        </div>
+        <h1 class="text-2xl font-black tracking-tight text-white">District: Common Ground</h1>
+        <p class="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+          Experience our fractured society through different shoes. Can you unite your block before division tears it down?
+        </p>
+      </div>
+
+      <div class="my-auto space-y-3">
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1">Choose Your Starting Reality</h2>
+
+        <!-- Character 1: Precarious / Unemployed -->
+        <div onclick="selectCharacter('precarious')" class="group p-4 rounded-2xl bg-slate-800/80 border border-slate-700 hover:border-amber-500/70 active:scale-[0.98] transition cursor-pointer relative overflow-hidden">
+          <div class="flex items-start gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0">
+              🛠️
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-amber-300 text-sm">The Precarious Gig Worker</h3>
+                <span class="text-[11px] bg-amber-950/80 text-amber-400 border border-amber-800/60 px-2 py-0.5 rounded-full font-semibold">High Free Time</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Zero safety net, constantly hunting gig shifts. You know first-hand how cold the city feels when you have no cash, but you have time and practical trade skills.
+              </p>
+              <div class="mt-2.5 flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+                <span>💰 $25</span>
+                <span>⚡ 80 Energy</span>
+                <span>🤝 40 Trust</span>
+                <span class="text-rose-400">🔥 High Stress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Character 2: The Everyday Worker -->
+        <div onclick="selectCharacter('worker')" class="group p-4 rounded-2xl bg-slate-800/80 border border-slate-700 hover:border-cyan-500/70 active:scale-[0.98] transition cursor-pointer relative overflow-hidden">
+          <div class="flex items-start gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-2xl shrink-0">
+              ⏱️
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-cyan-300 text-sm">The Exhausted 9-to-5er</h3>
+                <span class="text-[11px] bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 px-2 py-0.5 rounded-full font-semibold">Time Starved</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Steady paycheck, but the endless commute and rising bills leave you completely drained. You barely know your neighbors because you're always working.
+              </p>
+              <div class="mt-2.5 flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+                <span>💰 $240</span>
+                <span>⚡ 40 Energy</span>
+                <span>🤝 25 Trust</span>
+                <span class="text-amber-400">🔥 Med Stress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Character 3: The Wealthy Investor -->
+        <div onclick="selectCharacter('investor')" class="group p-4 rounded-2xl bg-slate-800/80 border border-slate-700 hover:border-emerald-500/70 active:scale-[0.98] transition cursor-pointer relative overflow-hidden">
+          <div class="flex items-start gap-3.5">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-2xl shrink-0">
+              💼
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-emerald-300 text-sm">The Solitary Landlord</h3>
+                <span class="text-[11px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/60 px-2 py-0.5 rounded-full font-semibold">Cash Heavy</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                Financial abundance, but guarded by alarm codes. Tenants resent you, and neighborhood decay threatens your security. You feel profoundly alone.
+              </p>
+              <div class="mt-2.5 flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+                <span>💰 $1,200</span>
+                <span>⚡ 65 Energy</span>
+                <span>🤝 10 Trust</span>
+                <span class="text-indigo-400">🛡️ Isolated</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="pt-4 text-center">
+        <p class="text-[11px] text-slate-500">
+          💡 Built for mobile touch screens • No sign-up required • Progress saves locally
+        </p>
+      </div>
+    </section>
+
+    <section id="screen-dashboard" class="hidden flex-col flex-1 h-full overflow-hidden">
+      
+      <!-- Top App Bar with Role and Day -->
+      <header class="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div id="player-avatar" class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-lg">
+            🛠️
+          </div>
+          <div>
+            <h2 id="player-role-title" class="text-xs font-bold text-white tracking-wide">Precarious Worker</h2>
+            <div class="text-[10px] text-slate-400 font-mono">
+              Day <span id="stat-day" class="text-emerald-400 font-bold">1</span> • District <span id="district-vibe">Grey Zone</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="openNextDayModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold text-xs shadow-md transition flex items-center gap-1">
+            <span>Next Day</span>
+            <span>⏩</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="px-4 py-3 bg-slate-950/70 border-b border-slate-800/80 shrink-0">
+        <div class="flex items-center justify-between text-xs mb-1.5">
+          <span class="text-slate-400 font-medium flex items-center gap-1">
+            <span>🏘️</span> Community Resilience (The Commons)
+          </span>
+          <span id="label-district-resilience" class="font-bold text-emerald-400 font-mono">35%</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
+          <div id="bar-resilience" class="h-full bg-gradient-to-r from-amber-500 via-emerald-500 to-teal-400 rounded-full transition-all duration-500" style="width: 35%;"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-slate-500 mt-1">
+          <span>0% Exploitative Collapse</span>
+          <span>100% Democratic Pluralism</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-2 px-4 py-2.5 bg-slate-900/60 border-b border-slate-800/80 shrink-0 text-center">
+        <!-- Cash -->
+        <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60">
+          <div class="text-[10px] uppercase font-bold text-slate-400">Cash</div>
+          <div id="stat-cash" class="text-sm font-black text-amber-300 font-mono mt-0.5">$25</div>
+        </div>
+        <!-- Energy -->
+        <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60">
+          <div class="text-[10px] uppercase font-bold text-slate-400">Energy</div>
+          <div id="stat-energy" class="text-sm font-black text-cyan-300 font-mono mt-0.5">80/100</div>
+        </div>
+        <!-- Social Trust -->
+        <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60">
+          <div class="text-[10px] uppercase font-bold text-slate-400">Trust</div>
+          <div id="stat-trust" class="text-sm font-black text-emerald-400 font-mono mt-0.5">40</div>
+        </div>
+        <!-- Stress Level -->
+        <div class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60">
+          <div class="text-[10px] uppercase font-bold text-slate-400">Stress</div>
+          <div id="stat-stress" class="text-sm font-black text-rose-400 font-mono mt-0.5">60%</div>
+        </div>
+      </div>
+
+      <nav class="flex border-b border-slate-800 bg-slate-900 shrink-0">
+        <button id="tab-btn-actions" onclick="switchTab('actions')" class="flex-1 py-2.5 text-xs font-bold border-b-2 border-emerald-500 text-emerald-400 flex items-center justify-center gap-1.5 transition">
+          <span>🤝</span> Neighborhood Actions
+        </button>
+        <button id="tab-btn-news" onclick="switchTab('news')" class="flex-1 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5 transition relative">
+          <span>📰</span> Crisis Wire
+          <span id="news-badge" class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+        </button>
+        <button id="tab-btn-commons" onclick="switchTab('commons')" class="flex-1 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center justify-center gap-1.5 transition">
+          <span>🏛️</span> The Commons
+        </button>
+      </nav>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        
+        <!-- Tab 1: Actions View -->
+        <div id="tab-content-actions" class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Local Actions</h3>
+            <span class="text-[11px] text-slate-500">Spend energy to reshape reality</span>
+          </div>
+
+          <!-- Action Item 1: Shift at Community Fridge -->
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/70 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+                🥗
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white">Distribute Community Meals</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Share meals with unhoused neighbors & elders.</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-slate-400 font-mono">
+                  <span class="text-cyan-400">-15 Energy</span>
+                  <span class="text-emerald-400">+10 Trust</span>
+                  <span class="text-emerald-400">+2% Commons</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="executeAction('food')" class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-emerald-600 active:scale-95 text-xs font-bold transition text-white shrink-0">
+              Serve
+            </button>
+          </div>
+
+          <!-- Action Item 2: Tool Library & Bike Repair -->
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/70 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+                🔧
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white">Free Community Repair Workshop</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Fix kids' bikes and heaters without corporate markup.</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] text-slate-400 font-mono">
+                  <span class="text-cyan-400">-20 Energy</span>
+                  <span class="text-amber-300">+$15 Barter Tip</span>
+                  <span class="text-emerald-400">+3% Commons</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="executeAction('repair')" class="px-3 py-2 rounded-xl bg-slate-700 hover:bg-amber-600 active:scale-95 text-xs font-bold transition text-white shrink-0">
+              Repair
+            </button>
+          </div>
+
+          <!-- Action Item 3: Class-Specific Action -->
+          <div id="class-specific-action-container"></div>
+
+          <!-- IRL Dual-Impact Quest Box -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-800/80 to-purple-950/60 border border-indigo-700/50 relative overflow-hidden">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-base">✨</span>
+              <span class="text-xs font-black uppercase tracking-wider text-indigo-300">IRL Micro-Quest: Real World Impact</span>
+            </div>
+            <p id="irl-quest-text" class="text-xs text-slate-200 leading-relaxed">
+              Step outside or take a 10-minute walk with your phone in pocket. Notice one local public space or tree you never gave attention to.
+            </p>
+            <div class="mt-3 flex items-center justify-between pt-2 border-t border-indigo-800/50">
+              <span class="text-[11px] text-indigo-300 font-medium">Reward: -20% Stress, +25 Energy</span>
+              <button onclick="completeIrlQuest()" id="btn-irl-quest" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-xs font-bold text-white transition shadow">
+                I Did This IRL!
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-content-news" class="hidden space-y-3">
+          <div class="p-3.5 rounded-2xl bg-rose-950/40 border border-rose-800/60 flex items-center gap-3">
+            <span class="text-2xl">🚨</span>
+            <div>
+              <h3 class="text-xs font-bold text-rose-300">Headlines from the City</h3>
+              <p class="text-[11px] text-slate-400">Demagogues exploit fear during crisis. How will your block respond?</p>
+            </div>
+          </div>
+
+          <!-- Dynamic Active Crisis Card -->
+          <div id="active-crisis-card" class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 space-y-3 shadow-lg">
+            <div class="flex items-center justify-between">
+              <span id="crisis-tag" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 border border-amber-800">
+                Economic Squeeze
+              </span>
+              <span class="text-[11px] text-slate-500">Urgent Decision</span>
+            </div>
+            
+            <h4 id="crisis-title" class="text-sm font-black text-white">The Heating & Rent Spike</h4>
+            
+            <p id="crisis-desc" class="text-xs text-slate-300 leading-relaxed">
+              Corporate energy syndicates raised heating rates by 40% as winter approaches. A populist influencer is circulating flyers blaming newly arrived immigrant families for draining the city grid.
+            </p>
+
+            <div class="space-y-2 pt-2">
+              <!-- Choice A: Authoritarian Scapegoating -->
+              <button onclick="resolveCrisis('scapegoat')" class="w-full text-left p-3 rounded-xl bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-600 transition text-xs group">
+                <div class="font-bold text-rose-400 group-hover:text-rose-300 flex items-center justify-between">
+                  <span>Choice A: Scapegoat Newcomers</span>
+                  <span class="text-[10px] text-rose-500 font-mono">Short-term Illusion</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">
+                  Demand police sweep the neighborhood and bar newcomers from city shelters.
+                </p>
+                <div class="mt-1.5 text-[10px] text-rose-400/80 font-mono">
+                  Result: +$20 temporary relief, -25 Trust, -15% Commons Resilience
+                </div>
+              </button>
+
+              <!-- Choice B: Solidarity / Democratic Assembly -->
+              <button onclick="resolveCrisis('solidarity')" class="w-full text-left p-3 rounded-xl bg-slate-900 hover:bg-emerald-950/60 border border-slate-700 hover:border-emerald-600 transition text-xs group">
+                <div class="font-bold text-emerald-400 group-hover:text-emerald-300 flex items-center justify-between">
+                  <span>Choice B: Open Tenants' Union & Winter Defense</span>
+                  <span class="text-[10px] text-emerald-500 font-mono">Solidarity Path</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">
+                  Unite old and new residents to collectively contest utility gouging and set up heated mutual aid hubs.
+                </p>
+                <div class="mt-1.5 text-[10px] text-emerald-400/80 font-mono">
+                  Cost: -20 Energy, +30 Trust, +18% Commons Resilience
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Solved Crises Archive Log -->
+          <div class="pt-2">
+            <h4 class="text-xs font-bold text-slate-400 mb-2 px-1">District Historical Log</h4>
+            <div id="crisis-history-list" class="space-y-2 text-[11px]">
+              <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 italic">
+                No past crises logged yet. Your decisions will write your district's history.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-content-commons" class="hidden space-y-3">
+          <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-800/60 flex items-center gap-3">
+            <span class="text-2xl">🌱</span>
+            <div>
+              <h3 class="text-xs font-bold text-emerald-300">Permanent Public Infrastructure</h3>
+              <p class="text-[11px] text-slate-400">Cooperative commons decrease daily living costs for everyone.</p>
+            </div>
+          </div>
+
+          <!-- Project 1: Rooftop Solar Grid -->
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">☀️</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Rooftop Solar Cooperative</h4>
+                  <p class="text-[10px] text-slate-400">Lowers daily energy costs by 25% for all neighbors.</p>
+                </div>
+              </div>
+              <span id="proj-solar-status" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-mono">0 / $300</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+              <div id="proj-solar-bar" class="h-full bg-emerald-500 rounded-full" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button onclick="contributeToCommons('solar')" class="px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-xs font-bold text-white transition">
+                Invest $50 / 20⚡
+              </button>
+            </div>
+          </div>
+
+          <!-- Project 2: Free Childcare & Language Exchange -->
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📚</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Free Community Childcare & Language Center</h4>
+                  <p class="text-[10px] text-slate-400">Fosters inter-generational trust and frees parents from burnout.</p>
+                </div>
+              </div>
+              <span id="proj-care-status" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-mono">0 / 80⚡</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+              <div id="proj-care-bar" class="h-full bg-cyan-500 rounded-full" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button onclick="contributeToCommons('care')" class="px-3 py-1.5 rounded-xl bg-cyan-700 hover:bg-cyan-600 active:scale-95 text-xs font-bold text-white transition">
+                Volunteer 25⚡
+              </button>
+            </div>
+          </div>
+
+          <!-- Project 3: Anti-Eviction Defense Network -->
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">⚖️</span>
+                <div>
+                  <h4 class="text-xs font-bold text-white">Legal Defense Fund</h4>
+                  <p class="text-[10px] text-slate-400">Protects vulnerable families from predatory evictions.</p>
+                </div>
+              </div>
+              <span id="proj-legal-status" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-900 text-slate-400 border border-slate-700 font-mono">0 / $400</span>
+            </div>
+            <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+              <div id="proj-legal-bar" class="h-full bg-purple-500 rounded-full" style="width: 0%;"></div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button onclick="contributeToCommons('legal')" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-xs font-bold text-white transition">
+                Contribute $60
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <footer class="p-3 bg-slate-950 border-t border-slate-800 text-center shrink-0">
+        <p class="text-[11px] text-slate-400">
+          "When we pool our power, no demagogue can buy our street."
+        </p>
+      </footer>
+    </section>
+
+    <div id="generic-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl">
+        <div class="flex items-center gap-3">
+          <div id="modal-icon" class="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-xl shrink-0">
+            ☀️
+          </div>
+          <div>
+            <h3 id="modal-title" class="font-bold text-white text-sm">Morning Briefing</h3>
+            <p id="modal-subtitle" class="text-[11px] text-slate-400">Day 2 Begins</p>
+          </div>
+        </div>
+        <p id="modal-body" class="text-xs text-slate-300 leading-relaxed">
+          Daily upkeep deducted. Your solidarity network provided mutual shelter and fresh bread.
+        </p>
+        <button onclick="closeGenericModal()" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs shadow-md transition">
+          Continue
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Audio Synthesizer (Web Audio API - Zero external asset dependency)
+    class SoundFx {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      }
+      playTone(freq = 440, type = 'sine', duration = 0.15) {
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {
+          // Audio blocked or unsupported
+        }
+      }
+      chimeSuccess() {
+        this.playTone(523.25, 'triangle', 0.1);
+        setTimeout(() => this.playTone(659.25, 'triangle', 0.15), 100);
+      }
+      chimeAlert() {
+        this.playTone(330, 'sawtooth', 0.2);
+        setTimeout(() => this.playTone(220, 'sawtooth', 0.25), 180);
+      }
+    }
+    const sfx = new SoundFx();
+
+    const defaultState = {
+      day: 1,
+      role: 'precarious',
+      cash: 25,
+      energy: 80,
+      maxEnergy: 100,
+      trust: 40,
+      stress: 60,
+      districtResilience: 35,
+      commonsProjects: {
+        solar: { progress: 0, max: 300, completed: false },
+        care: { progress: 0, max: 80, completed: false },
+        legal: { progress: 0, max: 400, completed: false }
+      },
+      currentCrisisIndex: 0,
+      history: []
+    };
+
+    let gameState = JSON.parse(JSON.stringify(defaultState));
+
+    // News/Crisis Allegory Pool (Reflecting real socio-political events)
+    const crisisDeck = [
+      {
+        tag: "Economic Squeeze",
+        title: "The Winter Heating Spike",
+        desc: "Private utility companies hiked rates by 40%. A vocal neighborhood Facebook group claims 'recent migrants are consuming all city subsidies' and demands cutoffs.",
+        options: {
+          scapegoat: {
+            title: "Join the Outrage Group & Demand Cutoffs",
+            consequence: "You echoed the scapegoat narrative. A quick temporary city relief voucher was handed out, but two migrant family-run shops were vandalized and fear silenced the community council.",
+            cashDelta: 25,
+            trustDelta: -25,
+            resilienceDelta: -15,
+            stressDelta: 15
+          },
+          solidarity: {
+            title: "Co-host an Open Tenants' Emergency Assembly",
+            consequence: "Longtime residents and newcomers joined together to contest the price hikes legally. The city council was forced to freeze shutoffs. Solidarity protected everyone.",
+            energyDelta: -25,
+            trustDelta: 30,
+            resilienceDelta: 20,
+            stressDelta: -10
+          }
+        }
+      },
+      {
+        tag: "Media & Disinformation",
+        title: "The Viral Rumor on Signal",
+        desc: "An anonymous viral voice message claims clean tap water is being laced by 'corrupt outsiders'. Supermarket shelves are empty as panicked hoarding begins.",
+        options: {
+          scapegoat: {
+            title: "Stockpile Goods & Barricade Doors",
+            consequence: "Hoarding intensified the panic. An elderly neighbor ran out of water. Distrust peaked across your street.",
+            cashDelta: -30,
+            trustDelta: -20,
+            resilienceDelta: -12,
+            stressDelta: 20
+          },
+          solidarity: {
+            title: "Set up a Street Water Testing & Fact-Check Table",
+            consequence: "With a high-school science teacher, you ran public water tests in the courtyard. The hoax dissolved, and neighbors shared spare supplies instead.",
+            energyDelta: -20,
+            trustDelta: 25,
+            resilienceDelta: 15,
+            stressDelta: -15
+          }
+        }
+      },
+      {
+        tag: "Housing & Speculation",
+        title: "The Predatory Buyout",
+        desc: "A mega-holding firm bought three apartment blocks and served sudden eviction letters. An extremist leaflet urges tenants to blame 'foreign buyers' instead of lobbying for rent caps.",
+        options: {
+          scapegoat: {
+            title: "Protest Foreigners, Ignore Landlord Speculators",
+            consequence: "Targeting the wrong enemy left the private equity firm unchecked. Evictions continued as scheduled.",
+            cashDelta: 0,
+            trustDelta: -30,
+            resilienceDelta: -20,
+            stressDelta: 25
+          },
+          solidarity: {
+            title: "Launch a Collective Rent Strike & Legal Picket",
+            consequence: "Every tenant signed the joint grievance petition. The courts granted an injunction, stalling evictions indefinitely.",
+            energyDelta: -30,
+            trustDelta: 35,
+            resilienceDelta: 25,
+            stressDelta: -10
+          }
+        }
+      }
+    ];
+
+    // Real Life Micro Quests
+    const irlQuests = [
+      "Send a kind text message to someone in your neighborhood or family you haven't spoken to in months.",
+      "Check your fridge or pantry: identify one canned or dry good to donate to a local community pantry or food bank.",
+      "Put your phone down for 15 minutes, look out a window, and practice deep belly breathing to de-escalate screen fatigue.",
+      "Read one local news article from an independent public broadcaster instead of scrolling sensational social feeds."
+    ];
+
+    function selectCharacter(roleKey) {
+      sfx.playTone(600, 'sine', 0.2);
+      gameState.role = roleKey;
+      gameState.day = 1;
+      gameState.districtResilience = 35;
+
+      if (roleKey === 'precarious') {
+        gameState.cash = 25;
+        gameState.energy = 80;
+        gameState.trust = 40;
+        gameState.stress = 60;
+      } else if (roleKey === 'worker') {
+        gameState.cash = 240;
+        gameState.energy = 40;
+        gameState.trust = 25;
+        gameState.stress = 45;
+      } else if (roleKey === 'investor') {
+        gameState.cash = 1200;
+        gameState.energy = 65;
+        gameState.trust = 10;
+        gameState.stress = 30;
+      }
+
+      saveGame();
+      renderDashboard();
+      document.getElementById('screen-character-select').classList.add('hidden');
+      document.getElementById('screen-dashboard').classList.remove('hidden');
+      showToast("Welcome to your district! Solidarity starts today.", "🌱");
+    }
+
+    function renderDashboard() {
+      // Player avatar & title
+      const roleTitles = {
+        precarious: { title: "Precarious Worker", icon: "🛠️", color: "amber" },
+        worker: { title: "Exhausted 9-to-5er", icon: "⏱️", color: "cyan" },
+        investor: { title: "Solitary Landlord", icon: "💼", color: "emerald" }
+      };
+      const info = roleTitles[gameState.role] || roleTitles.precarious;
+      document.getElementById('player-role-title').innerText = info.title;
+      document.getElementById('player-avatar').innerText = info.icon;
+      document.getElementById('stat-day').innerText = gameState.day;
+
+      // Stats
+      document.getElementById('stat-cash').innerText = `$${gameState.cash}`;
+      document.getElementById('stat-energy').innerText = `${gameState.energy}/${gameState.maxEnergy}`;
+      document.getElementById('stat-trust').innerText = gameState.trust;
+      document.getElementById('stat-stress').innerText = `${Math.max(0, gameState.stress)}%`;
+      
+      // Resilience / Commons Bar
+      const resilience = Math.min(100, Math.max(0, gameState.districtResilience));
+      document.getElementById('label-district-resilience').innerText = `${resilience}%`;
+      document.getElementById('bar-resilience').style.width = `${resilience}%`;
+
+      // Update district vibe wording
+      const vibeEl = document.getElementById('district-vibe');
+      if (resilience < 25) {
+        vibeEl.innerText = "Fragmented & Tense";
+        vibeEl.className = "text-rose-400 font-bold";
+      } else if (resilience < 60) {
+        vibeEl.innerText = "Common Ground";
+        vibeEl.className = "text-amber-400 font-bold";
+      } else {
+        vibeEl.innerText = "Flourishing Commons";
+        vibeEl.className = "text-emerald-400 font-bold";
+      }
+
+      // Render class-specific action
+      renderClassSpecificAction();
+
+      // Render Active Crisis
+      renderCrisisView();
+
+      // Render Commons Projects
+      renderCommonsProjects();
+    }
+
+    function renderClassSpecificAction() {
+      const container = document.getElementById('class-specific-action-container');
+      if (gameState.role === 'investor') {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-emerald-500/40 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+                🏡
+              </div>
+              <div>
+                <div class="text-xs font-bold text-emerald-300">Cap Rents & Open Communal Hall</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Forgive late fees and host community potlucks.</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] font-mono">
+                  <span class="text-amber-400">-$120 Capital</span>
+                  <span class="text-emerald-400">+25 Trust</span>
+                  <span class="text-rose-400">-15% Stress</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="executeAction('landlord_mercy')" class="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 active:scale-95 text-xs font-bold transition text-white shrink-0">
+              Forgive
+            </button>
+          </div>
+        `;
+      } else if (gameState.role === 'worker') {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-cyan-500/40 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-xl shrink-0">
+                📢
+              </div>
+              <div>
+                <div class="text-xs font-bold text-cyan-300">Organize Workplace Carpool & Union</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Reclaim commute hours and bargain collectively.</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] font-mono">
+                  <span class="text-cyan-400">-25 Energy</span>
+                  <span class="text-emerald-400">+20 Trust</span>
+                  <span class="text-amber-400">+$25/day saved</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="executeAction('worker_union')" class="px-3 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 active:scale-95 text-xs font-bold transition text-white shrink-0">
+              Organize
+            </button>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-amber-500/40 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+                📦
+              </div>
+              <div>
+                <div class="text-xs font-bold text-amber-300">Neighborhood Skill Barter Circle</div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Trade odd jobs directly with neighbors, bypassing gig apps.</p>
+                <div class="flex items-center gap-2 mt-1 text-[10px] font-mono">
+                  <span class="text-cyan-400">-20 Energy</span>
+                  <span class="text-amber-300">+$20 Cash</span>
+                  <span class="text-emerald-400">+15 Trust</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="executeAction('barter_circle')" class="px-3 py-2 rounded-xl bg-amber-700 hover:bg-amber-600 active:scale-95 text-xs font-bold transition text-white shrink-0">
+              Barter
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function executeAction(type) {
+      if (type === 'food') {
+        if (gameState.energy < 15) {
+          showToast("You're too exhausted! Rest or complete an IRL self-care quest.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.energy -= 15;
+        gameState.trust += 10;
+        gameState.districtResilience += 2;
+        gameState.stress = Math.max(0, gameState.stress - 5);
+        showToast("Distributed hot meals. Neighbors felt seen!", "🥗");
+        sfx.chimeSuccess();
+      } else if (type === 'repair') {
+        if (gameState.energy < 20) {
+          showToast("Not enough energy for heavy repair work.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.energy -= 20;
+        gameState.cash += 15;
+        gameState.trust += 8;
+        gameState.districtResilience += 3;
+        showToast("Fixed 3 bicycles! Grateful parents passed you a tip.", "🔧");
+        sfx.chimeSuccess();
+      } else if (type === 'landlord_mercy') {
+        if (gameState.cash < 120) {
+          showToast("Insufficient capital to forgive rent this month.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.cash -= 120;
+        gameState.trust += 25;
+        gameState.stress = Math.max(0, gameState.stress - 15);
+        gameState.districtResilience += 6;
+        showToast("You waived late fees. Neighbors cheered at the hall!", "🏡");
+        sfx.chimeSuccess();
+      } else if (type === 'worker_union') {
+        if (gameState.energy < 25) {
+          showToast("Too worn out after your shift.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.energy -= 25;
+        gameState.trust += 20;
+        gameState.cash += 25;
+        gameState.districtResilience += 5;
+        showToast("Union solidarity meeting successful. Transport costs reduced!", "📢");
+        sfx.chimeSuccess();
+      } else if (type === 'barter_circle') {
+        if (gameState.energy < 20) {
+          showToast("Not enough energy left.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.energy -= 20;
+        gameState.cash += 20;
+        gameState.trust += 15;
+        gameState.districtResilience += 4;
+        showToast("Direct barter completed. Gig platform got zero commission!", "📦");
+        sfx.chimeSuccess();
+      }
+
+      saveGame();
+      renderDashboard();
+    }
+
+    function renderCrisisView() {
+      const idx = gameState.currentCrisisIndex % crisisDeck.length;
+      const crisis = crisisDeck[idx];
+
+      document.getElementById('crisis-tag').innerText = crisis.tag;
+      document.getElementById('crisis-title').innerText = crisis.title;
+      document.getElementById('crisis-desc').innerText = crisis.desc;
+    }
+
+    function resolveCrisis(choiceType) {
+      const idx = gameState.currentCrisisIndex % crisisDeck.length;
+      const crisis = crisisDeck[idx];
+      const opt = crisis.options[choiceType];
+
+      if (choiceType === 'solidarity') {
+        if (gameState.energy < 20) {
+          showToast("Solidarity takes stamina! Take a rest before convening.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+      }
+
+      // Apply stat changes
+      gameState.cash += (opt.cashDelta || 0);
+      gameState.energy += (opt.energyDelta || 0);
+      gameState.trust += (opt.trustDelta || 0);
+      gameState.districtResilience += (opt.resilienceDelta || 0);
+      gameState.stress += (opt.stressDelta || 0);
+
+      // Log into history
+      gameState.history.unshift({
+        day: gameState.day,
+        title: crisis.title,
+        choice: opt.title,
+        consequence: opt.consequence,
+        type: choiceType
+      });
+
+      // Advance crisis index
+      gameState.currentCrisisIndex++;
+
+      // Play appropriate sound
+      if (choiceType === 'solidarity') {
+        sfx.chimeSuccess();
+      } else {
+        sfx.chimeAlert();
+      }
+
+      // Render modal popup with the historical consequence
+      openModal(
+        choiceType === 'solidarity' ? "Democratic Resilience!" : "The Scapegoat Trap",
+        `Day ${gameState.day} Decision: ${opt.title}`,
+        opt.consequence,
+        choiceType === 'solidarity' ? "🤝" : "⚠️"
+      );
+
+      updateHistoryUI();
+      saveGame();
+      renderDashboard();
+    }
+
+    function updateHistoryUI() {
+      const container = document.getElementById('crisis-history-list');
+      if (gameState.history.length === 0) return;
+
+      container.innerHTML = gameState.history.map(item => `
+        <div class="p-3 rounded-xl ${item.type === 'solidarity' ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-200' : 'bg-rose-950/30 border-rose-800/40 text-rose-200'} border">
+          <div class="flex items-center justify-between font-bold text-xs mb-1">
+            <span>Day ${item.day}: ${item.title}</span>
+            <span class="text-[10px] uppercase font-mono">${item.type}</span>
+          </div>
+          <p class="text-[11px] leading-relaxed opacity-90">${item.consequence}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderCommonsProjects() {
+      // Solar
+      const solar = gameState.commonsProjects.solar;
+      const solarPct = Math.min(100, Math.round((solar.progress / solar.max) * 100));
+      document.getElementById('proj-solar-status').innerText = solar.completed ? "ONLINE ✨" : `$${solar.progress} / $${solar.max}`;
+      document.getElementById('proj-solar-bar').style.width = `${solarPct}%`;
+
+      // Childcare
+      const care = gameState.commonsProjects.care;
+      const carePct = Math.min(100, Math.round((care.progress / care.max) * 100));
+      document.getElementById('proj-care-status').innerText = care.completed ? "OPERATIONAL ✨" : `${care.progress}⚡ / ${care.max}⚡`;
+      document.getElementById('proj-care-bar').style.width = `${carePct}%`;
+
+      // Legal Defense
+      const legal = gameState.commonsProjects.legal;
+      const legalPct = Math.min(100, Math.round((legal.progress / legal.max) * 100));
+      document.getElementById('proj-legal-status').innerText = legal.completed ? "ACTIVE SHIELD ✨" : `$${legal.progress} / $${legal.max}`;
+      document.getElementById('proj-legal-bar').style.width = `${legalPct}%`;
+    }
+
+    function contributeToCommons(projectKey) {
+      const proj = gameState.commonsProjects[projectKey];
+      if (proj.completed) {
+        showToast("This public infrastructure is already built and serving the block!", "✨");
+        return;
+      }
+
+      if (projectKey === 'solar') {
+        if (gameState.cash < 50 || gameState.energy < 20) {
+          showToast("Need $50 and 20 Energy to install solar panels.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.cash -= 50;
+        gameState.energy -= 20;
+        proj.progress += 50;
+        gameState.districtResilience += 8;
+        if (proj.progress >= proj.max) {
+          proj.completed = true;
+          showToast("🎉 Rooftop Solar Cooperative completed! Energy bills cut permanently.", "☀️");
+        } else {
+          showToast("Contributed to Solar Grid!", "☀️");
+        }
+      } else if (projectKey === 'care') {
+        if (gameState.energy < 25) {
+          showToast("Need at least 25 Energy to volunteer.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.energy -= 25;
+        proj.progress += 25;
+        gameState.districtResilience += 6;
+        gameState.trust += 15;
+        if (proj.progress >= proj.max) {
+          proj.completed = true;
+          showToast("🎉 Free Childcare Center Open! Families across the block rejoice.", "📚");
+        } else {
+          showToast("Volunteered at Childcare Center!", "📚");
+        }
+      } else if (projectKey === 'legal') {
+        if (gameState.cash < 60) {
+          showToast("Need $60 to fund the legal defense pool.", "⚠️");
+          sfx.chimeAlert();
+          return;
+        }
+        gameState.cash -= 60;
+        proj.progress += 60;
+        gameState.districtResilience += 10;
+        gameState.trust += 20;
+        if (proj.progress >= proj.max) {
+          proj.completed = true;
+          showToast("🎉 Legal Defense Fund Activated! Landlord evictions blocked.", "⚖️");
+        } else {
+          showToast("Funded tenant legal protection!", "⚖️");
+        }
+      }
+
+      sfx.chimeSuccess();
+      saveGame();
+      renderDashboard();
+    }
+
+    function completeIrlQuest() {
+      sfx.chimeSuccess();
+      gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 25);
+      gameState.stress = Math.max(0, gameState.stress - 20);
+      gameState.trust += 10;
+      
+      // Rotate quest text
+      const nextQuest = irlQuests[Math.floor(Math.random() * irlQuests.length)];
+      document.getElementById('irl-quest-text').innerText = nextQuest;
+
+      showToast("Real-world boost recorded! Mind refreshed, Energy recharged.", "✨");
+      saveGame();
+      renderDashboard();
+    }
+
+    function openNextDayModal() {
+      gameState.day++;
+      
+      // Daily Passive Upkeep & Commons Buffs
+      let rentUpkeep = gameState.role === 'investor' ? 0 : 20;
+      if (gameState.commonsProjects.solar.completed) {
+        rentUpkeep = Math.max(5, rentUpkeep - 10);
+      }
+      
+      // Deduct or adjust
+      gameState.cash = Math.max(0, gameState.cash - rentUpkeep);
+      
+      // Regenerate daily baseline energy
+      gameState.energy = Math.min(gameState.maxEnergy, gameState.energy + 45);
+
+      // Stress adjustments based on resilience
+      if (gameState.districtResilience > 60) {
+        gameState.stress = Math.max(0, gameState.stress - 15);
+      } else if (gameState.districtResilience < 25) {
+        gameState.stress = Math.min(100, gameState.stress + 15);
+      }
+
+      openModal(
+        `Sunrise on Day ${gameState.day}`,
+        "District Daily Report",
+        `Daily bills settled (-$${rentUpkeep}). ${gameState.commonsProjects.solar.completed ? '☀️ Solar cooperative kept heating costs low.' : 'High utility rates strained budgets.'} Community resilience stands at ${gameState.districtResilience}%.`,
+        "🌅"
+      );
+
+      saveGame();
+      renderDashboard();
+    }
+
+    function switchTab(tabId) {
+      sfx.playTone(500, 'sine', 0.05);
+      const tabs = ['actions', 'news', 'commons'];
+      tabs.forEach(t => {
+        document.getElementById(`tab-content-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.classList.remove('border-emerald-500', 'text-emerald-400');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+
+      document.getElementById(`tab-content-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      activeBtn.classList.remove('border-transparent', 'text-slate-400');
+      activeBtn.classList.add('border-emerald-500', 'text-emerald-400');
+
+      if (tabId === 'news') {
+        const badge = document.getElementById('news-badge');
+        if (badge) badge.classList.add('hidden');
+      }
+    }
+
+    function openModal(title, subtitle, body, icon = "ℹ️") {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-subtitle').innerText = subtitle;
+      document.getElementById('modal-body').innerText = body;
+      document.getElementById('modal-icon').innerText = icon;
+      document.getElementById('generic-modal').classList.remove('hidden');
+    }
+
+    function closeGenericModal() {
+      sfx.playTone(400, 'sine', 0.05);
+      document.getElementById('generic-modal').classList.add('hidden');
+    }
+
+    function showToast(message, icon = "📢") {
+      const banner = document.getElementById('toast-banner');
+      document.getElementById('toast-icon').innerText = icon;
+      document.getElementById('toast-message').innerText = message;
+      banner.className = "fixed sm:absolute top-4 left-1/2 -translate-x-1/2 z-50 w-11/12 max-w-sm px-4 py-3 rounded-2xl shadow-xl border border-emerald-500/40 bg-slate-900 text-slate-100 text-xs font-semibold flex items-center gap-3 toast-anim";
+      banner.classList.remove('hidden');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 3200);
+    }
+
+    function saveGame() {
+      try {
+        localStorage.setItem('district_common_ground_save', JSON.stringify(gameState));
+      } catch (e) {
+        // Storage restricted
+      }
+    }
+
+    function loadGame() {
+      try {
+        const saved = localStorage.getItem('district_common_ground_save');
+        if (saved) {
+          gameState = JSON.parse(saved);
+          document.getElementById('screen-character-select').classList.add('hidden');
+          document.getElementById('screen-dashboard').classList.remove('hidden');
+          renderDashboard();
+          updateHistoryUI();
+        }
+      } catch (e) {
+        // Fallback to fresh start
+      }
+    }
+
+    // Initialize on window load
+    window.onload = function() {
+      loadGame();
+    };
+  </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { useGameStore, type GameState } from '../core/state/useGameStore';
 import { advanceDay } from '../core/state/actions';
 import { SettingsModal } from './SettingsModal';
+import { openShareSheet } from './ShareModal';
 
 export class TopHUD {
   private el: HTMLElement;
@@ -10,6 +11,7 @@ export class TopHUD {
   private actionHandler: (() => void) | null = null;
   private endDayBtn: HTMLButtonElement;
   private settingsBtn: HTMLButtonElement;
+  private shareBtn: HTMLButtonElement;
   private scene?: Phaser.Scene;
 
   constructor(root: HTMLElement, scene?: Phaser.Scene) {
@@ -48,6 +50,16 @@ export class TopHUD {
     });
     root.appendChild(this.settingsBtn);
 
+    // Share button (bottom-right, next to settings)
+    this.shareBtn = document.createElement('button');
+    this.shareBtn.type = 'button';
+    this.shareBtn.className = 'share-btn interactive';
+    this.shareBtn.textContent = '📣';
+    this.shareBtn.hidden = true;
+    this.shareBtn.setAttribute('aria-label', 'Share progress');
+    this.shareBtn.addEventListener('click', () => openShareSheet(root));
+    root.appendChild(this.shareBtn);
+
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
   }
@@ -82,12 +94,14 @@ export class TopHUD {
       this.el.hidden = true;
       this.endDayBtn.hidden = true;
       this.settingsBtn.hidden = true;
+      this.shareBtn.hidden = true;
       return;
     }
 
     this.el.hidden = false;
     this.endDayBtn.hidden = false;
     this.settingsBtn.hidden = false;
+    this.shareBtn.hidden = false;
 
     const roleLabel = player.classRole
       ? { pip: 'Pip', morgan: 'Morgan', arthur: 'Arthur' }[player.classRole] ?? '?'

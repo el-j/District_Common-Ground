@@ -1020,3 +1020,29 @@
   color: #444466;
   cursor: default;
 }
+
+/* ── M6 — Share Button ──────────────────────────────────── */
+
+.share-btn {
+  position: absolute;
+  bottom: 0.85rem;
+  right: 3.5rem; /* left of the settings gear */
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 1px solid var(--skin-hud-border, #2a3a50);
+  background: var(--skin-hud-bg, #0d1117cc);
+  color: var(--skin-hud-text, #c8e6ff);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, border-color 0.15s;
+  z-index: 20;
+}
+.share-btn:hover {
+  background: var(--skin-surface, #1a1a2e);
+  border-color: var(--skin-accent, #4488cc);
+}

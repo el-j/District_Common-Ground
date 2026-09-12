@@ -54,3 +54,18 @@ export interface ApiUser {
   email: string;
   token: string;
 }
+
+export interface EconomicMultipliers {
+  food: number;
+  energy: number;
+  wage: number;
+  transit: number;
+  heat: number;
+  migrant: number;
+}
+
+export interface DistrictPulseState {
+  multipliers: EconomicMultipliers;
+  fetchedAt: string;
+  source: 'live' | 'seasonal-fallback';
+}

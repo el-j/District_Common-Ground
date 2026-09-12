@@ -1,2 +1,5 @@
 node_modules/
 .aider*
+apps/web/dist/
+apps/api/bin/
+*.local

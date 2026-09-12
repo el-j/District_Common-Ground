@@ -1,7 +1,9 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-13
-Current sprint: **M6 — PWA Packaging & Release** ✓
+Status: **All milestones complete. Project code-complete. Manual QA + deployment remaining.**
+
+All task files and story epics are archived under `docs/archive/`.
 
 ---
 
@@ -21,8 +23,8 @@ Current sprint: **M6 — PWA Packaging & Release** ✓
 
 ## M1 — Engine Foundation
 
-Task file: `docs/tasks/M1-engine-foundation.md`
-Stories: `docs/stories/EPIC-01-engine-foundation.md`
+Task file: `docs/archive/M1-engine-foundation.md`
+Stories: `docs/archive/EPIC-01-engine-foundation.md`
 
 | Task | Status |
 |---|---|
@@ -45,6 +47,7 @@ Stories: `docs/stories/EPIC-01-engine-foundation.md`
 
 Task file: `docs/archive/M2-state-hud.md`
 Stories: `docs/archive/EPIC-02-state-hud.md`
+
 
 | Task | Status |
 |---|---|
@@ -84,8 +87,8 @@ Stories: `docs/archive/EPIC-03-npc-construction.md`
 
 ## M4 — Crisis Engine
 
-Task file: `docs/tasks/M4-crisis-engine.md`
-Stories: `docs/stories/EPIC-04-crisis-engine.md`
+Task file: `docs/archive/M4-crisis-engine.md`
+Stories: `docs/archive/EPIC-04-crisis-engine.md`
 
 | Task | Status |
 |---|---|
@@ -103,8 +106,8 @@ Stories: `docs/stories/EPIC-04-crisis-engine.md`
 
 ## M5 — Multi-Skin Architecture & IRL Quests
 
-Task file: `docs/tasks/M5-skins-quests.md`
-Stories: `docs/stories/EPIC-05-skins-quests.md`
+Task file: `docs/archive/M5-skins-quests.md`
+Stories: `docs/archive/EPIC-05-skins-quests.md`
 
 | Task | Status |
 |---|---|
@@ -124,8 +127,8 @@ Stories: `docs/stories/EPIC-05-skins-quests.md`
 
 ## M6 — PWA Packaging & Release
 
-Task file: `docs/tasks/M6-pwa-release.md`
-Stories: `docs/stories/EPIC-06-pwa-release.md`
+Task file: `docs/archive/M6-pwa-release.md`
+Stories: `docs/archive/EPIC-06-pwa-release.md`
 
 | Task | Status |
 |---|---|
@@ -148,8 +151,8 @@ Stories: `docs/stories/EPIC-06-pwa-release.md`
 
 ## M7 — Infrastructure, Docker & Go Backend
 
-Task file: `docs/tasks/M7-infra-backend.md`
-Stories: `docs/stories/EPIC-07-infra-backend.md`
+Task file: `docs/archive/M7-infra-backend.md`
+Stories: `docs/archive/EPIC-07-infra-backend.md`
 
 | Task | Status |
 |---|---|

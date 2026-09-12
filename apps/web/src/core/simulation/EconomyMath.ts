@@ -1,4 +1,10 @@
+import type { EconomicMultipliers } from '@district-cg/shared-types';
+
 export const BUILD_COMPLETION_THRESHOLD = 100;
+
+export const DEFAULT_MULTIPLIERS: EconomicMultipliers = {
+  food: 1.0, energy: 1.0, wage: 1.0, transit: 1.0, heat: 1.0, migrant: 1.0,
+};
 
 // ── Daily tick ────────────────────────────────────────────────────────────────
 
@@ -19,20 +25,36 @@ export function applyDailyTick(
   classRole: string | null,
   commons: { kitchenProgress: number; solarGridProgress: number; legalFundProgress: number },
   socialTrust: number,
+  multipliers: EconomicMultipliers = DEFAULT_MULTIPLIERS,
 ): DailyTickResult {
   const regen = ENERGY_REGEN[classRole ?? ''] ?? 8;
   const energyUpkeep = 10;
   const energyDelta = regen - energyUpkeep;
 
-  // Cash upkeep: -5/day, reduced if kitchen is complete
-  const kitchenBonus = commons.kitchenProgress >= BUILD_COMPLETION_THRESHOLD ? 2 : 0;
-  const cashDelta = -(5 - kitchenBonus);
+  // Cash: base food upkeep multiplied by food index; kitchen built → free food
+  const baseFoodCost = 3;
+  const foodCost = commons.kitchenProgress >= BUILD_COMPLETION_THRESHOLD
+    ? 0
+    : Math.round(baseFoodCost * multipliers.food);
+
+  // Archetype earning modified by wage/transit multipliers
+  let earning = 0;
+  if (classRole === 'pip') {
+    earning = Math.round(5 * multipliers.wage);
+  } else if (classRole === 'morgan') {
+    const commutePenalty = Math.round(2 * multipliers.transit);
+    earning = 8 - commutePenalty;
+  } else if (classRole === 'arthur') {
+    earning = 12; // rent income unaffected by multipliers
+  }
+
+  const cashDelta = earning - foodCost;
 
   // Stress: +5/day baseline, reduced by trust and completed commons
-  const solarBonus  = commons.solarGridProgress  >= BUILD_COMPLETION_THRESHOLD ? 5 : 0;
-  const legalBonus  = commons.legalFundProgress  >= BUILD_COMPLETION_THRESHOLD ? 4 : 0;
-  const kitchenStressBonus = commons.kitchenProgress >= BUILD_COMPLETION_THRESHOLD ? 3 : 0;
-  const trustRelief = Math.floor(socialTrust / 20); // 0–5 relief based on trust
+  const solarBonus          = commons.solarGridProgress  >= BUILD_COMPLETION_THRESHOLD ? 5 : 0;
+  const legalBonus          = commons.legalFundProgress  >= BUILD_COMPLETION_THRESHOLD ? 4 : 0;
+  const kitchenStressBonus  = commons.kitchenProgress    >= BUILD_COMPLETION_THRESHOLD ? 3 : 0;
+  const trustRelief = Math.floor(socialTrust / 20);
   const stressDelta = 5 - solarBonus - legalBonus - kitchenStressBonus - trustRelief;
 
   return { energyDelta, cashDelta, stressDelta };
@@ -58,4 +80,10 @@ export function getBuildBuffState(progress: Record<BuildProgressKey, number>): B
     solar: progress.solarGridProgress >= BUILD_COMPLETION_THRESHOLD ? 10 : 0,
     legal: progress.legalFundProgress >= BUILD_COMPLETION_THRESHOLD ? 8 : 0,
   };
+}
+
+export function resilienceTier(score: number): 'crisis' | 'stabilising' | 'thriving' {
+  if (score < 30) return 'crisis';
+  if (score < 60) return 'stabilising';
+  return 'thriving';
 }

@@ -85,3 +85,267 @@ export function setSfxProfile(profile: string): void { _sfxProfile = profile; }
 export function setBgmProfile(profile: string): void { _bgmProfile = profile; }
 export function getSfxProfile(): string { return _sfxProfile; }
 export function getBgmProfile(): string { return _bgmProfile; }
+
+// ── SoundSynth v2 ─────────────────────────────────────────────────────────
+
+let _rainSource: AudioBufferSourceNode | null = null;
+let _rainDropletInterval: ReturnType<typeof setInterval> | null = null;
+
+export function playRain(): void {
+  const audio = getCtx();
+  if (!audio || _rainSource) return;
+
+  const sampleRate = audio.sampleRate;
+  const seconds = 2;
+  const buf = audio.createBuffer(1, sampleRate * seconds, sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  const src = audio.createBufferSource();
+  src.buffer = buf;
+  src.loop = true;
+
+  const filter = audio.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(800, audio.currentTime);
+  filter.Q.setValueAtTime(0.8, audio.currentTime);
+
+  const gain = audio.createGain();
+  gain.gain.setValueAtTime(0.15, audio.currentTime);
+
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(audio.destination);
+  src.start();
+  _rainSource = src;
+
+  _rainDropletInterval = setInterval(() => {
+    const a = getCtx();
+    if (!a) return;
+    const dropOsc = a.createOscillator();
+    const dropGain = a.createGain();
+    const freq = 1200 + Math.random() * 2800;
+    dropOsc.type = 'sine';
+    dropOsc.frequency.setValueAtTime(freq, a.currentTime);
+    dropGain.gain.setValueAtTime(0.08, a.currentTime);
+    dropGain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.08);
+    dropOsc.connect(dropGain);
+    dropGain.connect(a.destination);
+    dropOsc.start();
+    dropOsc.stop(a.currentTime + 0.08);
+  }, 50 + Math.random() * 150);
+}
+
+export function stopRain(): void {
+  if (_rainSource) {
+    try { _rainSource.stop(); } catch { /* already stopped */ }
+    _rainSource = null;
+  }
+  if (_rainDropletInterval !== null) {
+    clearInterval(_rainDropletInterval);
+    _rainDropletInterval = null;
+  }
+}
+
+export function playCatPurr(): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  const mainOsc = audio.createOscillator();
+  const lfoOsc = audio.createOscillator();
+  const lfoGain = audio.createGain();
+  const mainGain = audio.createGain();
+
+  mainOsc.type = 'triangle';
+  mainOsc.frequency.setValueAtTime(25, audio.currentTime);
+
+  lfoOsc.type = 'sine';
+  lfoOsc.frequency.setValueAtTime(7, audio.currentTime);
+  lfoGain.gain.setValueAtTime(7, audio.currentTime);
+
+  mainGain.gain.setValueAtTime(0.12, audio.currentTime);
+
+  lfoOsc.connect(lfoGain);
+  lfoGain.connect(mainOsc.frequency);
+  mainOsc.connect(mainGain);
+  mainGain.connect(audio.destination);
+
+  const end = audio.currentTime + 3;
+  lfoOsc.start();
+  mainOsc.start();
+  lfoOsc.stop(end);
+  mainOsc.stop(end);
+}
+
+export function playBikeBell(): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  [659, 880].forEach(freq => {
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, audio.currentTime);
+    gain.gain.setValueAtTime(0.3, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.8);
+    osc.connect(gain);
+    gain.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.8);
+  });
+}
+
+export function playRadioStatic(tuningFraction: number): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  const sampleRate = audio.sampleRate;
+  const duration = 0.3;
+  const buf = audio.createBuffer(1, Math.floor(sampleRate * duration), sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+  const src = audio.createBufferSource();
+  src.buffer = buf;
+
+  const filter = audio.createBiquadFilter();
+  filter.type = 'bandpass';
+  const centerFreq = 200 + tuningFraction * 2800;
+  filter.frequency.setValueAtTime(centerFreq, audio.currentTime);
+  filter.Q.setValueAtTime(2.0, audio.currentTime);
+
+  const gainVal = (1 - Math.abs(tuningFraction - 0.5) * 2) * 0.2;
+  const gain = audio.createGain();
+  gain.gain.setValueAtTime(Math.max(gainVal, 0.001), audio.currentTime);
+
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(audio.destination);
+  src.start();
+}
+
+export function playLoFiChord(rootHz: number): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  const duration = 2;
+  const masterGain = audio.createGain();
+  masterGain.gain.setValueAtTime(0.08, audio.currentTime);
+  masterGain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
+  masterGain.connect(audio.destination);
+
+  const oscDefs: Array<[OscillatorType, number, number]> = [
+    ['triangle', rootHz, -3],
+    ['square',   rootHz * 1.26, 3],
+    ['triangle', rootHz * 1.5, -2],
+  ];
+
+  for (const [type, freq, detuneCents] of oscDefs) {
+    const osc = audio.createOscillator();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audio.currentTime);
+    osc.detune.setValueAtTime(detuneCents, audio.currentTime);
+    osc.connect(masterGain);
+    osc.start();
+    osc.stop(audio.currentTime + duration);
+  }
+
+  // Vinyl crackle
+  const crackleBuf = audio.createBuffer(1, Math.floor(audio.sampleRate * duration), audio.sampleRate);
+  const crackleData = crackleBuf.getChannelData(0);
+  for (let i = 0; i < crackleData.length; i++) crackleData[i] = Math.random() * 2 - 1;
+  const crackleSrc = audio.createBufferSource();
+  crackleSrc.buffer = crackleBuf;
+  const crackleGain = audio.createGain();
+  crackleGain.gain.setValueAtTime(0.03, audio.currentTime);
+  crackleSrc.connect(crackleGain);
+  crackleGain.connect(audio.destination);
+  crackleSrc.start();
+}
+
+export function playCrisisStab(): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  [220, 221.5].forEach(freq => {
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, audio.currentTime);
+    gain.gain.setValueAtTime(0.15, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.4);
+    osc.connect(gain);
+    gain.connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.4);
+  });
+}
+
+export function playSolidarityChime(): void {
+  const audio = getCtx();
+  if (!audio) return;
+
+  const notes = [261.6, 329.6, 392, 523.2];
+  notes.forEach((freq, i) => {
+    const t = audio.currentTime + i * 0.1;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    osc.connect(gain);
+    gain.connect(audio.destination);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  });
+}
+
+// ── BGM loop ──────────────────────────────────────────────────────────────
+
+let _bgmOsc: OscillatorNode | null = null;
+let _bgmInterval: ReturnType<typeof setInterval> | null = null;
+
+export function startBGMLoop(): void {
+  const audio = getCtx();
+  if (!audio || _bgmOsc) return;
+
+  const drone = audio.createOscillator();
+  const droneGain = audio.createGain();
+  drone.type = 'triangle';
+  drone.frequency.setValueAtTime(55, audio.currentTime);
+  droneGain.gain.setValueAtTime(0.04, audio.currentTime);
+  drone.connect(droneGain);
+  droneGain.connect(audio.destination);
+  drone.start();
+  _bgmOsc = drone;
+
+  // Quiet rhythmic tick every ~500ms (4-bar feel at ~120bpm)
+  _bgmInterval = setInterval(() => {
+    const a = getCtx();
+    if (!a) return;
+    const tick = a.createOscillator();
+    const tickGain = a.createGain();
+    tick.type = 'square';
+    tick.frequency.setValueAtTime(110, a.currentTime);
+    tickGain.gain.setValueAtTime(0.02, a.currentTime);
+    tickGain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.05);
+    tick.connect(tickGain);
+    tickGain.connect(a.destination);
+    tick.start();
+    tick.stop(a.currentTime + 0.05);
+  }, 500);
+}
+
+export function stopBGMLoop(): void {
+  if (_bgmOsc) {
+    try { _bgmOsc.stop(); } catch { /* already stopped */ }
+    _bgmOsc = null;
+  }
+  if (_bgmInterval !== null) {
+    clearInterval(_bgmInterval);
+    _bgmInterval = null;
+  }
+}

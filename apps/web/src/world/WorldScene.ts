@@ -426,6 +426,12 @@ export class WorldScene extends Phaser.Scene {
     this.thumbstickGraphic = this.add.graphics();
     this.thumbstickGraphic.setScrollFactor(0);
     this.thumbstickGraphic.setDepth(100);
+
+    // Resilience visual tier — apply initial state and subscribe to changes
+    this.applyResilienceTier(useGameStore.getState().commons.resilienceScore);
+    useGameStore.subscribe((state) => {
+      this.applyResilienceTier(state.commons.resilienceScore);
+    });
   }
 
   update(): void {
@@ -534,6 +540,21 @@ export class WorldScene extends Phaser.Scene {
     this.dialogueOpen = true;
     const tree = DIALOGUES[npc.dialogueKey] ?? DIALOGUES['mira_intro'];
     new DialogueOverlay(uiRoot, tree, npc.dialogueKey, npc.name, () => { this.dialogueOpen = false; WorldScene.hud?.hideAction(); });
+  }
+
+  private applyResilienceTier(score: number): void {
+    const container = document.getElementById('game-container');
+    if (!container) return;
+    container.classList.remove('world--thriving', 'world--stabilising', 'world--crisis', 'world--emergency');
+    if (score < 15) {
+      container.classList.add('world--emergency');
+    } else if (score < 30) {
+      container.classList.add('world--crisis');
+    } else if (score < 60) {
+      container.classList.add('world--stabilising');
+    } else {
+      container.classList.add('world--thriving');
+    }
   }
 
   private drawThumbstick(): void {

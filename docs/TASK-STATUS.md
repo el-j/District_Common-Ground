@@ -1,9 +1,9 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-13
-Status: **All milestones complete. Project code-complete. Manual QA + deployment remaining.**
+Status: **Phase 1 code-complete. Phase 2 (M8–M12) in active development.**
 
-All task files and story epics are archived under `docs/archive/`.
+Phase 1 task files and story epics are archived under `docs/archive/`.
 
 ---
 
@@ -22,16 +22,113 @@ All Phase 1 task files and story epics are archived under [`docs/archive/`](file
 | M6 | PWA Packaging, Performance & Release | `[x] Complete` | 3 tests |
 | M7 | Infrastructure, Docker & Go Backend | `[x] Complete` | 3 tests |
 
-### Phase 2 — Living World & Real-World Data Expansion (Active Planning)
+### Phase 2 — Living World & Real-World Data Expansion (Active Development)
 Specifications authored under [`docs/planning/`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning).
+Story epics under [`docs/stories/`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories).
+Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks).
 
-| # | Milestone | Focus Area | Status | Spec Document |
-|---|---|---|---|---|
-| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] Planned` | [`02-LIVING-ECONOMY-AND-REAL-DATA.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md) |
-| M9 | "The District Dispatch" & Broadsheet News System | Civic RSS aggregator, morning broadsheet paper, anti-fascist defense, refugee solidarity | `[ ] Planned` | [`03-NEWS-TO-CRISIS-PIPELINE.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md), [`07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md) |
-| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, extreme weather shaders | `[ ] Planned` | [`04-DISTRICT-EXPANSION-AND-WORLD.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md) |
-| M11 | The Shared Commons & Asynchronous District Network | Community Land Trust, Tool Library, Sanctuary District, 10-year planetary adaptation | `[ ] Planned` | [`06-TECHNICAL-ROADMAP-M8-M12.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/06-TECHNICAL-ROADMAP-M8-M12.md), [`07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md) |
-| M12 | Procedural Web Audio Synth v2 & Mobile Polish | Rain/cat purr synthesis, mobile haptics, Lighthouse 95+ release | `[ ] Planned` | [`05-WHIMSY-AND-TACTILE-UX.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/05-WHIMSY-AND-TACTILE-UX.md) |
+| # | Milestone | Focus Area | Status | Story | Tasks |
+|---|---|---|---|---|---|
+| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] In Progress` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
+| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[ ] Queued` | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
+| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[ ] Queued` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
+| M11 | Shared Commons, Climate Migration & Anti-Fascist Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[ ] Queued` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
+| M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[ ] Queued` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
+
+---
+
+## M8 — Living Economy & District Pulse Engine
+
+Story: `docs/stories/EPIC-08-living-economy.md`
+Tasks: `docs/tasks/M8-living-economy.md`
+
+| Task | Status |
+|---|---|
+| `apps/api/internal/pulse/` package skeleton | `[ ]` |
+| `economy.go` — BLS/EIA/NOAA fetch + 24h cache | `[ ]` |
+| `economy.go` — fail-safe defaults on network error | `[ ]` |
+| `GET /api/v1/pulse/economy` + climate endpoints | `[ ]` |
+| `packages/shared-types` — `DistrictPulseState` type | `[ ]` |
+| `apps/web/src/api/endpoints/pulse.ts` | `[ ]` |
+| `EconomyMath.ts` — multiplier integration | `[ ]` |
+| `SeasonalWave.ts` — offline sinusoidal fallback | `[ ]` |
+| `useGameStore.ts` — `pulseState` field | `[ ]` |
+| `TopHUD.ts` — Economic Barometer chip | `[ ]` |
+| Tests (Vitest + Go httptest) | `[ ]` |
+
+---
+
+## M9 — "The District Dispatch" & Dynamic AI Narrative Engine
+
+Story: `docs/stories/EPIC-09-district-dispatch.md`
+Tasks: `docs/tasks/M9-district-dispatch.md`
+
+| Task | Status |
+|---|---|
+| `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[ ]` |
+| `narrative/client.go` — multi-provider free AI client (Ollama/Groq/Cloudflare) | `[ ]` |
+| `narrative/prompts.go` — system prompt, character voice pillars, lore bible | `[ ]` |
+| `narrative/validator.go` — JSON schema validator + mathematical clamp | `[ ]` |
+| `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[ ]` |
+| `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[ ]` |
+| `crisis_scenarios.json` expanded to 25+ curated fallback scenarios | `[ ]` |
+| `BroadsheetModal.ts` — 3D unfold, newsprint, headline citation, crossword | `[ ]` |
+| `RadioWidget.ts` — pirate FM tuner, amber LED, emergency ticker | `[ ]` |
+| `advanceDay()` — broadsheet trigger | `[ ]` |
+| Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[ ]` |
+| Tests (Vitest + Go httptest + validator clamping tests) | `[ ]` |
+
+---
+
+## M10 — District Expansion & Living World Systems
+
+Story: `docs/stories/EPIC-10-district-expansion.md`
+Tasks: `docs/tasks/M10-district-expansion.md`
+
+| Task | Status |
+|---|---|
+| Resilience visual tier CSS (crisis/stabilising/thriving/emergency) | `[ ]` |
+| `resilienceTier()` in EconomyMath + WorldScene subscribe | `[ ]` |
+| Day/night lighting (Phaser camera tint lerp) | `[ ]` |
+| Map expansion to 64×80 (4 named zones) | `[ ]` |
+| `ScrapsEntity.ts` — cat NPC, purr, hearts, Stress −5 | `[ ]` |
+| `PigeonEntity.ts` — scatter AI | `[ ]` |
+| Zone detection → HUD zone label | `[ ]` |
+| Tests (manual) | `[ ]` |
+
+---
+
+## M11 — Shared Commons, Climate Migration & Anti-Fascist Defense
+
+Story: `docs/stories/EPIC-11-shared-commons.md`
+Tasks: `docs/tasks/M11-shared-commons.md`
+
+| Task | Status |
+|---|---|
+| Node D: Community Tool Library | `[ ]` |
+| Node E: Community Land Trust | `[ ]` |
+| Climate migration crisis archetype (3 scenarios) | `[ ]` |
+| Anti-fascist flyer objects + tear-down action | `[ ]` |
+| `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[ ]` |
+| `TownHallAssembly.ts` — monthly vote modal | `[ ]` |
+| Tests | `[ ]` |
+
+---
+
+## M12 — Audio Synth v2, Mobile Polish & Release QA
+
+Story: `docs/stories/EPIC-12-audio-v2-polish.md`
+Tasks: `docs/tasks/M12-audio-v2-polish.md`
+
+| Task | Status |
+|---|---|
+| `SoundSynth.ts` v2 — rain, purr, bell, static, lo-fi, BGM | `[ ]` |
+| Mobile haptics (`navigator.vibrate`) | `[ ]` |
+| WCAG AA accessibility (ARIA, Escape, focus-visible) | `[ ]` |
+| `@media (prefers-reduced-motion)` CSS | `[ ]` |
+| Full Vitest suite (all modules) | `[ ]` |
+| Full Go test suite (unit + integration) | `[ ]` |
+| Lighthouse audit — documented in `docs/lighthouse-report.md` | `[ ]` |
 
 ---
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { DistrictPulseState } from '@district-cg/shared-types';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';
@@ -46,6 +47,7 @@ export interface GameState {
     historyLog: CrisisLogEntry[];
   };
   quests: QuestState[];
+  pulseState: DistrictPulseState | null;
 }
 
 const INITIAL_STATE: GameState = {
@@ -76,6 +78,7 @@ const INITIAL_STATE: GameState = {
     { questId: 'community-reconnect',  completedOnDay: null },
     { questId: 'local-mutual-aid',     completedOnDay: null },
   ],
+  pulseState: null,
 };
 
 export const useGameStore = create<GameState>()(() => INITIAL_STATE);

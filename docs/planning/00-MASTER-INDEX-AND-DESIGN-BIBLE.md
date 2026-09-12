@@ -1,0 +1,59 @@
+# 00 — Master Index & Studio Design Bible (District: Common Ground v2.0)
+
+**Studio Agent Consortium:** Game Designer 🎮, Narrative Designer 📖, Economy Designer 💰, Level Designer 🏛️, Backend Architect 🛠️, Frontend Developer 💻, Whimsy Injector ✨, Technical Artist 🎨, Brand Guardian 🛡️, Audio Engineer 🎵, UX Researcher 🔍, SRE ⚙️  
+**Status:** Master Design Bible (Living Document)  
+**Workspace:** [`CLAUDE.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/CLAUDE.md) · [`docs/TASK-STATUS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/TASK-STATUS.md)  
+
+---
+
+## The Vision at a Glance
+
+*District: Common Ground* is a browser-based, top-down urban resilience simulation demonstrating that individualist survivalism is an exhausting, destructive dead end under systemic pressure, while collective solidarity creates an engineered safety net capable of absorbing real-world economic, climate, and social shocks.
+
+Grounding the game in **real-world open data, macroeconomic indices, climate trajectories, and free AI-driven news synthesis**, the simulation bridges digital mechanics with lived civic reality, remaining relevant, living, and adaptive over the next 10+ years (2026–2036+).
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    THE LIVING DISTRICT ECOSYSTEM                        │
+│                                                                         │
+│  [REAL-WORLD PULSE]          [DISTRICT COMMONS]     [STREET LIFE]       │
+│  • BLS Food Inflation    ──> • Community Kitchen ─> • Sal's Grocer      │
+│  • EIA Energy Tariffs    ──> • Solar Cooperative ─> • Tariq's Inverter  │
+│  • Gig Wage Volatility   ──> • Tool Library      ─> • Pip's Cargo Bike  │
+│  • Transit Strikes       ──> • Tenant Legal Fund ─> • Morgan's Commute  │
+│  • NOAA Climate Anomalies──> • Cooling Sanctuary ─> • Rosa's ER Triage  │
+│  • UNHCR Climate Influx  ──> • Community Land    ─> • Arthur's Brown-   │
+│  • Far-Right Smears/Rallies  Trust (Deeded)         stone Transition    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Master Specification Directory (`docs/planning/`)
+
+| Doc # | Specification Document | Lead Agents | Focus & Key Contributions |
+|---|---|---|---|
+| **01** | [**01-VISION-AND-CORE-LOOP.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/01-VISION-AND-CORE-LOOP.md) | 🎮 Game Designer<br>📖 Narrative Designer | 4 Design Pillars; 3 core gameplay loops (0-30s, 5-15m, meta weeks); asymmetric class realities (Pip, Morgan, Arthur); psychological scapegoat vs. solidarity framework. |
+| **02** | [**02-LIVING-ECONOMY-AND-REAL-DATA.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md) | 💰 Economy Designer<br>🛠️ Backend Architect | Open macroeconomic data ingestion (CPI, energy, gig pay, rent); dynamic upkeep math in `EconomyMath.ts`; Commons Dividends ($0 bills at 100%); seasonal wave synthesizer. |
+| **03** | [**03-NEWS-TO-CRISIS-PIPELINE.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md) | 📖 Narrative Designer<br>🛠️ Backend Architect | Civic RSS aggregator; 7 Crisis Archetypes; tactile morning broadsheet (*"The Daily District Ground"*); pirate radio tuner (*"Radio Free Commons"*); real headline citations. |
+| **04** | [**04-DISTRICT-EXPANSION-AND-WORLD.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md) | 🏛️ Level Designer<br>🎨 Technical Artist | 5 interconnected map zones (Transit Hub, Plaza, East Canal, Tenements, Solar Quarter); dynamic day/night light transitions; weather shaders; Crisis Decay vs. Solidarity Bloom. |
+| **05** | [**05-WHIMSY-AND-TACTILE-UX.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/05-WHIMSY-AND-TACTILE-UX.md) | ✨ Whimsy Injector<br>🎨 UI/UX Designer | "Scraps" the stray calico cat (purring haptics, stress relief); interactive corkboard with draggable polaroids; analog pirate radio dial; zero-MP3 procedural sound design. |
+| **06** | [**06-TECHNICAL-ROADMAP-M8-M12.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/06-TECHNICAL-ROADMAP-M8-M12.md) | 💻 Frontend Developer<br>🛠️ Backend Architect | Granular engineering roadmap for Milestones M8 through M12 with explicit acceptance tests, dependency chains, and verification commands. |
+| **07** | [**07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md) | 📖 Narrative Designer<br>👁️ Visuals Specialist | Welcoming climate refugees (demographic & labor dividend); anti-fascist community defense; tearing down hate flyers; 10-year NOAA/UNHCR open-data integration. |
+| **08** | [**08-DYNAMIC-AI-NARRATIVE-PIPELINE.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/08-DYNAMIC-AI-NARRATIVE-PIPELINE.md) | 📖 Narrative Designer<br>🛠️ Backend Architect | Free, open-weight AI model pipeline (Ollama local / Groq free cloud); prompt guardrails; strict JSON schema validation; mathematical clamping; dynamic NPC street rumors. |
+| **09** | [**09-NPC-SOCIAL-NETWORK-AND-RELATIONSHIPS.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/09-NPC-SOCIAL-NETWORK-AND-RELATIONSHIPS.md) | 📖 Narrative Designer<br>👤 Persona Walkthrough | Deep dossiers for 7 neighborhood pillars (Sal, Elena, Marcus, Rosa, Tariq, Mrs. Higgins, Officer Vance); relational web; informal mutual aid favor and reciprocity buffs. |
+| **10** | [**10-COMMUNITY-LAND-TRUST-AND-ENDGAME.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/10-COMMUNITY-LAND-TRUST-AND-ENDGAME.md) | 💰 Economy Designer<br>🛠️ Backend Architect | The de-commodification endgame; Community Land Trust ratification; Arthur's class conversion arc; monthly participatory budgeting assembly; global asynchronous solidarity pool. |
+| **11** | [**11-AUDIO-SOUNDSCAPE-AND-PROCEDURAL-SYNTH.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/11-AUDIO-SOUNDSCAPE-AND-PROCEDURAL-SYNTH.md) | 🎵 Audio Engineer<br>✨ Whimsy Injector | 100% procedural Web Audio synthesis (0 bytes MP3s); resilience harmonic spectrum (Locrian drone vs. Major 9th bloom); rain droplet physics; generative 4/4 lo-fi hip-hop radio. |
+| **12** | [**12-ART-DIRECTION-SKINS-AND-SHADERS.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/12-ART-DIRECTION-SKINS-AND-SHADERS.md) | 🎨 Technical Artist<br>🛡️ Brand Guardian | Headless `EntityToken` skin mapping; 3 skins (Solarpunk 2036, Retro Game Boy 1989, 1930s Woodcut Broadsheet); Phaser 3 fragment shaders; inclusive representation standards. |
+| **13** | [**13-PLAYTESTING-BALANCING-AND-TELEMETRY.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/13-PLAYTESTING-BALANCING-AND-TELEMETRY.md) | 💰 Economy Designer<br>⚙️ SRE / DevOps | 90-day archetype solvency models (Monte Carlo stress runs); ethical zero-PII telemetry; 10-year antifragile software maintenance principles (scratch Docker, PWA offline caching). |
+
+---
+
+## Active Milestone Roadmap (Phase 2)
+
+- [x] **Milestones M1 – M7**: MVP Foundation, Top-Down Canvas, Zustand Store, Construction Nodes, Crisis Baseline, Multi-Skin Architecture, Go API & Docker Infrastructure *(Archived under `docs/archive/`)*.
+- [ ] **Milestone M8**: [Living Economy & District Pulse Engine](tasks/M8-living-economy.md)
+- [ ] **Milestone M9**: [The District Dispatch & Dynamic AI Narrative Engine](tasks/M9-district-dispatch.md)
+- [ ] **Milestone M10**: [District Expansion & Living World Systems](tasks/M10-district-expansion.md)
+- [ ] **Milestone M11**: [Shared Commons, Climate Migration & Anti-Fascist Defense](tasks/M11-shared-commons.md)
+- [ ] **Milestone M12**: [Procedural Audio Synth v2, Mobile Polish & Release QA](tasks/M12-audio-v2-polish.md)

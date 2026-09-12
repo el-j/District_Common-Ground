@@ -1,5 +1,43 @@
 export const BUILD_COMPLETION_THRESHOLD = 100;
 
+// ── Daily tick ────────────────────────────────────────────────────────────────
+
+export interface DailyTickResult {
+  energyDelta: number;
+  cashDelta: number;
+  stressDelta: number;
+}
+
+// Archetype-specific energy regen per day (before upkeep)
+const ENERGY_REGEN: Record<string, number> = {
+  pip: 15,    // gig worker recovers quickly; net +5 after 10 upkeep
+  morgan: 5,  // exhausted commuter; net -5 after 10 upkeep
+  arthur: 10, // comfortable landlord; net 0 after 10 upkeep
+};
+
+export function applyDailyTick(
+  classRole: string | null,
+  commons: { kitchenProgress: number; solarGridProgress: number; legalFundProgress: number },
+  socialTrust: number,
+): DailyTickResult {
+  const regen = ENERGY_REGEN[classRole ?? ''] ?? 8;
+  const energyUpkeep = 10;
+  const energyDelta = regen - energyUpkeep;
+
+  // Cash upkeep: -5/day, reduced if kitchen is complete
+  const kitchenBonus = commons.kitchenProgress >= BUILD_COMPLETION_THRESHOLD ? 2 : 0;
+  const cashDelta = -(5 - kitchenBonus);
+
+  // Stress: +5/day baseline, reduced by trust and completed commons
+  const solarBonus  = commons.solarGridProgress  >= BUILD_COMPLETION_THRESHOLD ? 5 : 0;
+  const legalBonus  = commons.legalFundProgress  >= BUILD_COMPLETION_THRESHOLD ? 4 : 0;
+  const kitchenStressBonus = commons.kitchenProgress >= BUILD_COMPLETION_THRESHOLD ? 3 : 0;
+  const trustRelief = Math.floor(socialTrust / 20); // 0–5 relief based on trust
+  const stressDelta = 5 - solarBonus - legalBonus - kitchenStressBonus - trustRelief;
+
+  return { energyDelta, cashDelta, stressDelta };
+}
+
 export type BuildProgressKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress';
 
 export interface BuildBuffState {

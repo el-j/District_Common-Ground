@@ -1,6 +1,7 @@
 import { useGameStore, type ClassRole, type CrisisLogEntry, type GameState } from './useGameStore';
 import { saveToDB } from './persistence';
-import { computeResilienceScore } from '../simulation/EconomyMath';
+import { computeResilienceScore, applyDailyTick } from '../simulation/EconomyMath';
+import { initCrisisQueue, checkForCrisis } from '../simulation/CrisisEngine';
 
 const ARCHETYPE_SEEDS: Record<ClassRole, {
   cash: number;
@@ -19,6 +20,7 @@ export function setArchetype(role: ClassRole): void {
     player: { ...state.player, classRole: role, ...ARCHETYPE_SEEDS[role] },
     meta: { ...state.meta, phase: 'playing' as const },
   }));
+  initCrisisQueue();
 }
 
 export function spendCash(amount: number): void {
@@ -70,9 +72,23 @@ export function reduceStress(amount: number): void {
 }
 
 export function advanceDay(): void {
-  useGameStore.setState(state => ({
-    meta: { ...state.meta, day: state.meta.day + 1 },
-  }));
+  useGameStore.setState(state => {
+    const tick = applyDailyTick(
+      state.player.classRole,
+      state.commons,
+      state.player.socialTrust,
+    );
+    return {
+      meta: { ...state.meta, day: state.meta.day + 1 },
+      player: {
+        ...state.player,
+        energy:      Math.min(state.player.maxEnergy, Math.max(0, state.player.energy + tick.energyDelta)),
+        cash:        Math.max(0, state.player.cash + tick.cashDelta),
+        stressLevel: Math.max(0, Math.min(100, state.player.stressLevel + tick.stressDelta)),
+      },
+    };
+  });
+  checkForCrisis();
   void saveToDB(useGameStore.getState());
 }
 

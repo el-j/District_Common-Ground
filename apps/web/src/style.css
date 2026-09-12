@@ -504,3 +504,249 @@
   cursor: pointer;
   text-decoration: underline;
 }
+
+/* ── Crisis Wire Modal ──────────────────────────────────── */
+
+.crisis-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 6, 14, 0.88);
+  z-index: 70;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.crisis-overlay--visible { opacity: 1; }
+.crisis-overlay--out { opacity: 0; }
+
+.crisis-panel {
+  width: min(520px, calc(100% - 2rem));
+  background: #0c0c1a;
+  border: 1px solid #cc3333;
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+  font-family: ui-monospace, monospace;
+  box-shadow: 0 0 40px rgba(180, 30, 30, 0.3), 0 16px 40px rgba(0,0,0,0.7);
+}
+
+.crisis-ticker {
+  font-size: 0.55rem;
+  color: #cc3333;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  animation: ticker-flash 1.2s infinite;
+}
+@keyframes ticker-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.crisis-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffeecc;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+}
+
+.crisis-context {
+  font-size: 0.7rem;
+  color: #bbbbdd;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.crisis-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.crisis-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.85rem 0.75rem;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: left;
+  font-family: ui-monospace, monospace;
+  transition: background 0.12s, border-color 0.12s;
+}
+.crisis-btn-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  display: block;
+}
+.crisis-btn-desc {
+  font-size: 0.58rem;
+  opacity: 0.75;
+  display: block;
+  line-height: 1.4;
+}
+
+.crisis-btn--scapegoat {
+  background: #2a1408;
+  border: 1px solid #aa4411;
+  color: #ffcc88;
+}
+.crisis-btn--scapegoat:hover {
+  background: #3a1c0c;
+  border-color: #dd6622;
+}
+
+.crisis-btn--solidarity {
+  background: #081a10;
+  border: 1px solid #226633;
+  color: #88ffaa;
+}
+.crisis-btn--solidarity:hover {
+  background: #0e2818;
+  border-color: #44aa66;
+}
+
+.crisis-note {
+  font-size: 0.55rem;
+  color: #444466;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ── World Emergency Effect ─────────────────────────────── */
+
+#game-container {
+  transition: filter 0.8s ease;
+}
+
+.world-emergency {
+  animation: emergency-pulse 1.5s ease-in-out infinite;
+}
+@keyframes emergency-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(180, 20, 20, 0); }
+  50%       { box-shadow: inset 0 0 40px 8px rgba(180, 20, 20, 0.25); }
+}
+
+/* ── History Modal (Town Hall) ──────────────────────────── */
+
+.history-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(8, 8, 18, 0.5);
+  z-index: 35;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.history-overlay--visible { opacity: 1; }
+
+.history-panel {
+  width: min(520px, 100%);
+  max-height: 70vh;
+  background: rgba(12, 12, 24, 0.97);
+  border: 1px solid #3a3a5a;
+  border-radius: 12px 12px 0 0;
+  padding: 1rem;
+  font-family: ui-monospace, monospace;
+  color: #ddddf8;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.history-title {
+  font-weight: bold;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #aaaaee;
+}
+
+.history-close {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.history-subtitle {
+  font-size: 0.58rem;
+  color: #555577;
+  margin-bottom: 0.75rem;
+}
+
+.history-list {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-right: 0.25rem;
+}
+
+.history-empty {
+  font-size: 0.68rem;
+  color: #444466;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.history-row {
+  border: 1px solid #28283e;
+  border-radius: 4px;
+  padding: 0.6rem;
+  background: #10101e;
+}
+
+.history-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.history-day {
+  font-size: 0.55rem;
+  color: #555577;
+  background: #1a1a2e;
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+}
+
+.history-crisis-name {
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: #bbbbee;
+  flex: 1;
+}
+
+.history-choice {
+  font-size: 0.55rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+}
+.history-choice--bad  { background: #2a0e08; color: #ff8866; }
+.history-choice--good { background: #081a10; color: #66ee88; }
+
+.history-summary {
+  font-size: 0.62rem;
+  color: #9999bb;
+  line-height: 1.45;
+}

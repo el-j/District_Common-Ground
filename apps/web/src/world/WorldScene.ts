@@ -5,6 +5,8 @@ import { PlayerEntity } from './entities/PlayerEntity';
 import { NPCEntity } from './entities/NPCEntity';
 import { DialogueOverlay } from '../ui/DialogueOverlay';
 import { ConstructionModal, type ConstructionNodeData } from '../ui/ConstructionModal';
+import { CrisisWireModal } from '../ui/CrisisWireModal';
+import { HistoryModal } from '../ui/HistoryModal';
 import { TopHUD } from '../ui/TopHUD';
 import { useGameStore } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
@@ -331,9 +333,14 @@ export class WorldScene extends Phaser.Scene {
   private nodeMarkers: Map<string, Phaser.GameObjects.Graphics> = new Map();
   private dialogueOpen = false;
   private buildOpen = false;
+  private crisisOpen = false;
+  private historyOpen = false;
   private actionKey!: Phaser.Input.Keyboard.Key;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private completedIds = new Set<string>();
+
+  // Town Hall interaction point (door at col 5, row 35)
+  private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
 
   public static setHud(hud: TopHUD): void { WorldScene.hud = hud; }
 
@@ -427,8 +434,19 @@ export class WorldScene extends Phaser.Scene {
     this.npcs.forEach(npc => npc.update(this.player.x, this.player.y));
     this.syncCompletedBuilds();
     this.updateZone();
+    this.checkCrisis();
     this.handleInteractions();
     this.drawThumbstick();
+  }
+
+  private checkCrisis(): void {
+    if (this.crisisOpen) return;
+    const { activeCrisisId } = useGameStore.getState().crisisState;
+    if (!activeCrisisId) return;
+    const uiRoot = document.getElementById('ui-root');
+    if (!uiRoot) return;
+    this.crisisOpen = true;
+    new CrisisWireModal(uiRoot, activeCrisisId, () => { this.crisisOpen = false; });
   }
 
   private updateZone(): void {
@@ -441,22 +459,29 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private handleInteractions(): void {
+    if (this.crisisOpen) { WorldScene.hud?.hideAction(); return; }
+
     const nearbyNpc = this.npcs.find(npc => npc.isActive);
     const nearbyBuild = this.constructionNodes.find(node => {
       const dx = this.player.x - node.position.x, dy = this.player.y - node.position.y;
       return Math.hypot(dx, dy) <= 42;
     });
+    const th = WorldScene.TOWN_HALL;
+    const nearTownHall = Math.hypot(this.player.x - th.x, this.player.y - th.y) <= 48;
 
-    if (!this.dialogueOpen && !this.buildOpen) {
+    if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen) {
       const pressed = Phaser.Input.Keyboard.JustDown(this.actionKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
       if (pressed) {
-        if (nearbyBuild) this.openBuild(nearbyBuild);
-        else if (nearbyNpc) this.openTalk(nearbyNpc);
+        if (nearTownHall)    this.openHistory();
+        else if (nearbyBuild) this.openBuild(nearbyBuild);
+        else if (nearbyNpc)   this.openTalk(nearbyNpc);
       }
     }
 
-    if (this.dialogueOpen || this.buildOpen) {
+    if (this.dialogueOpen || this.buildOpen || this.historyOpen) {
       WorldScene.hud?.hideAction();
+    } else if (nearTownHall) {
+      WorldScene.hud?.setAction('Town Hall 📜', () => this.openHistory());
     } else if (nearbyBuild) {
       WorldScene.hud?.setAction('Build 🔨', () => this.openBuild(nearbyBuild));
     } else if (nearbyNpc) {
@@ -464,6 +489,14 @@ export class WorldScene extends Phaser.Scene {
     } else {
       WorldScene.hud?.hideAction();
     }
+  }
+
+  private openHistory(): void {
+    if (this.historyOpen || this.dialogueOpen || this.buildOpen) return;
+    const uiRoot = document.getElementById('ui-root');
+    if (!uiRoot) return;
+    this.historyOpen = true;
+    new HistoryModal(uiRoot, () => { this.historyOpen = false; WorldScene.hud?.hideAction(); });
   }
 
   private syncCompletedBuilds(): void {

@@ -1,0 +1,157 @@
+[
+  {
+    "id": "winter-power-surge",
+    "title": "The Winter Power Surge",
+    "context": "A brutal cold snap has hit the district. The regional energy monopoly announces a 40% rate increase, citing \"unusual demand patterns.\" Local officials quickly point to immigrant families in the South Quarter as the cause, claiming they run appliances overnight without regard for the grid.",
+    "choiceA": {
+      "label": "Blame the high-usage households",
+      "type": "authoritarian",
+      "description": "You repeat the utility's talking points to your neighbors. Anger redirects away from the company. Your bill gets a small credit — a goodwill gesture from the utility for helping manage the narrative.",
+      "consequences": {
+        "cashDelta": 30,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -15,
+        "stressDelta": -8,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organize a public hearing",
+      "type": "solidarity",
+      "description": "You help coordinate a block meeting and a formal challenge to the rate increase. It takes energy, but neighbors pool resources and the utility backs down on the surcharge. Trust deepens.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -15,
+        "trustDelta": 15,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "social-app-disinfo",
+    "title": "The Social App Disinformation Wave",
+    "context": "A video goes viral showing a blurry figure near the cultural center late at night, captioned: \"Who is running drugs out of the community center?\" It has 40,000 views. Local Facebook groups are erupting. The cultural center's organizers are facing harassment.",
+    "choiceA": {
+      "label": "Share the video, let the community decide",
+      "type": "authoritarian",
+      "description": "You share it without comment. The video spreads further. The cultural center loses half its volunteers from intimidation. Cash flows briefly as anxious neighbors pay for private security instead of communal solutions.",
+      "consequences": {
+        "cashDelta": 20,
+        "energyDelta": 0,
+        "trustDelta": -25,
+        "resilienceDelta": -15,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organize a counter-gathering at the center",
+      "type": "solidarity",
+      "description": "You help the center host an open-doors event and a public rebuttal. The video's origin is traced to a real estate firm looking to devalue the area. Community trust surges. It cost time and money but the center survives.",
+      "consequences": {
+        "cashDelta": -10,
+        "energyDelta": -20,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "housing-speculation",
+    "title": "The Speculation Wave",
+    "context": "Horizon Capital Group has quietly purchased three apartment buildings on your block. 47 households received eviction notices this morning — 90-day compliance required. A buyout offer for your unit arrives by the afternoon: $8,000 to leave early and quietly.",
+    "choiceA": {
+      "label": "Accept the buyout, move on",
+      "type": "authoritarian",
+      "description": "You take the money and secure yourself a room elsewhere. The block loses a voice. More neighbors accept buyouts over the next month. Horizon begins renovating for market-rate renters.",
+      "consequences": {
+        "cashDelta": 100,
+        "energyDelta": 0,
+        "trustDelta": -15,
+        "resilienceDelta": -20,
+        "stressDelta": -15,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Join the tenant coalition, withhold rent together",
+      "type": "solidarity",
+      "description": "You help organize collective rent withholding and a formal legal challenge. It's expensive and draining. But the coalition holds 34 households together, Horizon's timeline slips, and the press coverage forces a city council hearing.",
+      "consequences": {
+        "cashDelta": -20,
+        "energyDelta": -25,
+        "trustDelta": 10,
+        "resilienceDelta": 25,
+        "stressDelta": 15,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "utility-shutoff",
+    "title": "The Water Authority Threat",
+    "context": "The municipal water authority has issued shutoff notices to 22 households on your block — anyone 30+ days overdue on their bill. The temperature is dropping. An authority spokesperson says \"individual responsibility for utility payments remains non-negotiable.\"",
+    "choiceA": {
+      "label": "Pay your own bill early, stay out of it",
+      "type": "authoritarian",
+      "description": "You secure your own water supply and don't engage. Twelve households lose water access for three days. Stress concentrates in those families. The block grows more fragmented.",
+      "consequences": {
+        "cashDelta": -5,
+        "energyDelta": 0,
+        "trustDelta": -15,
+        "resilienceDelta": -10,
+        "stressDelta": -10,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organize a delegation and a community bucket brigade",
+      "type": "solidarity",
+      "description": "Neighbors coordinate to share water and you lead a formal negotiation delegation to the water authority. An emergency hardship deferral is won for 18 of the 22 households. The collective action becomes a model.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -15,
+        "trustDelta": 20,
+        "resilienceDelta": 15,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "mutual-aid-raid",
+    "title": "The Community Fridge Shutdown",
+    "context": "City health inspectors have cited the community fridge outside the Corner Grocer for seven \"code violations\" — the main one being its location on public sidewalk. The organizers have 72 hours to comply or face a $2,000 fine. The fridge feeds 40 families a week.",
+    "choiceA": {
+      "label": "Advise the organizers to comply and close it",
+      "type": "authoritarian",
+      "description": "You counsel caution. The fridge closes to avoid the fine. 40 families lose a reliable food source. The city inspector marks it as resolved. The organizers are demoralized.",
+      "consequences": {
+        "cashDelta": 15,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -20,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Mobilize a rapid legal and media response",
+      "type": "solidarity",
+      "description": "You activate the Legal Defense Fund and contact two local journalists. Within 48 hours the story is citywide news. The city quietly drops four of the seven violations. The fridge stays open with a temporary permit and 200 new supporters.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -10,
+        "trustDelta": 15,
+        "resilienceDelta": 20,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  }
+]

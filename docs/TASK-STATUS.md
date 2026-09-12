@@ -1,7 +1,7 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-12
-Current sprint: **M7 — Infrastructure, Docker & Backend**
+Current sprint: **M5 — Multi-Skin Architecture & IRL Quests**
 
 ---
 
@@ -12,7 +12,7 @@ Current sprint: **M7 — Infrastructure, Docker & Backend**
 | M1 | Engine Foundation & Top-Down Canvas | `[x] Complete` | 3 tests |
 | M2 | State Store, Archetype Selection & HUD | `[x] Complete` | 3 tests |
 | M3 | NPC Interactions & Commons Construction | `[x] Complete` | 3 tests |
-| M4 | Crisis Engine & Real-World News System | `[ ] Not Started` | 3 tests |
+| M4 | Crisis Engine & Real-World News System | `[x] Complete` | 3 tests |
 | M5 | Multi-Skin Architecture & IRL Quests | `[ ] Not Started` | 2 tests |
 | M6 | PWA Packaging, Performance & Release | `[ ] Not Started` | 3 tests |
 | M7 | Infrastructure, Docker & Go Backend | `[x] Complete` | 3 tests |
@@ -89,15 +89,15 @@ Stories: `docs/stories/EPIC-04-crisis-engine.md`
 
 | Task | Status |
 |---|---|
-| crisis_scenarios.json — schema + 5 scenarios | `[ ]` |
-| CrisisEngine.ts — queue + resolve logic | `[ ]` |
-| CrisisWireModal.ts — breaking news overlay | `[ ]` |
-| World visual consequence system | `[ ]` |
-| EconomyMath.ts — daily tick + buffs | `[ ]` |
-| Town Hall crisis history log | `[ ]` |
-| **Test 4.1:** Crisis triggers → movement paused → modal shown | `[ ]` |
-| **Test 4.2:** 3x scapegoat → resilience drops → emergency state | `[ ]` |
-| **Test 4.3:** History log persists across sessions | `[ ]` |
+| crisis_scenarios.json — schema + 5 scenarios | `[x]` |
+| CrisisEngine.ts — queue + resolve logic | `[x]` |
+| CrisisWireModal.ts — breaking news overlay | `[x]` |
+| World visual consequence system | `[x]` |
+| EconomyMath.ts — daily tick + buffs | `[x]` |
+| Town Hall crisis history log | `[x]` |
+| **Test 4.1:** Crisis triggers → movement paused → modal shown | `[ ]` manual |
+| **Test 4.2:** 3x scapegoat → resilience drops → emergency state | `[ ]` manual |
+| **Test 4.3:** History log persists across sessions | `[ ]` manual |
 
 ---
 

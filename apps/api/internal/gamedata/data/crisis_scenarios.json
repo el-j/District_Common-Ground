@@ -1,0 +1,87 @@
+[
+  {
+    "id": "rent_hike",
+    "title": "Rent Spike",
+    "description": "The landlord association announces a 40% rent hike across the district, citing inflation. Residents are holding an emergency meeting.",
+    "scapegoat": {
+      "label": "Blame the newcomers",
+      "cashDelta": 50,
+      "trustDelta": -20,
+      "resilienceDelta": -15
+    },
+    "solidarity": {
+      "label": "Organise rent strike",
+      "energyCost": 30,
+      "trustDelta": 25,
+      "resilienceDelta": 20
+    }
+  },
+  {
+    "id": "power_outage",
+    "title": "Grid Failure",
+    "description": "A transformer blew and the south block has been dark for two days. The utility company says repairs will take a week.",
+    "scapegoat": {
+      "label": "Demand priority service (pay bribe)",
+      "cashDelta": -80,
+      "trustDelta": -15,
+      "resilienceDelta": -10
+    },
+    "solidarity": {
+      "label": "Pool generators & share power",
+      "energyCost": 20,
+      "trustDelta": 20,
+      "resilienceDelta": 18
+    }
+  },
+  {
+    "id": "eviction_notice",
+    "title": "Mass Eviction",
+    "description": "Three families received eviction notices. A developer wants to convert the block to luxury condos.",
+    "scapegoat": {
+      "label": "Stay quiet, negotiate your own deal",
+      "cashDelta": 120,
+      "trustDelta": -25,
+      "resilienceDelta": -20
+    },
+    "solidarity": {
+      "label": "Fund legal defense collectively",
+      "energyCost": 40,
+      "trustDelta": 30,
+      "resilienceDelta": 25
+    }
+  },
+  {
+    "id": "food_shortage",
+    "title": "Corner Store Closure",
+    "description": "The only affordable grocery in the district closed overnight. A chain store is offering to fill the space — at twice the prices.",
+    "scapegoat": {
+      "label": "Accept the chain store deal",
+      "cashDelta": -30,
+      "trustDelta": -10,
+      "resilienceDelta": -12
+    },
+    "solidarity": {
+      "label": "Launch community fridge network",
+      "energyCost": 25,
+      "trustDelta": 22,
+      "resilienceDelta": 20
+    }
+  },
+  {
+    "id": "police_sweep",
+    "title": "Sweeps & Displacement",
+    "description": "City authorities announce a 'clean-up operation' targeting unhoused neighbors in the park.",
+    "scapegoat": {
+      "label": "Support the sweep",
+      "cashDelta": 40,
+      "trustDelta": -30,
+      "resilienceDelta": -18
+    },
+    "solidarity": {
+      "label": "Provide shelter & legal support",
+      "energyCost": 35,
+      "trustDelta": 35,
+      "resilienceDelta": 22
+    }
+  }
+]

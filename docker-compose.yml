@@ -1,0 +1,45 @@
+name: district-cg
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: district_cg
+      POSTGRES_USER: dcg
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dcg -d district_cg"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      DATABASE_URL: postgres://dcg:${POSTGRES_PASSWORD}@db:5432/district_cg?sslmode=disable
+      JWT_SECRET: ${JWT_SECRET}
+      VITE_ORIGIN: ${VITE_ORIGIN:-http://localhost:9300}
+      PORT: "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["/usr/bin/wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  web:
+    build:
+      context: ./apps/web
+    ports:
+      - "9300:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:

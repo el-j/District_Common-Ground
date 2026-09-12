@@ -1,0 +1,29 @@
+{
+  "name": "@district-cg/web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src/",
+    "check": "tsc --noEmit && oxlint src/",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@district-cg/shared-types": "*",
+    "@tailwindcss/vite": "^4.3.3",
+    "oxlint": "^0.16.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.4.5",
+    "vite": "^8.3.0",
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "idb-keyval": "^6.2.1",
+    "phaser": "^3.87.0",
+    "zustand": "^4.5.4"
+  }
+}

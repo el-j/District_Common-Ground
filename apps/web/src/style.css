@@ -1,0 +1,506 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-game: #1a1a2e;
+  --color-wall: #5a5a7a;
+  --color-floor: #2d2d3d;
+  --font-game: ui-monospace, monospace;
+}
+
+/* ── Character Select ───────────────────────────────────── */
+
+.character-select {
+  position: absolute;
+  inset: 0;
+  background: #0d0d1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 50;
+}
+
+.cs-inner {
+  max-width: 640px;
+  width: 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.cs-title {
+  font-family: ui-monospace, monospace;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #e0e0ff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.cs-subtitle {
+  color: #666688;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  margin-bottom: 1.5rem;
+}
+
+.cs-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.archetype-card {
+  background: #1a1a2e;
+  border: 1px solid #35354a;
+  border-radius: 3px;
+  padding: 1rem;
+  cursor: pointer;
+  text-align: left;
+  color: #e0e0ff;
+  font-family: ui-monospace, monospace;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.archetype-card:hover,
+.archetype-card:focus-visible {
+  border-color: #6666aa;
+  background: #22223a;
+  outline: none;
+}
+
+.card-name {
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-bottom: 0.1rem;
+}
+
+.card-title {
+  font-size: 0.6rem;
+  color: #777799;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-desc {
+  font-size: 0.68rem;
+  color: #aaaacc;
+  margin-bottom: 0.75rem;
+  line-height: 1.45;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.5rem;
+  font-size: 0.62rem;
+}
+
+.card-stats dt { color: #666688; }
+.card-stats dd { color: #e0e0ff; font-variant-numeric: tabular-nums; }
+
+/* ── Top HUD ────────────────────────────────────────────── */
+
+#top-hud {
+  position: absolute;
+  inset: 0 0 auto 0;
+  padding: 0.35rem 0.6rem 0.5rem;
+  background: linear-gradient(to bottom, rgba(10, 10, 20, 0.92) 70%, transparent);
+  pointer-events: none;
+  font-family: ui-monospace, monospace;
+  font-size: 0.6rem;
+  color: #d8d8f0;
+}
+
+#hud-zone {
+  font-size: 0.52rem;
+  color: #555577;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding-top: 0.1rem;
+  min-height: 0.9rem;
+}
+
+.hud-row { display: flex; align-items: center; gap: 0.4rem; }
+.hud-top { margin-bottom: 0.2rem; }
+.hud-stats { gap: 0.6rem; }
+
+.hud-badge {
+  background: #2d2d4a;
+  border: 1px solid #44446a;
+  border-radius: 2px;
+  padding: 0 0.25rem;
+  font-weight: bold;
+  color: #aaaaee;
+}
+
+.hud-day { font-weight: bold; color: #ccccee; white-space: nowrap; }
+
+.hud-res-bar {
+  flex: 1;
+  height: 3px;
+  background: #1e1e30;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.hud-res-fill {
+  height: 100%;
+  background: linear-gradient(to right, #22aa55, #44ee88);
+  border-radius: 2px;
+  transition: width 0.4s;
+}
+.hud-res-pct { min-width: 2.2rem; text-align: right; color: #44ee88; font-size: 0.55rem; }
+
+.hud-stat { opacity: 0.85; white-space: nowrap; }
+.hud-stat--warn  { color: #ffcc44; opacity: 1; }
+.hud-stat--danger { color: #ff5555; opacity: 1; }
+
+.hud-energy-stat { display: flex; align-items: center; gap: 0.2rem; }
+.hud-ebar {
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  background: #1e1e30;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.hud-ebar-fill {
+  height: 100%;
+  background: #4499ff;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ── Context action button (bottom-right) ───────────────── */
+
+.context-action-button {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 4.5rem;
+  pointer-events: auto;
+  border: 1px solid #4c5d9d;
+  background: rgba(18, 22, 44, 0.92);
+  color: #edf0ff;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-size: 0.72rem;
+  font-family: ui-monospace, monospace;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: background 0.12s, border-color 0.12s;
+}
+.context-action-button:hover {
+  background: rgba(30, 38, 72, 0.95);
+  border-color: #7788cc;
+}
+
+/* ── End Day button (bottom-left) ───────────────────────── */
+
+.end-day-btn {
+  position: absolute;
+  left: 0.85rem;
+  bottom: 4.5rem;
+  pointer-events: auto;
+  border: 1px solid #3a5a3a;
+  background: rgba(14, 26, 14, 0.92);
+  color: #66dd88;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font-size: 0.72rem;
+  font-family: ui-monospace, monospace;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: background 0.12s, border-color 0.12s;
+  cursor: pointer;
+}
+.end-day-btn:hover {
+  background: rgba(20, 44, 20, 0.95);
+  border-color: #55aa66;
+  color: #88ffaa;
+}
+
+.dialogue-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(9, 10, 20, 0.35);
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.dialogue-panel {
+  width: min(420px, calc(100% - 1.25rem));
+  background: rgba(15, 17, 28, 0.96);
+  border: 1px solid #434d79;
+  border-radius: 12px 12px 0 0;
+  padding: 0.85rem;
+  box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.25);
+}
+
+.dialogue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.dialogue-title {
+  color: #dfe6ff;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dialogue-close {
+  border: none;
+  background: transparent;
+  color: #dfe6ff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.dialogue-text {
+  color: #edf0ff;
+  min-height: 4.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin-bottom: 0.65rem;
+}
+
+.dialogue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dialogue-choice {
+  flex: 1 1 45%;
+  min-width: 120px;
+  background: #1f2d4d;
+  color: #edf0ff;
+  border: 1px solid #555d88;
+  border-radius: 999px;
+  padding: 0.5rem 0.7rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+
+/* ── Construction Modal ─────────────────────────────────── */
+
+.construction-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(9, 10, 20, 0.4);
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.construction-panel {
+  width: min(380px, calc(100% - 1.25rem));
+  background: rgba(15, 17, 28, 0.97);
+  border: 1px solid #3d5a3d;
+  border-radius: 12px 12px 0 0;
+  padding: 0.85rem;
+  box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.3);
+  font-family: ui-monospace, monospace;
+  color: #edf0ff;
+}
+
+.construction-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.construction-title {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #44cc88;
+}
+
+.construction-close {
+  border: none;
+  background: transparent;
+  color: #aaa;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.construction-progress-wrap {
+  margin-bottom: 0.75rem;
+}
+
+.construction-progress-label {
+  font-size: 0.6rem;
+  color: #888;
+  margin-bottom: 0.2rem;
+}
+
+.construction-progress-bar {
+  height: 4px;
+  background: #2d2d3d;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.construction-progress-fill {
+  height: 100%;
+  background: #44cc88;
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.construction-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.construction-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.62rem;
+  color: #888;
+}
+
+.construction-form input {
+  background: #1a1a2e;
+  border: 1px solid #35354a;
+  border-radius: 3px;
+  color: #edf0ff;
+  padding: 0.3rem 0.4rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  width: 100%;
+}
+
+.construction-submit {
+  grid-column: span 2;
+  background: #1e3d2f;
+  border: 1px solid #44cc88;
+  border-radius: 999px;
+  color: #44cc88;
+  padding: 0.5rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.construction-submit:hover {
+  background: #2a5040;
+}
+
+/* ── Auth Overlay ───────────────────────────────────────── */
+
+.auth-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a16;
+  z-index: 60;
+  pointer-events: auto;
+}
+
+.auth-panel {
+  width: min(360px, calc(100% - 2rem));
+  text-align: center;
+  padding: 1.5rem;
+  font-family: ui-monospace, monospace;
+}
+
+.auth-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #e0e0ff;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.auth-subtitle {
+  color: #555577;
+  font-size: 0.68rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.auth-input {
+  background: #1a1a2e;
+  border: 1px solid #35354a;
+  border-radius: 3px;
+  color: #edf0ff;
+  padding: 0.5rem 0.6rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  width: 100%;
+}
+
+.auth-input:focus {
+  outline: 1px solid #6666aa;
+}
+
+.auth-error {
+  font-size: 0.65rem;
+  color: #cc5555;
+  margin: 0;
+}
+
+.auth-btn {
+  border-radius: 999px;
+  padding: 0.55rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.auth-btn--primary {
+  background: #2a3a6a;
+  border: 1px solid #4c5d9d;
+  color: #edf0ff;
+}
+
+.auth-btn--primary:hover {
+  background: #354a80;
+}
+
+.auth-btn--secondary {
+  background: transparent;
+  border: 1px solid #35354a;
+  color: #aaaacc;
+}
+
+.auth-btn--secondary:hover {
+  border-color: #6666aa;
+  color: #edf0ff;
+}
+
+.auth-offline {
+  margin-top: 1rem;
+  background: transparent;
+  border: none;
+  color: #444466;
+  font-family: ui-monospace, monospace;
+  font-size: 0.62rem;
+  cursor: pointer;
+  text-decoration: underline;
+}

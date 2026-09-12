@@ -9,6 +9,9 @@ All task files and story epics are archived under `docs/archive/`.
 
 ## Milestone Overview
 
+### Phase 1 — MVP Foundation (Archived)
+All Phase 1 task files and story epics are archived under [`docs/archive/`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive).
+
 | # | Milestone | Status | Acceptance Tests |
 |---|---|---|---|
 | M1 | Engine Foundation & Top-Down Canvas | `[x] Complete` | 3 tests |
@@ -18,6 +21,17 @@ All task files and story epics are archived under `docs/archive/`.
 | M5 | Multi-Skin Architecture & IRL Quests | `[x] Complete` | 2 tests |
 | M6 | PWA Packaging, Performance & Release | `[x] Complete` | 3 tests |
 | M7 | Infrastructure, Docker & Go Backend | `[x] Complete` | 3 tests |
+
+### Phase 2 — Living World & Real-World Data Expansion (Active Planning)
+Specifications authored under [`docs/planning/`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning).
+
+| # | Milestone | Focus Area | Status | Spec Document |
+|---|---|---|---|---|
+| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] Planned` | [`02-LIVING-ECONOMY-AND-REAL-DATA.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md) |
+| M9 | "The District Dispatch" & Broadsheet News System | Civic RSS aggregator, morning broadsheet paper, anti-fascist defense, refugee solidarity | `[ ] Planned` | [`03-NEWS-TO-CRISIS-PIPELINE.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md), [`07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md) |
+| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, extreme weather shaders | `[ ] Planned` | [`04-DISTRICT-EXPANSION-AND-WORLD.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md) |
+| M11 | The Shared Commons & Asynchronous District Network | Community Land Trust, Tool Library, Sanctuary District, 10-year planetary adaptation | `[ ] Planned` | [`06-TECHNICAL-ROADMAP-M8-M12.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/06-TECHNICAL-ROADMAP-M8-M12.md), [`07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md) |
+| M12 | Procedural Web Audio Synth v2 & Mobile Polish | Rain/cat purr synthesis, mobile haptics, Lighthouse 95+ release | `[ ] Planned` | [`05-WHIMSY-AND-TACTILE-UX.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/05-WHIMSY-AND-TACTILE-UX.md) |
 
 ---
 

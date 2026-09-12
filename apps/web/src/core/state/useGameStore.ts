@@ -3,6 +3,12 @@ import { create } from 'zustand';
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';
 export type GamePhase = 'select' | 'playing';
+export type QuestId = 'digital-deescalation' | 'community-reconnect' | 'local-mutual-aid';
+
+export interface QuestState {
+  questId: QuestId;
+  completedOnDay: number | null;
+}
 
 export interface CrisisLogEntry {
   id: string;
@@ -39,6 +45,7 @@ export interface GameState {
     pendingQueue: string[];
     historyLog: CrisisLogEntry[];
   };
+  quests: QuestState[];
 }
 
 const INITIAL_STATE: GameState = {
@@ -64,6 +71,11 @@ const INITIAL_STATE: GameState = {
     pendingQueue: [],
     historyLog: [],
   },
+  quests: [
+    { questId: 'digital-deescalation', completedOnDay: null },
+    { questId: 'community-reconnect',  completedOnDay: null },
+    { questId: 'local-mutual-aid',     completedOnDay: null },
+  ],
 };
 
 export const useGameStore = create<GameState>()(() => INITIAL_STATE);

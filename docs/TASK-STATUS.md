@@ -1,7 +1,7 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-12
-Current sprint: **M5 — Multi-Skin Architecture & IRL Quests**
+Current sprint: **M6 — PWA Packaging & Release**
 
 ---
 
@@ -13,7 +13,7 @@ Current sprint: **M5 — Multi-Skin Architecture & IRL Quests**
 | M2 | State Store, Archetype Selection & HUD | `[x] Complete` | 3 tests |
 | M3 | NPC Interactions & Commons Construction | `[x] Complete` | 3 tests |
 | M4 | Crisis Engine & Real-World News System | `[x] Complete` | 3 tests |
-| M5 | Multi-Skin Architecture & IRL Quests | `[ ] Not Started` | 2 tests |
+| M5 | Multi-Skin Architecture & IRL Quests | `[x] Complete` | 2 tests |
 | M6 | PWA Packaging, Performance & Release | `[ ] Not Started` | 3 tests |
 | M7 | Infrastructure, Docker & Go Backend | `[x] Complete` | 3 tests |
 
@@ -108,17 +108,17 @@ Stories: `docs/stories/EPIC-05-skins-quests.md`
 
 | Task | Status |
 |---|---|
-| SkinInterface.ts — SkinManifest type + EntityToken | `[ ]` |
-| solarpunk/skin.manifest.json | `[ ]` |
-| retro_gb/skin.manifest.json | `[ ]` |
-| ThemeManager.ts — runtime skin switcher | `[ ]` |
-| Solarpunk skin assets (all EntityTokens) | `[ ]` |
-| Retro GB skin assets (all EntityTokens) | `[ ]` |
-| Chiptune audio profile in SoundSynth | `[ ]` |
-| Settings menu — skin switcher UI | `[ ]` |
-| IrlQuestSystem.ts — 3 quests + daily reset | `[ ]` |
-| **Test 5.1:** Skin switch — no state reset, within time budget | `[ ]` |
-| **Test 5.2:** IRL quest buffs + day-lock | `[ ]` |
+| SkinInterface.ts — SkinManifest type + EntityToken | `[x]` |
+| solarpunk/skin.manifest.json | `[x]` |
+| retro_gb/skin.manifest.json | `[x]` |
+| ThemeManager.ts — runtime skin switcher | `[x]` |
+| Solarpunk skin assets (all EntityTokens) | `[ ]` art assets |
+| Retro GB skin assets (all EntityTokens) | `[ ]` art assets |
+| Chiptune audio profile in SoundSynth | `[x]` (profile hooks; synthesis modes deferred) |
+| Settings menu — skin switcher UI | `[x]` |
+| IrlQuestSystem.ts — 3 quests + daily reset | `[x]` |
+| **Test 5.1:** Skin switch — no state reset, within time budget | `[ ]` manual |
+| **Test 5.2:** IRL quest buffs + day-lock | `[ ]` manual |
 
 ---
 

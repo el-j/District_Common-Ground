@@ -7,6 +7,7 @@ import { CharacterSelect } from './ui/CharacterSelect';
 import { TopHUD } from './ui/TopHUD';
 import { AuthOverlay } from './ui/AuthOverlay';
 import { setupAudioOnInteraction } from './core/audio/SoundSynth';
+import { activateDefaultSkin } from './skins/ThemeManager';
 
 export const VIRTUAL_WIDTH = 320;
 export const VIRTUAL_HEIGHT = 240;
@@ -61,6 +62,7 @@ async function boot(): Promise<void> {
   });
 
   setupAudioOnInteraction();
+  void activateDefaultSkin();
 
   const hud = new TopHUD(uiRoot);
   WorldScene.setHud(hud);

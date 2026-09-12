@@ -75,3 +75,13 @@ export function playDayChime(): void {
     osc.stop(t + 0.3);
   });
 }
+
+// ── Skin audio profile hooks ───────────────────────────────────────────────
+// Stored for future skin-driven synthesis modes; no runtime effect yet.
+let _sfxProfile = 'nature_chimes';
+let _bgmProfile = 'warm_ambient';
+
+export function setSfxProfile(profile: string): void { _sfxProfile = profile; }
+export function setBgmProfile(profile: string): void { _bgmProfile = profile; }
+export function getSfxProfile(): string { return _sfxProfile; }
+export function getBgmProfile(): string { return _bgmProfile; }

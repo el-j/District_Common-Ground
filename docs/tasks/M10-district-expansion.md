@@ -4,29 +4,29 @@ Stories: `docs/stories/EPIC-10-district-expansion.md`
 Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 
 ## Resilience Visual Tier System (Priority 1 — implement first)
-- [ ] `EconomyMath.ts` — export `resilienceTier(score: number)` returning 'crisis'|'stabilising'|'thriving'
-- [ ] `WorldScene.ts` — subscribe to store; on resilience change update `#game-container` CSS class + Phaser camera tint
-- [ ] `style.css` — `.world--crisis` (grayscale 70%, sepia 20%, vignette), `.world--stabilising` (mild), `.world--thriving` (saturate 120%, warm +5° hue, glow)
-- [ ] `style.css` — `.world--emergency` (red pulse when resilience < 15)
-- [ ] `CrisisEngine.ts` / `actions.ts` — apply `worldEffect` immediately on crisis resolution
+- [x] `EconomyMath.ts` — export `resilienceTier(score: number)` returning 'crisis'|'stabilising'|'thriving'
+- [x] `WorldScene.ts` — subscribe to store; on resilience change update `#game-container` CSS class
+- [x] `style.css` — `.world--crisis` (grayscale 70%, sepia 20%, vignette), `.world--stabilising` (mild), `.world--thriving` (saturate 120%, warm +5° hue, glow)
+- [x] `style.css` — `.world--emergency` (pulse animation when resilience < 15)
+- [x] `CrisisEngine.ts` / `actions.ts` — apply `worldEffect` immediately on crisis resolution
 
 ## Day/Night Lighting
-- [ ] `WorldScene.ts` — in-game time state (0–23 driven by tick counter, 6 ticks per day)
-- [ ] Phaser camera tint lerp: dawn #ffcc88, midday #ffffff, dusk #cc8833, night #1a1040
+- [x] `WorldScene.ts` — in-game time state (tick-based, 2-minute real-time cycle)
+- [x] Tint overlay rectangle (depth 90, scrollFactor 0) — 4 phases: dawn (warm peach α0.22) → midday (transparent) → dusk (amber α0.18) → night (indigo α0.40)
 - [ ] Streetlamp alpha overlay sprite (night-only, preload canvas texture)
 
 ## Map Expansion
-- [ ] Expand `buildMap()` to 64×80 tiles
+- [ ] Expand `buildMap()` to 64×80 tiles (currently 48×64)
 - [ ] North Transit Hub zone (rows 0–15): rail platform, ticket booth, cargo dock
 - [ ] East Canal zone (cols 35–47): flood dikes, Tool Library build node location
 - [ ] South Solar Quarter (rows 60–79): rooftop solar area, greenhouse garden node
 
 ## Ambient Life — Scraps the Cat
-- [ ] `ScrapsEntity.ts` — extends NPCEntity; 3 patrol waypoints (grocer/plaza/solar wall) by time-of-day
-- [ ] Proximity prompt: "[E] Pet Scraps 🐱"
-- [ ] Interaction: purr audio, floating heart particles (canvas tween), Stress −5
+- [x] `ScrapsEntity.ts` — plain class with 3 patrol waypoints, proximity prompt
+- [x] Proximity prompt: "[E] Pet Scraps 🐱"
+- [x] Interaction: purr audio, floating heart particles (canvas tween), Stress −5
 - [ ] Feed interaction (if cash > 0): Stress −10 buff flagged in store
-- [ ] `WorldScene.ts` — instantiate ScrapsEntity after character select
+- [x] `WorldScene.ts` — instantiate ScrapsEntity after character select
 
 ## Pigeon Entities
 - [ ] `PigeonEntity.ts` — simple scatter AI (flee vector on player approach < 2 tiles)

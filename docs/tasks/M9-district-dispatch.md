@@ -17,17 +17,17 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 - [ ] Curated vault: 25+ evergreen fallback scenarios in `crisis_scenarios.json` for 100% offline play
 
 ## Frontend Tasks
-- [ ] `BroadsheetModal.ts` — "The Daily District Ground" UI
+- [x] `BroadsheetModal.ts` — "The Daily District Ground" UI
   - CSS 3D unfold animation (rotateX 90° → 0°, 400ms)
   - Newsprint texture (CSS background: repeating halftone SVG)
   - Real-world headline citation badge with source pill
   - Sections: dynamic headline story, barometer row, NPC street quote, 4×4 mini-crossword (+5 energy on solve)
-- [ ] `RadioWidget.ts` — "Radio Free Commons" pirate FM tuner
+- [x] `RadioWidget.ts` — "Radio Free Commons" pirate FM tuner
   - SVG analog dial + needle indicator
   - 3 frequencies with label + audio profile switch
   - White noise static during tuning (bandpass audio node)
   - Amber LED display showing frequency + scrolling breaking news ticker
-- [ ] `advanceDay()` → trigger BroadsheetModal before new day begins (not blocking)
+- [x] `advanceDay()` → trigger BroadsheetModal before new day begins (not blocking)
 - [ ] Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`):
   - Fetches daily NPC gossip array from API
   - Replaces static one-liners with dynamic commentary on current inflation, recent crisis outcome, and district bloom state

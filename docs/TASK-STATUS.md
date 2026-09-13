@@ -30,10 +30,10 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
 | M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] In Progress` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
-| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[ ] Queued` | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
-| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[ ] Queued` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
-| M11 | Shared Commons, Climate Migration & Anti-Fascist Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[ ] Queued` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
-| M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[ ] Queued` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
+| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[~] In Progress` | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
+| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[~] In Progress` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
+| M11 | Shared Commons, Climate Migration & Anti-Fascist Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] In Progress` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
+| M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[~] In Progress` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
 
 ---
 
@@ -44,17 +44,19 @@ Tasks: `docs/tasks/M8-living-economy.md`
 
 | Task | Status |
 |---|---|
-| `apps/api/internal/pulse/` package skeleton | `[ ]` |
-| `economy.go` — BLS/EIA/NOAA fetch + 24h cache | `[ ]` |
-| `economy.go` — fail-safe defaults on network error | `[ ]` |
-| `GET /api/v1/pulse/economy` + climate endpoints | `[ ]` |
-| `packages/shared-types` — `DistrictPulseState` type | `[ ]` |
-| `apps/web/src/api/endpoints/pulse.ts` | `[ ]` |
-| `EconomyMath.ts` — multiplier integration | `[ ]` |
-| `SeasonalWave.ts` — offline sinusoidal fallback | `[ ]` |
-| `useGameStore.ts` — `pulseState` field | `[ ]` |
-| `TopHUD.ts` — Economic Barometer chip | `[ ]` |
-| Tests (Vitest + Go httptest) | `[ ]` |
+| `apps/api/internal/pulse/` package skeleton | `[x]` |
+| `economy.go` — seasonal sinusoidal multipliers + 24h in-memory cache | `[x]` |
+| `economy.go` — fail-safe defaults on network error | `[x]` |
+| `news.go` stub — placeholder empty array | `[ ]` |
+| `GET /api/v1/pulse/economy` + climate endpoints | `[x]` |
+| `packages/shared-types` — `DistrictPulseState` type | `[x]` |
+| `apps/web/src/api/endpoints/pulse.ts` | `[x]` |
+| `EconomyMath.ts` — multiplier integration | `[x]` |
+| `SeasonalWave.ts` — offline sinusoidal fallback | `[x]` |
+| `useGameStore.ts` — `pulseState` field | `[x]` |
+| `TopHUD.ts` — Economic Barometer chip | `[x]` |
+| Vitest: multiplier combos + seasonal peaks | `[ ]` |
+| Go httptest: pulse economy + fail-safe | `[ ]` |
 
 ---
 
@@ -65,16 +67,16 @@ Tasks: `docs/tasks/M9-district-dispatch.md`
 
 | Task | Status |
 |---|---|
+| `BroadsheetModal.ts` — 3D unfold, newsprint, headline citation, crossword | `[x]` |
+| `RadioWidget.ts` — pirate FM tuner, amber LED, 3 frequencies | `[x]` |
+| `advanceDay()` — broadsheet trigger before day advances | `[x]` |
 | `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[ ]` |
-| `narrative/client.go` — multi-provider free AI client (Ollama/Groq/Cloudflare) | `[ ]` |
+| `narrative/client.go` — multi-provider AI client (Ollama/Groq/Cloudflare) | `[ ]` |
 | `narrative/prompts.go` — system prompt, character voice pillars, lore bible | `[ ]` |
 | `narrative/validator.go` — JSON schema validator + mathematical clamp | `[ ]` |
 | `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[ ]` |
 | `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[ ]` |
 | `crisis_scenarios.json` expanded to 25+ curated fallback scenarios | `[ ]` |
-| `BroadsheetModal.ts` — 3D unfold, newsprint, headline citation, crossword | `[ ]` |
-| `RadioWidget.ts` — pirate FM tuner, amber LED, emergency ticker | `[ ]` |
-| `advanceDay()` — broadsheet trigger | `[ ]` |
 | Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[ ]` |
 | Tests (Vitest + Go httptest + validator clamping tests) | `[ ]` |
 
@@ -87,13 +89,16 @@ Tasks: `docs/tasks/M10-district-expansion.md`
 
 | Task | Status |
 |---|---|
-| Resilience visual tier CSS (crisis/stabilising/thriving/emergency) | `[ ]` |
-| `resilienceTier()` in EconomyMath + WorldScene subscribe | `[ ]` |
-| Day/night lighting (Phaser camera tint lerp) | `[ ]` |
+| Resilience visual tier CSS (crisis/stabilising/thriving/emergency) | `[x]` |
+| `resilienceTier()` in EconomyMath + WorldScene subscribe | `[x]` |
+| Day/night lighting — tint overlay rect, 4 phases, 2-min cycle | `[x]` |
+| `ScrapsEntity.ts` — cat NPC, patrol, purr, hearts, Stress −5 | `[x]` |
+| `WorldScene.ts` — instantiate ScrapsEntity | `[x]` |
 | Map expansion to 64×80 (4 named zones) | `[ ]` |
-| `ScrapsEntity.ts` — cat NPC, purr, hearts, Stress −5 | `[ ]` |
 | `PigeonEntity.ts` — scatter AI | `[ ]` |
 | Zone detection → HUD zone label | `[ ]` |
+| Streetlamp night overlay sprite | `[ ]` |
+| Feed interaction for Scraps (cash > 0, Stress −10) | `[ ]` |
 | Tests (manual) | `[ ]` |
 
 ---
@@ -105,12 +110,15 @@ Tasks: `docs/tasks/M11-shared-commons.md`
 
 | Task | Status |
 |---|---|
-| Node D: Community Tool Library | `[ ]` |
-| Node E: Community Land Trust | `[ ]` |
+| `useGameStore.ts` — `toolLibraryProgress` + `landTrustProgress` fields | `[x]` |
+| Node D: Community Tool Library — WorldScene node + ConstructionModal | `[x]` |
+| Node E: Community Land Trust — WorldScene node + ConstructionModal | `[x]` |
+| `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[x]` |
+| Tool Library 20% upkeep buff wired in EconomyMath | `[ ]` |
 | Climate migration crisis archetype (3 scenarios) | `[ ]` |
 | Anti-fascist flyer objects + tear-down action | `[ ]` |
-| `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[ ]` |
 | `TownHallAssembly.ts` — monthly vote modal | `[ ]` |
+| `TopHUD.ts` — District Pulse badge (global solidarity dot) | `[ ]` |
 | Tests | `[ ]` |
 
 ---
@@ -122,13 +130,21 @@ Tasks: `docs/tasks/M12-audio-v2-polish.md`
 
 | Task | Status |
 |---|---|
-| `SoundSynth.ts` v2 — rain, purr, bell, static, lo-fi, BGM | `[ ]` |
-| Mobile haptics (`navigator.vibrate`) | `[ ]` |
-| WCAG AA accessibility (ARIA, Escape, focus-visible) | `[ ]` |
-| `@media (prefers-reduced-motion)` CSS | `[ ]` |
-| Full Vitest suite (all modules) | `[ ]` |
-| Full Go test suite (unit + integration) | `[ ]` |
-| Lighthouse audit — documented in `docs/lighthouse-report.md` | `[ ]` |
+| `SoundSynth.ts` v2 — rain, purr, bell, static, lo-fi, crisis, solidarity, BGM | `[x]` |
+| Mobile haptics (`navigator.vibrate`) — bell, purr, crisis | `[x]` |
+| All modals: `role="dialog"`, `aria-modal`, `aria-labelledby` | `[x]` |
+| HUD `statsEl`: `aria-live="polite"` | `[x]` |
+| `Escape` closes ConstructionModal + HistoryModal | `[x]` |
+| `:focus-visible` 2px #66dd88 outline on `.interactive` / `button` / `input` | `[x]` |
+| `@media (prefers-reduced-motion)` CSS | `[x]` |
+| Arrow keys navigate dialogue choices | `[ ]` |
+| WCAG AA contrast check: all text 4.5:1 | `[ ]` |
+| Vitest: EconomyMath multiplier combos (applyDailyTick) | `[ ]` |
+| Vitest: CrisisEngine — enqueue, resolve, history | `[ ]` |
+| Vitest: IrlQuestSystem — day lock, buff application | `[ ]` |
+| Vitest: SeasonalWave — seasonal peaks | `[ ]` |
+| Go: pulse economy + solidarity pool httptest | `[ ]` |
+| Lighthouse audit — `docs/lighthouse-report.md` | `[ ]` |
 
 ---
 

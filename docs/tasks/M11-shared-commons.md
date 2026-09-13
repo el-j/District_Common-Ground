@@ -4,11 +4,11 @@ Stories: `docs/stories/EPIC-11-shared-commons.md`
 Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 
 ## New Construction Nodes
-- [ ] `useGameStore.ts` — add `toolLibraryProgress: number`, `landTrustProgress: number` to commons
-- [ ] Node D: Community Tool Library (East Canal) — reduces appliance repair upkeep by 20%
-- [ ] Node E: Community Land Trust — locks buildings; when 100% unlocks "Safe Haven" ending state
-- [ ] `WorldScene.ts` — add Node D and Node E interactive objects in East Canal zone
-- [ ] `ConstructionModal.ts` — extend to cover all 5 nodes
+- [x] `useGameStore.ts` — add `toolLibraryProgress: number`, `landTrustProgress: number` to commons
+- [x] Node D: Community Tool Library (East Canal) — interactive node in WorldScene; 20% upkeep reduction not yet wired in EconomyMath
+- [x] Node E: Community Land Trust — interactive node in WorldScene
+- [x] `WorldScene.ts` — Node D and Node E added as construction nodes
+- [x] `ConstructionModal.ts` — extended to cover all 5 nodes (BuildProgressKey includes toolLibraryProgress + landTrustProgress)
 
 ## Climate Migration Events
 - [ ] New crisis archetype: `MIGRATION_SANCT` scenarios in `crisis_scenarios.json` (3 authored)
@@ -23,8 +23,8 @@ Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 - [ ] Alert community network option → Stress −10 across block
 
 ## Global Solidarity Pool (Go Backend)
-- [ ] `apps/api/internal/save/solidarity_pool.go` — aggregate anonymous solidarity choices
-- [ ] `GET /api/v1/district/resilience` — returns global community index (cached 1h)
+- [x] `apps/api/internal/save/solidarity_pool.go` — aggregate anonymous solidarity choices from crisis_log
+- [x] `GET /api/v1/district/resilience` — returns global community index (cached 1h)
 - [ ] `TopHUD.ts` — "District Pulse" badge: global solidarity tier shown as coloured dot
 
 ## End-of-Month Assembly

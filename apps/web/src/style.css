@@ -1357,6 +1357,76 @@ input:focus-visible {
   z-index: 80;
 }
 
+/* ── Quest button ────────────────────────────────────────── */
+
+.quest-open-btn {
+  position: absolute;
+  right: 7.6rem;
+  bottom: 0.85rem;
+  pointer-events: auto;
+  border: 1px solid #2d2d44;
+  background: rgba(12, 12, 22, 0.85);
+  color: #aaaacc;
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.quest-open-btn:hover {
+  background: rgba(24, 24, 44, 0.95);
+  border-color: #5555aa;
+}
+
+/* ── New-game section in Settings ────────────────────────── */
+
+.settings-new-game {
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid #2d2d44;
+}
+.new-game-btn {
+  width: 100%;
+  font-size: 0.8rem;
+}
+.new-game-confirm-text {
+  font-size: 0.8rem;
+  color: #ff8866;
+  margin-bottom: 0.5rem;
+}
+.new-game-confirm-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+.new-game-yes {
+  flex: 1;
+  background: #a03020 !important;
+  border-color: #ff8866 !important;
+}
+.new-game-cancel {
+  flex: 1;
+}
+
+/* ── Construction modal resource hints ───────────────────── */
+
+.build-resources-hint {
+  font-size: 0.75rem;
+  color: #8888aa;
+  margin-bottom: 0.5rem;
+}
+.build-complete-msg {
+  font-size: 0.8rem;
+  color: #44cc88;
+  margin: 0.5rem 0 0.8rem;
+  text-align: center;
+}
+.build-error {
+  font-size: 0.75rem;
+  color: #ff8866;
+  margin: 0.3rem 0 0;
+}
+
 /* ── Prefers reduced motion ──────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

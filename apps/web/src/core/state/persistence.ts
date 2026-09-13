@@ -58,6 +58,14 @@ export async function loadSave(): Promise<void> {
   }
 }
 
+export async function clearSave(): Promise<void> {
+  try {
+    await set(SAVE_KEY, undefined);
+  } catch {
+    // best effort
+  }
+}
+
 export async function saveToDB(state: GameState): Promise<void> {
   try {
     await set(SAVE_KEY, state);

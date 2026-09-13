@@ -23,6 +23,9 @@ export class ConstructionModal {
     const state = useGameStore.getState();
     const current = state.commons[progressKey];
 
+    const { cash: playerCash, energy: playerEnergy } = state.player;
+    const completed = current >= 100;
+
     this.el = document.createElement('div');
     this.el.className = 'construction-modal';
     this.el.innerHTML = `
@@ -32,22 +35,27 @@ export class ConstructionModal {
           <button class="construction-close" type="button" aria-label="Close build panel">×</button>
         </div>
         <div class="construction-progress-wrap">
-          <div class="construction-progress-label">Progress ${Math.round(current)}%</div>
+          <div class="construction-progress-label">${completed ? '✅ Complete!' : `Progress ${Math.round(current)}%`}</div>
           <div class="construction-progress-bar">
-            <div class="construction-progress-fill" style="width:${current}%"></div>
+            <div class="construction-progress-fill" style="width:${current}%${completed ? ';background:#44cc88' : ''}"></div>
           </div>
         </div>
-        <form class="construction-form">
-          <label>
-            <span>Cash</span>
-            <input type="number" min="0" step="5" value="0" name="cash" />
-          </label>
-          <label>
-            <span>Energy</span>
-            <input type="number" min="0" step="5" value="0" name="energy" />
-          </label>
-          <button type="submit" class="construction-submit">Confirm</button>
-        </form>
+        ${completed
+          ? `<p class="build-complete-msg">This building is fully funded. The community benefits every day.</p>`
+          : `<p class="build-resources-hint">You have: 💰 $${playerCash} &nbsp; ⚡ ${playerEnergy}</p>
+             <form class="construction-form">
+               <label>
+                 <span>Contribute Cash ($${playerCash} available)</span>
+                 <input type="number" min="0" max="${playerCash}" step="5" value="0" name="cash" />
+               </label>
+               <label>
+                 <span>Contribute Energy (${playerEnergy} available)</span>
+                 <input type="number" min="0" max="${playerEnergy}" step="5" value="0" name="energy" />
+               </label>
+               <p class="build-error" hidden></p>
+               <button type="submit" class="construction-submit"${playerCash <= 0 && playerEnergy <= 0 ? ' disabled' : ''}>Contribute</button>
+             </form>`
+        }
       </div>
     `;
 
@@ -64,10 +72,13 @@ export class ConstructionModal {
     document.addEventListener('keydown', onKey);
 
     const form = this.el.querySelector<HTMLFormElement>('.construction-form');
-    form?.addEventListener('submit', (event) => {
+    if (!form) return;
+
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
       const cashField = form.elements.namedItem('cash') as HTMLInputElement | null;
       const energyField = form.elements.namedItem('energy') as HTMLInputElement | null;
+      const errorEl = form.querySelector<HTMLElement>('.build-error');
 
       const cash = Number(cashField?.value ?? '0');
       const energy = Number(energyField?.value ?? '0');
@@ -80,6 +91,16 @@ export class ConstructionModal {
       }
 
       const state = useGameStore.getState();
+      const { cash: playerCash, energy: playerEnergy } = state.player;
+
+      if (safeCash > playerCash || safeEnergy > playerEnergy) {
+        if (errorEl) {
+          errorEl.textContent = "You don't have enough resources.";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
       const current = state.commons[this.progressKey];
       const totalProgress = (safeCash / 25) + (safeEnergy / 20);
       const nextProgress = Math.min(100, current + totalProgress);

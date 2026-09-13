@@ -1,6 +1,7 @@
 import { useGameStore, type GameState } from '../core/state/useGameStore';
 import { advanceDay } from '../core/state/actions';
 import { SettingsModal } from './SettingsModal';
+import { QuestModal } from './QuestModal';
 import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
@@ -19,6 +20,7 @@ export class TopHUD {
   private shareBtn: HTMLButtonElement;
   private radioBtn: HTMLButtonElement;
   private muteBtn: HTMLButtonElement;
+  private questBtn: HTMLButtonElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private scene?: Phaser.Scene;
@@ -109,6 +111,16 @@ export class TopHUD {
       this.muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
     });
     root.appendChild(this.muteBtn);
+
+    // Daily quests button
+    this.questBtn = document.createElement('button');
+    this.questBtn.type = 'button';
+    this.questBtn.className = 'quest-open-btn interactive';
+    this.questBtn.textContent = '📋';
+    this.questBtn.hidden = true;
+    this.questBtn.setAttribute('aria-label', 'Daily Quests');
+    this.questBtn.addEventListener('click', () => new QuestModal(root));
+    root.appendChild(this.questBtn);
 
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
@@ -202,6 +214,7 @@ export class TopHUD {
       this.shareBtn.hidden = true;
       this.radioBtn.hidden = true;
       this.muteBtn.hidden = true;
+      this.questBtn.hidden = true;
       return;
     }
 
@@ -211,6 +224,7 @@ export class TopHUD {
     this.shareBtn.hidden = false;
     this.radioBtn.hidden = false;
     this.muteBtn.hidden = false;
+    this.questBtn.hidden = false;
     // pulseBadgeEl visibility controlled by fetchPulseBadge response
 
     const roleLabel = player.classRole

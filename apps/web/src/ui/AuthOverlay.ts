@@ -47,6 +47,15 @@ export class AuthOverlay {
       const email = (form.querySelector<HTMLInputElement>('[name=email]')!).value.trim();
       const password = (form.querySelector<HTMLInputElement>('[name=password]')!).value;
 
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('Please enter a valid email address.');
+        return;
+      }
+      if (password.length < 8) {
+        showError('Password must be at least 8 characters.');
+        return;
+      }
+
       try {
         const fn = action === 'login' ? login : register;
         const { token } = await fn(email, password);
@@ -54,9 +63,10 @@ export class AuthOverlay {
         this.dismiss();
       } catch (err) {
         if (err instanceof ApiError) {
-          showError(err.status === 409 ? 'Email already registered.' :
+          showError(err.status === 409 ? 'Email already registered. Try signing in.' :
                     err.status === 401 ? 'Wrong email or password.' :
-                    `Error ${err.status} — try again.`);
+                    err.status === 400 ? 'Invalid email or password too short (8+ chars).' :
+                    `Server error — try again.`);
         } else {
           showError('Network error — check your connection.');
         }

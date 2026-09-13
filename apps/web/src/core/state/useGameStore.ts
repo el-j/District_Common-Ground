@@ -55,7 +55,7 @@ export interface GameState {
   pulseState: DistrictPulseState | null;
 }
 
-const INITIAL_STATE: GameState = {
+export const INITIAL_STATE: GameState = {
   meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select', lastAssemblyDay: 0 },
   player: {
     classRole: null,

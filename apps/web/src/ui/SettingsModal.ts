@@ -1,8 +1,8 @@
 import { switchSkin, getActiveSkinId } from '../skins/ThemeManager';
-import { getQuestsForToday, completeQuest, type QuestDefinition } from '../core/simulation/IrlQuestSystem';
-import { type QuestId } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
+import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
+import { clearSave } from '../core/state/persistence';
 
 const SKINS = [
   {
@@ -23,8 +23,8 @@ const SKINS = [
 
 export class SettingsModal {
   private readonly el: HTMLElement;
-  private tab: 'skins' | 'quests' = 'skins';
   private scene?: Phaser.Scene;
+  private confirmNewGame = false;
 
   constructor(root: HTMLElement, scene?: Phaser.Scene, onClose?: () => void) {
     this.scene = scene;
@@ -38,14 +38,12 @@ export class SettingsModal {
 
     this.render();
 
-    // Close on backdrop click
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close(onClose);
     });
   }
 
   private render(): void {
-    const quests = getQuestsForToday();
     const activeSkin = getActiveSkinId();
 
     this.el.innerHTML = `
@@ -54,18 +52,18 @@ export class SettingsModal {
           <span class="settings-title">⚙ Settings</span>
           <button class="settings-close" type="button" aria-label="Close">×</button>
         </div>
-
-        <div class="settings-tabs">
-          <button class="settings-tab ${this.tab === 'skins' ? 'settings-tab--active' : ''}" data-tab="skins" type="button">
-            🎨 Skins
-          </button>
-          <button class="settings-tab ${this.tab === 'quests' ? 'settings-tab--active' : ''}" data-tab="quests" type="button">
-            📋 Daily Quests
-          </button>
-        </div>
-
         <div class="settings-body">
-          ${this.tab === 'skins' ? this.renderSkins(activeSkin) : this.renderQuests(quests)}
+          ${this.renderSkins(activeSkin)}
+          <div class="settings-new-game">
+            ${this.confirmNewGame
+              ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
+                 <div class="new-game-confirm-btns">
+                   <button class="construction-submit new-game-yes" type="button">Yes, start over</button>
+                   <button class="auth-btn auth-btn--secondary new-game-cancel" type="button">Cancel</button>
+                 </div>`
+              : `<button class="auth-btn auth-btn--secondary new-game-btn" type="button">🔄 New Game</button>`
+            }
+          </div>
         </div>
       </div>
     `;
@@ -108,43 +106,9 @@ export class SettingsModal {
     `;
   }
 
-  private renderQuests(quests: (QuestDefinition & { available: boolean })[]): string {
-    return `
-      <div class="quest-list">
-        <p class="quest-subtitle">Complete real-world actions for in-game buffs. Resets each morning.</p>
-        ${quests.map(q => `
-          <div class="quest-row ${q.available ? '' : 'quest-row--done'}">
-            <span class="quest-icon">${q.icon}</span>
-            <div class="quest-text">
-              <span class="quest-title">${q.title}</span>
-              <span class="quest-desc">${q.description}</span>
-              <span class="quest-reward">Reward: ${q.reward}</span>
-            </div>
-            <button
-              class="quest-btn interactive ${q.available ? '' : 'quest-btn--done'}"
-              data-quest="${q.questId}"
-              type="button"
-              ${q.available ? '' : 'disabled'}
-            >
-              ${q.available ? 'Done! ✓' : '✓ Claimed'}
-            </button>
-          </div>
-        `).join('')}
-      </div>
-    `;
-  }
-
   private bindEvents(): void {
     this.el.querySelector<HTMLButtonElement>('.settings-close')
       ?.addEventListener('click', () => this.close());
-
-    this.el.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        playUIClick();
-        this.tab = btn.dataset['tab'] as 'skins' | 'quests';
-        this.render();
-      });
-    });
 
     this.el.querySelectorAll<HTMLButtonElement>('[data-skin]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -154,14 +118,28 @@ export class SettingsModal {
       });
     });
 
-    this.el.querySelectorAll<HTMLButtonElement>('[data-quest]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.disabled) return;
+    this.el.querySelector<HTMLButtonElement>('.new-game-btn')
+      ?.addEventListener('click', () => {
         playUIClick();
-        completeQuest(btn.dataset['quest'] as QuestId);
+        this.confirmNewGame = true;
         this.render();
       });
-    });
+
+    this.el.querySelector<HTMLButtonElement>('.new-game-yes')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        void clearSave().then(() => {
+          useGameStore.setState(INITIAL_STATE);
+          this.close();
+        });
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.new-game-cancel')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        this.confirmNewGame = false;
+        this.render();
+      });
   }
 
   private close(cb?: () => void): void {

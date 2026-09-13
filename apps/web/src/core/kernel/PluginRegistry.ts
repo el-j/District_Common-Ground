@@ -6,8 +6,10 @@ import type {
   MinigameRole,
 } from '@district-cg/shared-types';
 import { listGames, type ServerGameManifest } from '../../api/endpoints/games';
-import { MinigameLoader } from './MinigameLoader';
 import { inspectBundleManifest } from './PluginSandbox';
+import { SandboxedPluginRuntime } from './SandboxedPluginRuntime';
+import type { HostPlatformCallbacks } from './HostPlatformAPI';
+import { useGameStore } from '../state/useGameStore';
 
 const INDEX_KEY = 'dcg-installed-plugin-index';
 const BUNDLE_KEY_PREFIX = 'dcg-installed-plugin-bundle:';
@@ -50,15 +52,6 @@ export interface PluginInstallResult {
 export interface PluginCatalogSnapshot {
   installed: InstalledPluginRecord[];
   serverGames: ServerGameManifest[];
-}
-
-type BundleModule = MinigameModule & { manifest?: MinigameManifest };
-
-interface MinigameModule {
-  createMinigame(): {
-    mount(container: HTMLElement, context: unknown): Promise<void>;
-    unmount(): Promise<void>;
-  };
 }
 
 function nowIso(): string {
@@ -105,19 +98,6 @@ async function sha256(text: string): Promise<string> {
   return toHex(digest);
 }
 
-async function importTrustedBundle(bundleText: string, label: string): Promise<BundleModule> {
-  const blob = new Blob([bundleText], { type: 'text/javascript' });
-  const blobUrl = URL.createObjectURL(blob);
-  try {
-    const module = await import(/* @vite-ignore */ blobUrl) as BundleModule;
-    if (typeof module.createMinigame !== 'function') {
-      throw new Error(`Plugin bundle ${label} does not export createMinigame()`);
-    }
-    return module;
-  } finally {
-    URL.revokeObjectURL(blobUrl);
-  }
-}
 
 async function readIndex(): Promise<InstalledPluginRecord[]> {
   try {
@@ -158,11 +138,6 @@ function compareVersions(left: string, right: string): number {
   return 0;
 }
 
-async function registerLoadedModule(manifest: MinigameManifest, module: BundleModule): Promise<void> {
-  MinigameLoader.registerLocalMinigame(manifest.id, cloneManifest(manifest), async () => ({
-    createMinigame: module.createMinigame,
-  }));
-}
 
 function createRecord(manifest: MinigameManifest, bundleSha256: string, sourceKind: PluginSourceKind, manifestUrl?: string): InstalledPluginRecord {
   const timestamp = nowIso();
@@ -246,35 +221,20 @@ async function fetchBundleFromManifest(manifestUrl: string, entrypointUrl: strin
 export async function bootstrapInstalledPlugins(): Promise<PluginCatalogSnapshot> {
   const installed = await readIndex();
   for (const record of installed) {
-    if (record.trustLevel !== 'trusted') {
-      continue;
+    await compareWithServer(record);
+    if (record.serverStatus === 'missing' && record.trustLevel === 'trusted') {
+      record.trustLevel = 'review-needed';
+      record.updatedAt = nowIso();
     }
-    const bundleText = await loadBundleText(record);
-    if (!bundleText) {
-      continue;
-    }
-    try {
-      const module = await importTrustedBundle(bundleText, record.id);
-      const manifest = module.manifest ?? {
-        id: record.id,
-        version: record.version,
-        title: record.title,
-        description: record.description,
-        category: record.category,
-        thumbnailUrl: record.thumbnailUrl,
-        entrypointUrl: record.entrypointUrl,
-        permissions: record.permissions,
-        requiredRole: record.requiredRole,
-        targetHardware: record.targetHardware,
-      };
-      await registerLoadedModule(cloneManifest(manifest), module);
-    } catch {
-      MinigameLoader.unregisterMinigame(record.id);
+    if (record.serverStatus !== 'missing' && record.trustLevel !== 'trusted') {
+      record.trustLevel = 'trusted';
+      record.updatedAt = nowIso();
     }
   }
 
+  await writeIndex(installed);
   const serverGames = await listGames().catch(() => []);
-  return { installed: await readIndex(), serverGames };
+  return { installed, serverGames };
 }
 
 export async function installPluginFromManifestUrl(manifestUrl: string): Promise<PluginInstallResult> {
@@ -313,7 +273,7 @@ export async function refreshInstalledPlugins(): Promise<InstalledPluginRecord[]
     await compareWithServer(record);
     if (record.serverStatus === 'missing' && record.trustLevel === 'trusted') {
       record.trustLevel = 'review-needed';
-      MinigameLoader.unregisterMinigame(record.id);
+      record.updatedAt = nowIso();
     }
     if (record.serverStatus !== 'missing' && record.trustLevel !== 'trusted') {
       record.trustLevel = 'trusted';
@@ -389,7 +349,62 @@ export async function removeInstalledPlugin(id: string): Promise<void> {
   if (record) {
     await del(record.bundleStorageKey);
   }
-  MinigameLoader.unregisterMinigame(id);
+}
+
+export async function launchInstalledPlugin(
+  id: string,
+  callbacks: HostPlatformCallbacks = {},
+  parent: HTMLElement = document.body,
+): Promise<SandboxedPluginRuntime> {
+  const record = (await readIndex()).find(item => item.id === id);
+  if (!record) {
+    throw new Error(`Plugin "${id}" is not installed.`);
+  }
+  if (record.trustLevel !== 'trusted') {
+    throw new Error(`Plugin "${id}" has not been approved yet.`);
+  }
+
+  const bundleText = await loadBundleText(record);
+  if (!bundleText) {
+    throw new Error(`Plugin bundle for "${id}" is unavailable.`);
+  }
+
+  const state = useGameStore.getState();
+  const runtime = new SandboxedPluginRuntime({
+    manifest: {
+      id: record.id,
+      version: record.version,
+      title: record.title,
+      description: record.description,
+      category: record.category,
+      thumbnailUrl: record.thumbnailUrl,
+      entrypointUrl: record.entrypointUrl,
+      permissions: record.permissions,
+      requiredRole: record.requiredRole,
+      targetHardware: record.targetHardware,
+      sourceUrl: record.sourceUrl,
+      bundleSha256: record.bundleSha256,
+    },
+    bundleText,
+    sessionContext: {
+      sessionId: `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      sessionToken: 'local_offline_token',
+      userId: 'local_player',
+      archetype: state.player.classRole ?? 'pip',
+      activeSkin: state.meta.activeSkin,
+      day: state.meta.day,
+      currentStats: {
+        cash: state.player.cash,
+        energy: state.player.energy,
+        socialTrust: state.player.socialTrust,
+        stressLevel: state.player.stressLevel,
+      },
+    },
+    callbacks,
+  });
+
+  await runtime.mount(parent);
+  return runtime;
 }
 
 export async function getPluginCatalogSnapshot(): Promise<PluginCatalogSnapshot> {

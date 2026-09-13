@@ -1,10 +1,10 @@
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
-import { MinigameLoader } from '../core/kernel/MinigameLoader';
 import {
   getPluginCatalogSnapshot,
   installPluginFromBundleFile,
   installPluginFromManifestUrl,
+  launchInstalledPlugin,
   refreshInstalledPlugins,
   removeInstalledPlugin,
   type InstalledPluginRecord,
@@ -266,7 +266,7 @@ export class PluginManagerModal {
       });
       card.querySelector<HTMLButtonElement>('[data-action=launch]')?.addEventListener('click', () => {
         if (!pluginId) return;
-        void MinigameLoader.launchMinigame(pluginId, {}, this.el.parentElement ?? document.body).catch(err => {
+        void launchInstalledPlugin(pluginId, {}, this.el.parentElement ?? document.body).catch(err => {
           this.setStatus(err instanceof Error ? err.message : 'Failed to launch plugin.', 'error');
         });
       });

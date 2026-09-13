@@ -5,13 +5,15 @@ services:
 
   api:
     build:
-      context: ./apps/api
+      context: .
+      dockerfile: ./apps/api/Dockerfile
       target: builder
-    command: go run ./cmd/server
+    command: sh -c "cd apps/api && go run ./cmd/server"
     ports:
       - "8080:8080"
     volumes:
-      - ./apps/api:/app
+      - ./apps/api:/app/apps/api
+      - ./packages/go:/app/packages/go
     environment:
       GO_ENV: development
 

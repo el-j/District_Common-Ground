@@ -1,10 +1,22 @@
 # Stage 1: build
+# Build context is the monorepo root so that packages/go/ (local plugin modules)
+# are available alongside apps/api/ — required for go.mod replace directives.
 FROM golang:1.26-alpine AS builder
 WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o server ./cmd/server
+
+# Copy go.mod/go.sum first for layer caching.
+COPY apps/api/go.mod apps/api/go.sum ./apps/api/
+
+# Copy the local Go plugin modules referenced by replace directives in go.mod.
+# These must be present before `go mod download` so the replace paths resolve.
+COPY packages/go/ ./packages/go/
+
+# Download dependencies (replace paths now resolvable inside the build).
+RUN cd apps/api && go mod download
+
+# Copy the full API source and build.
+COPY apps/api/ ./apps/api/
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -C apps/api -o /app/server ./cmd/server
 
 # Stage 2: wget for health check (separate layer — no Go toolchain in final image)
 FROM alpine:3.21 AS health

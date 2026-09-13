@@ -15,12 +15,16 @@ import (
 	"github.com/district-cg/api/internal/kernel"
 	"github.com/district-cg/api/internal/middleware"
 	"github.com/district-cg/api/internal/narrative"
-	_ "github.com/district-cg/api/internal/plugins" // self-registers minigame plugins into kernel.DefaultRegistry
+	"github.com/district-cg/api/internal/plugins" // plugin manifest: RegisterAll() wires minigames
 	"github.com/district-cg/api/internal/pulse"
 	"github.com/district-cg/api/internal/save"
 )
 
 func main() {
+	// Register all standalone minigame plugins into the kernel before anything else.
+	// To add a new plugin, edit internal/plugins/register.go only — nothing here changes.
+	plugins.RegisterAll()
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("config: %v", err)

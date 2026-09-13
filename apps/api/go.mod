@@ -3,13 +3,23 @@ module github.com/district-cg/api
 go 1.25.0
 
 require (
+	github.com/district-cg/kernel-contracts v0.1.0
+	github.com/district-cg/plugin-courier-rush v0.1.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.2
 	github.com/jackc/pgx/v5 v5.7.5
-	github.com/testcontainers/testcontainers-go v0.37.0
+	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
 	golang.org/x/crypto v0.51.0
+)
+
+// Monorepo-local plugin modules. These replace directives point to the workspace
+// packages so no external publishing is needed during development. Each plugin
+// lives in packages/go/<name>/ as a standalone Go module.
+replace (
+	github.com/district-cg/kernel-contracts => ../../packages/go/kernel-contracts
+	github.com/district-cg/plugin-courier-rush => ../../packages/go/plugin-courier-rush
 )
 
 require (
@@ -57,7 +67,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/shirou/gopsutil/v4 v4.25.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/testcontainers/testcontainers-go v0.37.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect

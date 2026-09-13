@@ -28,6 +28,12 @@ export interface CrisisScenario {
 
 export const scenarios: CrisisScenario[] = scenariosRaw as CrisisScenario[];
 
+export function addDynamicScenario(s: CrisisScenario): void {
+  if (!scenarios.find(existing => existing.id === s.id)) {
+    scenarios.push(s);
+  }
+}
+
 // Module-level state (not persisted — resets on page reload; historyLog is the truth)
 let scapegoatStreak = 0;
 let lastCrisisDay = 0;

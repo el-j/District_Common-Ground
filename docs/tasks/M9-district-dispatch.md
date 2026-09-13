@@ -28,15 +28,16 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
   - White noise static during tuning (bandpass audio node)
   - Amber LED display showing frequency + scrolling breaking news ticker
 - [x] `advanceDay()` → trigger BroadsheetModal before new day begins (not blocking)
-- [ ] Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`):
-  - Fetches daily NPC gossip array from API
-  - Replaces static one-liners with dynamic commentary on current inflation, recent crisis outcome, and district bloom state
-  - Offline fallback to authored archetype lines
+- [x] Dynamic NPC Rumor Mill (`NPCEntity.ts`, `WorldScene.ts`, `narrativeGossip.ts`):
+  - Fetches daily NPC gossip from `/api/v1/narrative/daily-scenarios`
+  - Session-cached (1h TTL), each NPC gets archetype-matched line
+  - "Heard anything lately?" branch injected into NPC dialogue tree at runtime
+  - Offline fallback to authored archetype lines per NPC (mira/leo/elena × 7 archetypes)
 
 ## Tests
-- [ ] Vitest: BroadsheetModal renders dynamic scenario JSON without throwing
-- [ ] Vitest: CrisisEngine parses and applies dynamic AI scenario stat deltas within clamp bounds
-- [ ] Go test: `validator_test.go` verifies malformed or out-of-bounds LLM responses are rejected
-- [ ] Go httptest: `/api/v1/narrative/daily-scenarios` returns valid scenario matching schema
-- [ ] Go httptest: fallback to curated vault works when AI provider returns 500 or times out
+- [x] Vitest: BroadsheetModal renders dynamic scenario JSON without throwing (`BroadsheetModal.test.ts`)
+- [x] Vitest: CrisisEngine parses and applies dynamic AI scenario stat deltas within clamp bounds (`CrisisEngine.dynamic.test.ts`)
+- [x] Go test: `validator_test.go` verifies malformed or out-of-bounds LLM responses are rejected (16 tests)
+- [x] Go httptest: `/api/v1/narrative/daily-scenarios` returns valid scenario matching schema
+- [x] Go httptest: fallback returns 200 valid JSON when AI provider returns 500
 - [ ] Manual: advance day → broadsheet unfolds with dynamic story → close → talk to Sal → hear dynamic rumor

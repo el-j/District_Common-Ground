@@ -9,11 +9,20 @@ export interface NPCDefinition {
 
 export class NPCEntity {
   private active = false;
+  private _gossipLine: string | null = null;
 
   constructor(
     private readonly definition: NPCDefinition,
     private readonly onChange: (id: string, active: boolean) => void,
   ) {}
+
+  setGossip(line: string): void {
+    this._gossipLine = line;
+  }
+
+  get gossipLine(): string | null {
+    return this._gossipLine;
+  }
 
   update(playerX: number, playerY: number): void {
     const dx = playerX - this.definition.position.x;

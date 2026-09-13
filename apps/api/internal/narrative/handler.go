@@ -46,13 +46,15 @@ func (h *Handler) HandleDailyScenarios(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fall back: check DB cache for recent scenarios
-	var scenarios []*DynamicScenario
+	scenarios := make([]*DynamicScenario, 0)
 	if scenario != nil {
-		if dbErr := UpsertScenario(ctx, h.pool, scenario); dbErr != nil {
-			slog.Warn("narrative upsert", "err", dbErr)
+		if h.pool != nil {
+			if dbErr := UpsertScenario(ctx, h.pool, scenario); dbErr != nil {
+				slog.Warn("narrative upsert", "err", dbErr)
+			}
 		}
 		scenarios = []*DynamicScenario{scenario}
-	} else {
+	} else if h.pool != nil {
 		cached, dbErr := GetRecentScenarios(ctx, h.pool, 5)
 		if dbErr != nil {
 			slog.Warn("narrative cached fetch", "err", dbErr)

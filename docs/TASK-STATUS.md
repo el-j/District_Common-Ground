@@ -47,7 +47,7 @@ Tasks: `docs/tasks/M8-living-economy.md`
 | `apps/api/internal/pulse/` package skeleton | `[x]` |
 | `economy.go` — seasonal sinusoidal multipliers + 24h in-memory cache | `[x]` |
 | `economy.go` — fail-safe defaults on network error | `[x]` |
-| `news.go` stub — placeholder empty array | `[ ]` |
+| `news.go` stub — placeholder empty array | `[x]` |
 | `GET /api/v1/pulse/economy` + climate endpoints | `[x]` |
 | `packages/shared-types` — `DistrictPulseState` type | `[x]` |
 | `apps/web/src/api/endpoints/pulse.ts` | `[x]` |
@@ -55,8 +55,8 @@ Tasks: `docs/tasks/M8-living-economy.md`
 | `SeasonalWave.ts` — offline sinusoidal fallback | `[x]` |
 | `useGameStore.ts` — `pulseState` field | `[x]` |
 | `TopHUD.ts` — Economic Barometer chip | `[x]` |
-| Vitest: multiplier combos + seasonal peaks | `[ ]` |
-| Go httptest: pulse economy + fail-safe | `[ ]` |
+| Vitest: multiplier combos + seasonal peaks | `[x]` |
+| Go httptest: pulse economy + fail-safe | `[x]` |
 
 ---
 
@@ -70,15 +70,15 @@ Tasks: `docs/tasks/M9-district-dispatch.md`
 | `BroadsheetModal.ts` — 3D unfold, newsprint, headline citation, crossword | `[x]` |
 | `RadioWidget.ts` — pirate FM tuner, amber LED, 3 frequencies | `[x]` |
 | `advanceDay()` — broadsheet trigger before day advances | `[x]` |
-| `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[ ]` |
-| `narrative/client.go` — multi-provider AI client (Ollama/Groq/Cloudflare) | `[ ]` |
-| `narrative/prompts.go` — system prompt, character voice pillars, lore bible | `[ ]` |
-| `narrative/validator.go` — JSON schema validator + mathematical clamp | `[ ]` |
-| `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[ ]` |
-| `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[ ]` |
-| `crisis_scenarios.json` expanded to 25+ curated fallback scenarios | `[ ]` |
+| `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[x]` |
+| `narrative/client.go` — multi-provider AI client (Ollama/Groq/Cloudflare) | `[x]` |
+| `narrative/prompts.go` — system prompt, character voice pillars, lore bible | `[x]` |
+| `narrative/validator.go` — JSON schema validator + mathematical clamp | `[x]` |
+| `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[x]` |
+| `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[x]` |
+| `crisis_scenarios.json` expanded to 25+ curated fallback scenarios | `[x]` |
 | Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[ ]` |
-| Tests (Vitest + Go httptest + validator clamping tests) | `[ ]` |
+| Tests (Vitest + Go httptest + validator clamping tests) | `[~]` |
 
 ---
 

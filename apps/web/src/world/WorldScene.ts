@@ -15,6 +15,7 @@ import { useGameStore } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
 import { addTrust, spendEnergy, reduceStress } from '../core/state/actions';
 import { startBGMLoop } from '../core/audio/SoundSynth';
+import { fetchDailyGossip } from '../api/narrativeGossip';
 
 const TS = 16;
 const COLS = 64;
@@ -455,6 +456,14 @@ export class WorldScene extends Phaser.Scene {
       this.npcSprites.set(npc.id, img);
     });
 
+    // Fetch daily gossip and inject into NPC dialogue trees
+    void fetchDailyGossip().then(gossipMap => {
+      this.npcs.forEach(npc => {
+        const line = gossipMap[npc.id];
+        if (line) npc.setGossip(line);
+      });
+    });
+
     // Zone labels
     const lStyle = { fontFamily: 'monospace', fontSize: '9px', color: '#555577', alpha: 0.6 };
     this.add.text(COLS/2*TS, 1*TS+4,  '— NORTH — TRANSIT HUB —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
@@ -774,7 +783,29 @@ export class WorldScene extends Phaser.Scene {
     const uiRoot = document.getElementById('ui-root');
     if (!uiRoot) return;
     this.dialogueOpen = true;
-    const tree = DIALOGUES[npc.dialogueKey] ?? DIALOGUES['mira_intro'];
+
+    const baseTree = DIALOGUES[npc.dialogueKey] ?? DIALOGUES['mira_intro'];
+    const tree: typeof baseTree = { ...baseTree };
+
+    const gossip = npc.gossipLine;
+    if (gossip) {
+      const gossipKey = `${npc.dialogueKey}_rumor`;
+      const startNode = tree[npc.dialogueKey];
+      if (startNode) {
+        tree[npc.dialogueKey] = {
+          ...startNode,
+          responses: [
+            ...startNode.responses,
+            { label: 'Heard anything lately?', next: gossipKey },
+          ],
+        };
+      }
+      tree[gossipKey] = {
+        text: gossip,
+        responses: [{ label: 'Good to know', next: null }],
+      };
+    }
+
     new DialogueOverlay(uiRoot, tree, npc.dialogueKey, npc.name, () => { this.dialogueOpen = false; WorldScene.hud?.hideAction(); });
   }
 

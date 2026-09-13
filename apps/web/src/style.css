@@ -1093,3 +1093,165 @@
     filter: grayscale(0.85) sepia(0.4) brightness(0.7);
   }
 }
+
+/* ── Economic Barometer chip ──────────────────────────────── */
+
+#hud-barometer {
+  display: flex;
+  gap: 6px;
+  padding: 2px 8px 4px;
+}
+
+.baro-chip {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.baro--ok   { background: rgba(60,80,50,0.7); color: #88cc88; }
+.baro--high { background: rgba(80,30,20,0.8); color: #ff8888; }
+.baro--low  { background: rgba(30,60,30,0.7); color: #66ee88; }
+
+/* ── Radio button (bottom-right near share) ───────────────── */
+
+.radio-open-btn {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 7rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15,25,12,0.85);
+  backdrop-filter: blur(4px);
+  font-size: 1rem;
+  cursor: pointer;
+  color: #cce8cc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.radio-open-btn:focus-visible {
+  outline: 2px solid #66dd88;
+  outline-offset: 2px;
+}
+
+/* ── RadioWidget ──────────────────────────────────────────── */
+
+.radio-widget {
+  position: absolute;
+  bottom: 3.5rem;
+  right: 0.5rem;
+  width: 240px;
+  background: #1a1208;
+  border: 1px solid #3a2c10;
+  border-radius: 6px;
+  padding: 12px;
+  z-index: 50;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  color: #e8cc88;
+  font-family: monospace;
+}
+
+.radio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #aa8844;
+}
+
+.radio-close {
+  background: none;
+  border: none;
+  color: #aa8844;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0 2px;
+}
+
+.radio-close:focus-visible { outline: 2px solid #66dd88; }
+
+.radio-display {
+  background: #0a0800;
+  border: 1px solid #3a2c10;
+  border-radius: 3px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.radio-freq {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #ffcc44;
+  text-shadow: 0 0 8px rgba(255, 200, 50, 0.6);
+  letter-spacing: 0.08em;
+}
+
+.radio-name {
+  font-size: 0.65rem;
+  color: #887744;
+  margin-top: 2px;
+  letter-spacing: 0.05em;
+}
+
+.radio-dial-track {
+  position: relative;
+  height: 20px;
+  background: #0a0800;
+  border: 1px solid #3a2c10;
+  border-radius: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.radio-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ffcc44;
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+  box-shadow: 0 0 4px rgba(255,200,50,0.8);
+}
+
+.radio-dial-marks {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 100%;
+  font-size: 0.5rem;
+  color: #445533;
+  padding: 0 4px;
+}
+
+.radio-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.radio-controls button {
+  flex: 1;
+  background: #2a1c08;
+  border: 1px solid #3a2c10;
+  color: #e8cc88;
+  padding: 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.radio-controls button:hover { background: #3a2c10; }
+.radio-controls button:focus-visible { outline: 2px solid #66dd88; }

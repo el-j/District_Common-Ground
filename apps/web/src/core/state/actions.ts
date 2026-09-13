@@ -1,6 +1,6 @@
 import { useGameStore, type ClassRole, type CrisisLogEntry, type GameState } from './useGameStore';
 import { saveToDB } from './persistence';
-import { computeResilienceScore, applyDailyTick } from '../simulation/EconomyMath';
+import { computeResilienceScore, applyDailyTick, DEFAULT_MULTIPLIERS } from '../simulation/EconomyMath';
 import { initCrisisQueue, checkForCrisis } from '../simulation/CrisisEngine';
 
 const ARCHETYPE_SEEDS: Record<ClassRole, {
@@ -73,10 +73,12 @@ export function reduceStress(amount: number): void {
 
 export function advanceDay(): void {
   useGameStore.setState(state => {
+    const multipliers = state.pulseState?.multipliers ?? DEFAULT_MULTIPLIERS;
     const tick = applyDailyTick(
       state.player.classRole,
       state.commons,
       state.player.socialTrust,
+      multipliers,
     );
     return {
       meta: { ...state.meta, day: state.meta.day + 1 },

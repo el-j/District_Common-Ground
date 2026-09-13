@@ -3,6 +3,7 @@ import { inputManager } from './InputManager';
 import { setupTilemapCollision } from './CollisionSystem';
 import { PlayerEntity } from './entities/PlayerEntity';
 import { NPCEntity } from './entities/NPCEntity';
+import { ScrapsEntity } from './entities/ScrapsEntity';
 import { DialogueOverlay } from '../ui/DialogueOverlay';
 import { ConstructionModal, type ConstructionNodeData } from '../ui/ConstructionModal';
 import { CrisisWireModal } from '../ui/CrisisWireModal';
@@ -10,6 +11,7 @@ import { HistoryModal } from '../ui/HistoryModal';
 import { TopHUD } from '../ui/TopHUD';
 import { useGameStore } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
+import { startBGMLoop } from '../core/audio/SoundSynth';
 
 const TS = 16;
 const COLS = 48;
@@ -322,6 +324,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
 
 // ── WorldScene ─────────────────────────────────────────────────────────────────
 
+
 export class WorldScene extends Phaser.Scene {
   private static hud: TopHUD | null = null;
   private player!: PlayerEntity;
@@ -338,6 +341,11 @@ export class WorldScene extends Phaser.Scene {
   private actionKey!: Phaser.Input.Keyboard.Key;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private completedIds = new Set<string>();
+  private scraps!: ScrapsEntity;
+  private ticksSinceDay = 0;
+  private bgmStarted = false;
+  private tintOverlay!: Phaser.GameObjects.Rectangle;
+  private prevDay = 0;
 
   // Town Hall interaction point (door at col 5, row 35)
   private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
@@ -432,17 +440,87 @@ export class WorldScene extends Phaser.Scene {
     useGameStore.subscribe((state) => {
       this.applyResilienceTier(state.commons.resilienceScore);
     });
+
+    // Scraps the cat
+    this.scraps = new ScrapsEntity(this, 160, 53 * 16);
+
+    // Tint overlay for day/night lighting (depth 90, scrollFactor 0 = fixed to screen)
+    const screenW = this.scale.width, screenH = this.scale.height;
+    this.tintOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0x220044, 0)
+      .setScrollFactor(0).setDepth(90);
+
+    // Track day advances for day/night cycle
+    this.prevDay = useGameStore.getState().meta.day;
+    useGameStore.subscribe((state) => {
+      if (state.meta.day !== this.prevDay) {
+        this.ticksSinceDay = 0;
+        this.prevDay = state.meta.day;
+      }
+    });
   }
 
-  update(): void {
+  update(_time: number, delta: number): void {
     inputManager.update();
+
+    // Start BGM on first player movement
+    if (!this.bgmStarted) {
+      const dir = inputManager.getDirection();
+      if (dir.dx !== 0 || dir.dy !== 0) {
+        this.bgmStarted = true;
+        startBGMLoop();
+      }
+    }
+
     this.player.update();
+
+    // Day/night cycle: advance ticks, update camera tint every ~500ms
+    this.ticksSinceDay += delta;
+    this.updateDayNight();
+
+    // Scraps
+    const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
+    this.scraps.update(this.player.x, this.player.y, ePressed, delta);
+
     this.npcs.forEach(npc => npc.update(this.player.x, this.player.y));
     this.syncCompletedBuilds();
     this.updateZone();
     this.checkCrisis();
     this.handleInteractions();
     this.drawThumbstick();
+  }
+
+  private updateDayNight(): void {
+    // 4 phases per day cycle (dawn→midday→dusk→night), 2 minutes real time
+    const cycleDuration = 120_000;
+    const phase = (this.ticksSinceDay % cycleDuration) / cycleDuration; // 0–1
+
+    // Map phase to overlay color+alpha:
+    // 0.0 = dawn (warm peach, low alpha), 0.25 = midday (transparent),
+    // 0.5 = dusk (amber, low alpha), 0.75 = night (deep indigo, higher alpha)
+    let color = 0x220044, alpha = 0;
+    if (phase < 0.25) {
+      // dawn → midday: fade out peach overlay
+      const t = phase / 0.25;
+      color = 0xffaa44;
+      alpha = (1 - t) * 0.22;
+    } else if (phase < 0.5) {
+      // midday → dusk: fade in amber
+      const t = (phase - 0.25) / 0.25;
+      color = 0xcc6622;
+      alpha = t * 0.18;
+    } else if (phase < 0.75) {
+      // dusk → night: fade to indigo
+      const t = (phase - 0.5) / 0.25;
+      color = 0x220044 * (1 - t) + 0x110022 * t | 0;
+      alpha = 0.18 + t * 0.22;
+    } else {
+      // night → dawn: fade out indigo
+      const t = (phase - 0.75) / 0.25;
+      color = 0x110022;
+      alpha = 0.40 * (1 - t);
+    }
+
+    this.tintOverlay.setFillStyle(color, alpha);
   }
 
   private checkCrisis(): void {

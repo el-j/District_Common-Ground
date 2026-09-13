@@ -42,7 +42,7 @@ This specification introduces four transformative gameplay and architectural sys
 ## 2. System 1: Pluggable Skin & Theming Engine
 
 ### 2.1 The Plugin Theme Architecture
-In alignment with the Microkernel architecture defined in [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md), skin packs are **autonomous plugins** that require **zero modifications to the core engine**.
+In alignment with the Microkernel architecture defined in [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md), skin packs are **autonomous plugins** that require **zero modifications to the core engine**. However, they are not executed directly from the host app. They follow the same trust gate as every other third-party bundle: quarantine on install, manifest and bundle hash validation, owner review, and only then sandboxed runtime launch in the verified catalog.
 
 A theme plugin can override:
 * **Building Facades & Stages:** Custom sprites/textures for each of the 4 construction tiers (Groundwork, Scaffolding, Operational, Solarpunk Bloom).

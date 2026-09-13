@@ -8,7 +8,7 @@
 
 ## Vision
 Transform the game into a **civic nexus and customizable living universe**:
-1. **Pluggable Skinning & Theming System:** Introduce new architectural aesthetics, color grades, and sprites dynamically via zero-core-touch theme plugins.
+1. **Pluggable Skinning & Theming System:** Introduce new architectural aesthetics, color grades, and sprites dynamically via zero-core-touch theme plugins that pass the same quarantine, validation, and owner approval flow as all other approved plugins.
 2. **The Commons Bazaar (Ethical In-Game Shop):** An in-game marketplace where players spend earned Solidarity Tokens (ST) on architectural facades, street foliage, and aesthetic upgrades with zero predatory microtransactions.
 3. **"Common Grounds" Social Graph & Friend Visiting:** Connect with real players as friends, inspect their custom-built districts, and dispatch cross-district mutual aid caravans during crises.
 4. **Real-World Community Bridge & Democratic Action Ticker:** Discover or found physical local community initiatives (tool libraries, food pantries) and follow a live regional news-ticker of verified pro-democracy demonstrations and climate strikes.

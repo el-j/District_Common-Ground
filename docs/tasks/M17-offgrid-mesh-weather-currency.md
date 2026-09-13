@@ -4,6 +4,8 @@ Story: [`docs/stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md`](file:/
 Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md)  
 Status: `[ ] Planned (Off-Grid PoC)`
 
+> Trust gate for future work: geo-weather, mesh communication, and mutual-credit modules are all treated as installable runtime plugins, not direct code hooks. Each plugin must still pass the platform quarantine + hash validation + owner approval flow before it can be mounted in the live environment.
+
 ---
 
 ## 1. Real-Time Geo-Weather Engine Plugin (`apps/web/src/plugins/geo-weather/`)

@@ -4,6 +4,8 @@ Story: [`docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](fi
 Planning: [`docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md)  
 Status: `[ ] Planned (Decoupled Transport Plugin)`
 
+> This architecture remains decoupled from the core game loop, but it is still subject to the platform trust model: untrusted transport bundles are quarantined, inspected, and approved by the owner before they can become active mesh transports. Direct host-level execution is prohibited.
+
 ---
 
 ## 1. Unified Mesh Transport Interfaces (`packages/shared-types/src/mesh.ts`)

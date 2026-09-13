@@ -4,6 +4,8 @@ Story: [`docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](f
 Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md)  
 Status: `[ ] Planned`
 
+> System guardrail: all future theme/shop/social integrations remain standalone modules, but they must follow the M14 trust gate: install -> quarantine -> manifest + hash validation -> owner review -> sandboxed runtime approval. No theme or plugin is allowed to execute directly in the host app without passing this flow.
+
 ---
 
 ## 1. Shared Types (`packages/shared-types/src/`)

@@ -7,7 +7,7 @@ The core requirement of *District: Common Ground* is that **Minigames and Transp
 ### Why This Matters
 1. **Third-Party Contributor Freedom**: A game designer or community organizer wanting to create a new minigame (e.g. *Kitchen Frenzy*, *Solar Inverter Puzzle*, *Eviction Defense*) or a new transport (e.g. *bitchat.free*, *Reticulum*) should never need to touch the main game engine repo or understand Phaser 3 physics. They create a standalone npm package or static web bundle conforming strictly to `@district-cg/shared-types`.
 2. **Independent Versioning & Release Cycles**: Minigames can be upgraded, tested, and released independently of the main game.
-3. **Decoupled Bundling**: The main `apps/web` bundle remains lean and lightweight (< 1.5 MB initial load). Minigames are loaded as external packages or dynamic micro-frontends only when launched in-game.
+3. **Decoupled Bundling**: The main `apps/web` bundle remains lean and lightweight (< 1.5 MB initial load). Minigames are loaded as external packages or dynamic micro-frontends only when launched in-game, and only after the platform's quarantine, validation, and owner approval flow promotes them to the verified catalog.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐

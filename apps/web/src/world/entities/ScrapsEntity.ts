@@ -57,7 +57,7 @@ export class ScrapsEntity {
 
   private onPet(): void {
     useGameStore.setState(s => ({
-      player: { ...s.player, stress: Math.max(0, s.player.stress - 5) },
+      player: { ...s.player, stressLevel: Math.max(0, s.player.stressLevel - 5) },
     }));
     this.spawnHearts();
   }

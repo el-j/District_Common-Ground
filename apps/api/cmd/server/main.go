@@ -13,6 +13,7 @@ import (
 	"github.com/district-cg/api/internal/db"
 	"github.com/district-cg/api/internal/gamedata"
 	"github.com/district-cg/api/internal/middleware"
+	"github.com/district-cg/api/internal/pulse"
 	"github.com/district-cg/api/internal/save"
 )
 
@@ -59,6 +60,8 @@ func main() {
 		r.With(requireAuth).Get("/save", saveHandler.Load)
 		r.With(requireAuth).Put("/save", saveHandler.Upsert)
 		r.Get("/data/crises", gamedataHandler.Crises)
+		r.Get("/pulse/economy", pulse.HandleEconomy)
+		r.Get("/pulse/climate", pulse.HandleClimate)
 	})
 
 	log.Printf("api listening on :%s", cfg.Port)

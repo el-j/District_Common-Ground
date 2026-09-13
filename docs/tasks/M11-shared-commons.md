@@ -12,15 +12,15 @@ Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 
 ## Climate Migration Events
 - [x] New crisis archetype: `MIGRATION_SANCT` scenarios in `crisis_scenarios.json` (3 authored: ice-raid-threat, sanctuary-council-vote, refugee-housing-crisis)
-- [ ] When $M_\text{migrant} > 1.5$ → trigger migration event at North Transit Hub
-- [ ] Solidarity resolution: +30% construction speed (buff multiplier), unlock Greenhouse node
-- [ ] Scapegoat resolution: police militarisation visual (extra dark filter), −15 trust
+- [x] When $M_\text{migrant} > 1.5$ → trigger migration event at North Transit Hub
+- [x] Solidarity resolution: +30% construction speed (buff multiplier), unlock Greenhouse node
+- [x] Scapegoat resolution: police militarisation visual (extra dark filter), −15 trust
 
 ## Anti-Fascist Defense Actions
 - [x] Discoverable flyer objects in alley tiles (generated when `FASCIST_AGITATION` event active)
 - [x] Proximity action: "Tear down flyer [E]" → +5 Trust, −2 Energy, flyer disappears
-- [ ] Counter-organise public rebuttal crisis option → −20 Energy, Trust +25
-- [ ] Alert community network option → Stress −10 across block
+- [x] Counter-organise public rebuttal crisis option → −20 Energy, Trust +25
+- [x] Alert community network option → Stress −10 across block
 
 ## Global Solidarity Pool (Go Backend)
 - [x] `apps/api/internal/save/solidarity_pool.go` — aggregate anonymous solidarity choices from crisis_log
@@ -35,4 +35,4 @@ Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 ## Tests
 - [ ] Manual: complete Land Trust → "Safe Haven" banner displays
 - [ ] Manual: tear down flyer → trust +5, flyer tile removed
-- [ ] Go httptest: `/api/v1/district/resilience` returns valid global index
+- [x] Go httptest: `/api/v1/district/resilience` returns valid global index

@@ -20,6 +20,7 @@ export interface CrisisChoice {
 
 export interface CrisisScenario {
   id: string;
+  archetype?: string;
   title: string;
   context: string;
   choiceA: CrisisChoice;
@@ -59,7 +60,16 @@ export function checkForCrisis(): void {
   // 60% chance after the minimum cooldown
   if (Math.random() > 0.6) return;
 
-  const nextId = state.crisisState.pendingQueue[0];
+  // High migrant pressure → prioritise a MIGRATION_SANCT scenario
+  const migrantIndex = state.pulseState?.multipliers.migrant ?? 1.0;
+  let nextId = state.crisisState.pendingQueue[0];
+  if (migrantIndex > 1.5) {
+    const migrationId = state.crisisState.pendingQueue.find(id =>
+      scenarios.find(s => s.id === id)?.archetype === 'MIGRATION_SANCT',
+    );
+    if (migrationId) nextId = migrationId;
+  }
+
   triggerCrisis(nextId);
 }
 
@@ -108,6 +118,25 @@ export function resolveCrisis(choice: 'A' | 'B'): void {
 
   // Update scapegoat streak
   scapegoatStreak = isScapegoat ? scapegoatStreak + 1 : Math.max(0, scapegoatStreak - 1);
+
+  // Solidarity bonus: +30% construction speed, unlock Greenhouse
+  if (!isScapegoat) {
+    useGameStore.setState(s => ({
+      commons: {
+        ...s.commons,
+        constructionSpeedBuff: Math.min(0.6, s.commons.constructionSpeedBuff + 0.3),
+        greenhouseUnlocked: true,
+      },
+    }));
+  }
+
+  // Scapegoat: police militarisation visual + extra −15 trust
+  if (isScapegoat) {
+    loseTrust(15);
+    if (typeof document !== 'undefined') {
+      document.getElementById('game-container')?.classList.add('world--police-state');
+    }
+  }
 
   // Log the resolution
   const entry: CrisisLogEntry = {
@@ -158,4 +187,15 @@ export function getScenario(id: string): CrisisScenario | undefined {
 
 export function getScapegoatStreak(): number {
   return scapegoatStreak;
+}
+
+export type AntiFascistActionType = 'counter-organise' | 'alert-network';
+
+export function triggerAntiFascistAction(type: AntiFascistActionType): void {
+  if (type === 'counter-organise') {
+    spendEnergy(20);
+    addTrust(25);
+  } else if (type === 'alert-network') {
+    reduceStress(10);
+  }
 }

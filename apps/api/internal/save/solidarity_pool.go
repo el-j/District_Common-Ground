@@ -32,15 +32,17 @@ func (h *SolidarityHandler) HandleDistrictResilience(w http.ResponseWriter, r *h
 	defer cancel()
 
 	var solidarityCount, scapegoatCount int
-	row := h.pool.QueryRow(ctx, `
-		SELECT
-			COUNT(*) FILTER (WHERE choice = 'solidarity') AS solidarity,
-			COUNT(*) FILTER (WHERE choice = 'scapegoat')  AS scapegoat
-		FROM crisis_log
-	`)
-	if err := row.Scan(&solidarityCount, &scapegoatCount); err != nil {
-		slog.Warn("solidarity_pool query failed, returning defaults", "err", err)
-		solidarityCount, scapegoatCount = 0, 0
+	if h.pool != nil {
+		row := h.pool.QueryRow(ctx, `
+			SELECT
+				COUNT(*) FILTER (WHERE choice = 'solidarity') AS solidarity,
+				COUNT(*) FILTER (WHERE choice = 'scapegoat')  AS scapegoat
+			FROM crisis_log
+		`)
+		if err := row.Scan(&solidarityCount, &scapegoatCount); err != nil {
+			slog.Warn("solidarity_pool query failed, returning defaults", "err", err)
+			solidarityCount, scapegoatCount = 0, 0
+		}
 	}
 
 	total := solidarityCount + scapegoatCount

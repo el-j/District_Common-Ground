@@ -36,5 +36,5 @@ Planning: `docs/planning/05-WHIMSY-AND-TACTILE-UX.md`
 - [x] Vitest: SeasonalWave — seasonal peaks correct for each season
 - [x] Go: pulse economy endpoint unit + httptest
 - [x] Go: pulse news classification unit tests
-- [ ] Go: solidarity pool integration test (testcontainers)
+- [x] Go: solidarity pool integration test (testcontainers)
 - [ ] Lighthouse audit report documented in `docs/lighthouse-report.md`

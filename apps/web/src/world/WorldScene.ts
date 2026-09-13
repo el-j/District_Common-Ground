@@ -408,7 +408,7 @@ export class WorldScene extends Phaser.Scene {
     if (!tileset) throw new Error('tileset missing');
     const layer = map.createLayer(0, tileset, 0, 0);
     if (!layer) throw new Error('layer failed');
-    this.layer = layer;
+    this.layer = layer as Phaser.Tilemaps.TilemapLayer;
     layer.setCollision([T.WALL]);
 
     const worldW = COLS * TS, worldH = ROWS * TS;
@@ -425,7 +425,7 @@ export class WorldScene extends Phaser.Scene {
     this.anims.create({ key: 'walk_left',  frames: [{ key:'player',frame:4 },{ key:'player',frame:5 }], frameRate: 6, repeat: -1 });
     this.anims.create({ key: 'walk_right', frames: [{ key:'player',frame:6 },{ key:'player',frame:7 }], frameRate: 6, repeat: -1 });
 
-    setupTilemapCollision(this, sprite, layer);
+    setupTilemapCollision(this, sprite, layer as Phaser.Tilemaps.TilemapLayer);
     this.player = new PlayerEntity(sprite);
 
     // Construction nodes (A–E)

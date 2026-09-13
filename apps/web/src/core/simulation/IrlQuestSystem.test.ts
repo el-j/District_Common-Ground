@@ -13,6 +13,7 @@ function resetStore(day = 1) {
       resilienceScore: 0,
       solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0,
       toolLibraryProgress: 0, landTrustProgress: 0,
+      constructionSpeedBuff: 0, greenhouseUnlocked: false,
     },
     crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
     quests: [

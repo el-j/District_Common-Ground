@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
 import type { DistrictPulseState } from '@district-cg/shared-types';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
@@ -43,6 +43,8 @@ export interface GameState {
     legalFundProgress: number;
     toolLibraryProgress: number;
     landTrustProgress: number;
+    constructionSpeedBuff: number;
+    greenhouseUnlocked: boolean;
   };
   crisisState: {
     activeCrisisId: string | null;
@@ -72,6 +74,8 @@ const INITIAL_STATE: GameState = {
     legalFundProgress: 0,
     toolLibraryProgress: 0,
     landTrustProgress: 0,
+    constructionSpeedBuff: 0,
+    greenhouseUnlocked: false,
   },
   crisisState: {
     activeCrisisId: null,
@@ -86,4 +90,4 @@ const INITIAL_STATE: GameState = {
   pulseState: null,
 };
 
-export const useGameStore = create<GameState>()(() => INITIAL_STATE);
+export const useGameStore = createStore<GameState>()(() => INITIAL_STATE);

@@ -96,9 +96,10 @@ export function advanceDay(): void {
 
 export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): void {
   useGameStore.setState(state => {
+    const buffedAmount = amount * (1 + state.commons.constructionSpeedBuff);
     const nextCommons = {
       ...state.commons,
-      [node]: Math.min(100, state.commons[node] + amount),
+      [node]: Math.min(100, Number(state.commons[node]) + buffedAmount),
     } as GameState['commons'];
 
     const resilienceScore = computeResilienceScore({

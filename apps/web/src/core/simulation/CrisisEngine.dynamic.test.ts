@@ -35,6 +35,7 @@ function resetStore() {
       resilienceScore: 50,
       solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0,
       toolLibraryProgress: 0, landTrustProgress: 0,
+      constructionSpeedBuff: 0, greenhouseUnlocked: false,
     },
     crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
   });
@@ -71,8 +72,8 @@ describe('CrisisEngine — dynamic AI scenario integration', () => {
     const before = useGameStore.getState().player.socialTrust;
     resolveCrisis('A');
     const after = useGameStore.getState().player.socialTrust;
-    // trustDelta is -30 from clamp boundary; trust should decrease by 30 (min 0)
-    expect(after).toBe(Math.max(0, before - 30));
+    // trustDelta is -30 plus -15 authoritarian scapegoat penalty; trust decreases by 45 (min 0)
+    expect(after).toBe(Math.max(0, before - 30 - 15));
   });
 
   it('solidarity choice applies positive trust delta within clamped bounds', () => {

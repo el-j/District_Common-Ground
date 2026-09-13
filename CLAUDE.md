@@ -151,7 +151,19 @@ Every crisis offers two branches:
 - Go binary must be `CGO_ENABLED=0` (scratch images + Wails portability)
 - `VITE_ORIGIN` must be the deployed web URL in production (CORS)
 
-## Running Locally
+## Running Locally (via Makefile)
+
+```bash
+make setup          # first-time setup (env-init + npm install + go mod download)
+make dev            # start dev stack with hot-reloading (Vite HMR + Go live sync)
+make dev-d          # start dev stack in detached background mode
+make play           # open the game in your browser (http://localhost:9300)
+make check          # run full linter and unit tests
+make down           # stop the stack
+make help           # list all available targets
+```
+
+Or run manually:
 
 ```bash
 # Dev (Vite HMR + Go hot-reload via docker compose)

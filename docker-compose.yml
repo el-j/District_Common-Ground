@@ -27,7 +27,7 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["/usr/bin/wget", "-qO-", "http://localhost:8080/health"]
+      test: ["CMD", "/usr/bin/wget", "-qO-", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 3

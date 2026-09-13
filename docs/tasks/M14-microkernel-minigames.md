@@ -81,3 +81,4 @@ Priority: 🚨 **Immediate Next Refactor (Pre-M8/M9 Foundational Pipeline)**
 - [ ] **Test 14.2 (Zero Memory Leaks):** Mount and unmount "Cargo Courier Rush" 10 times consecutively; verify canvas and WebGL context are cleanly disposed
 - [ ] **Test 14.3 (Tactile Builder Upgrades):** Upgrading parcel #1 increments tier from 0 to 1, changes visual sprite, emits particle burst, and registers in save game state
 - [ ] **Test 14.4 (Full Courier Delivery Loop):** Start courier session ➔ deliver 3 soup orders ➔ submit score ➔ verify player cash and community trust increase in store and DB
+- [ ] **Test 14.5 (Trusted Plugin Review Flow):** Install a third-party plugin from URL or bundle, verify it is quarantined, submit an owner review request, approve it, and confirm it appears in the verified store catalog.

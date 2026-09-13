@@ -776,6 +776,28 @@
 }
 .settings-gear-btn:hover { color: #aaaacc; border-color: #5a5a88; }
 
+/* ── Plugin Library Button ─────────────────────────────── */
+
+.plugin-open-btn {
+  position: absolute;
+  right: 5.65rem;
+  bottom: 0.85rem;
+  background: rgba(14, 14, 26, 0.9);
+  border: 1px solid #3a4f6a;
+  border-radius: 50%;
+  color: #8aa8c8;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.plugin-open-btn:hover { color: #d4e9ff; border-color: #6d8eb4; }
+
 /* ── Settings Modal ─────────────────────────────────────── */
 
 .settings-overlay {
@@ -861,6 +883,224 @@
   overflow-y: auto;
   flex: 1;
   padding: 1rem;
+}
+
+/* ── Plugin Manager Modal ───────────────────────────────── */
+
+.plugin-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 6, 14, 0.74);
+  z-index: 60;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.plugin-overlay--visible { opacity: 1; }
+
+.plugin-panel {
+  width: min(760px, calc(100% - 2rem));
+  max-height: 84vh;
+  background: linear-gradient(180deg, rgba(13, 16, 30, 0.98), rgba(9, 12, 22, 0.99));
+  border: 1px solid #31435c;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  font-family: ui-monospace, monospace;
+  color: #e4eeff;
+  overflow: hidden;
+  box-shadow: 0 18px 54px rgba(0,0,0,0.7);
+}
+
+.plugin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem 0.6rem;
+  border-bottom: 1px solid #1e2938;
+}
+
+.plugin-title {
+  font-weight: bold;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d7e7ff;
+}
+
+.plugin-close {
+  background: transparent;
+  border: none;
+  color: #7e90aa;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.plugin-close:hover { color: #d7e7ff; }
+
+.plugin-body {
+  padding: 0.9rem 1rem 1rem;
+  overflow-y: auto;
+}
+
+.plugin-copy {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: #a9b8d1;
+  margin-bottom: 0.9rem;
+}
+
+.plugin-install-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.85rem;
+}
+
+.plugin-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.64rem;
+  color: #99acc7;
+}
+
+.plugin-input {
+  width: 100%;
+  background: rgba(9, 12, 22, 0.96);
+  border: 1px solid #31435c;
+  border-radius: 8px;
+  color: #e4eeff;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.plugin-upload {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+  border: 1px dashed #31435c;
+  border-radius: 10px;
+  padding: 0.75rem;
+  background: rgba(7, 10, 18, 0.55);
+  color: #a9b8d1;
+  font-size: 0.68rem;
+}
+
+.plugin-file { max-width: 100%; color: #a9b8d1; }
+
+.plugin-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.plugin-actions--inline {
+  justify-content: flex-end;
+}
+
+.plugin-btn {
+  border: 1px solid #435978;
+  background: rgba(24, 32, 48, 0.96);
+  color: #e4eeff;
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  cursor: pointer;
+}
+.plugin-btn:hover { border-color: #6d8cb8; background: rgba(30, 42, 62, 0.98); }
+.plugin-btn--primary { background: linear-gradient(180deg, #25446a, #1c314c); border-color: #5d80ad; }
+.plugin-btn--secondary { background: rgba(24, 48, 34, 0.96); border-color: #4f8361; }
+.plugin-btn--danger { background: rgba(66, 20, 26, 0.96); border-color: #8f4a57; }
+
+.plugin-status {
+  border: 1px solid #2c3d55;
+  background: rgba(10, 14, 24, 0.95);
+  border-radius: 10px;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.85rem;
+  font-size: 0.68rem;
+  color: #d7e7ff;
+}
+.plugin-status[data-tone='error'] { border-color: #8f4a57; color: #ffd0d6; }
+
+.plugin-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.plugin-empty {
+  border: 1px dashed #31435c;
+  border-radius: 10px;
+  padding: 0.9rem;
+  color: #9eb0c8;
+  font-size: 0.68rem;
+}
+
+.plugin-card {
+  border: 1px solid #26364c;
+  border-radius: 12px;
+  padding: 0.85rem;
+  background: rgba(9, 12, 22, 0.96);
+}
+
+.plugin-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.plugin-card h3 {
+  font-size: 0.82rem;
+  margin: 0 0 0.15rem;
+}
+
+.plugin-card p {
+  margin: 0;
+}
+
+.plugin-card-head p,
+.plugin-desc,
+.plugin-meta {
+  font-size: 0.65rem;
+  color: #9eb0c8;
+  line-height: 1.5;
+}
+
+.plugin-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.58rem;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.plugin-pill--matches { background: rgba(24, 52, 34, 0.9); border-color: #4f8361; color: #9ff0ba; }
+.plugin-pill--outdated { background: rgba(58, 39, 10, 0.9); border-color: #9b7b31; color: #ffd97c; }
+.plugin-pill--conflict { background: rgba(66, 20, 26, 0.9); border-color: #8f4a57; color: #ffb7c0; }
+.plugin-pill--missing { background: rgba(22, 30, 44, 0.9); border-color: #435978; color: #c6ddff; }
+
+.plugin-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.5rem;
+  margin: 0.7rem 0;
+}
+
+.plugin-meta dt { color: #6f819b; }
+.plugin-meta dd { margin: 0; overflow-wrap: anywhere; }
+
+.plugin-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* ── Skin Cards ─────────────────────────────────────────── */

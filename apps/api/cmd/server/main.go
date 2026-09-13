@@ -21,8 +21,8 @@ import (
 )
 
 func main() {
-	// Register all standalone minigame plugins into the kernel before anything else.
-	// To add a new plugin, edit internal/plugins/register.go only — nothing here changes.
+	// Register bundled plugins and start runtime discovery before anything else.
+	// New plugin binaries dropped into ./plugins are picked up without a code change.
 	plugins.RegisterAll()
 
 	cfg, err := config.Load()
@@ -51,7 +51,7 @@ func main() {
 	gamedataHandler := gamedata.NewHandler()
 	narrativeHandler := narrative.NewHandler(pool)
 
-	kernelHandler := kernel.NewHandler(kernel.DefaultRegistry, kernel.NewSessionManager(cfg.GameSessionSecret), kernel.NewRepository(pool))
+	kernelHandler := kernel.NewHandler(kernel.DefaultRegistry, kernel.NewSessionManager(cfg.GameSessionSecret), kernel.NewRepository(pool), cfg.PluginOwnerUserID)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
@@ -77,6 +77,9 @@ func main() {
 		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
 		r.Get("/games", kernelHandler.ListGames)
+		r.With(requireAuth).Post("/plugins/verification-requests", kernelHandler.SubmitVerificationRequest)
+		r.With(requireAuth).Get("/plugins/verification-requests", kernelHandler.ListVerificationRequests)
+		r.With(requireAuth).Post("/plugins/verification-requests/{id}/review", kernelHandler.ReviewVerificationRequest)
 		r.With(requireAuth).Post("/games/{id}/session", kernelHandler.StartSession)
 		r.With(requireAuth).Post("/games/{id}/complete", kernelHandler.CompleteSession)
 	})

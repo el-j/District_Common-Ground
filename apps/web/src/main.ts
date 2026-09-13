@@ -9,6 +9,7 @@ import { AuthOverlay } from './ui/AuthOverlay';
 import { setupAudioOnInteraction } from './core/audio/SoundSynth';
 import { activateDefaultSkin } from './skins/ThemeManager';
 import { MinigameLoader } from './core/kernel/MinigameLoader';
+import { bootstrapInstalledPlugins } from './core/kernel/PluginRegistry';
 import { manifest as courierRushManifest } from '@district-cg/minigame-courier-rush';
 
 MinigameLoader.registerLocalMinigame(
@@ -36,6 +37,7 @@ async function boot(): Promise<void> {
   }
 
   await loadSave();
+  await bootstrapInstalledPlugins().catch(() => undefined);
 
   const viewport = getViewportSize();
 

@@ -13,20 +13,92 @@ import (
 )
 
 type Handler struct {
-	registry *Registry
-	sessions *SessionManager
-	repo     *Repository
+	registry    *Registry
+	sessions    *SessionManager
+	repo        *Repository
+	ownerUserID string
 }
 
-func NewHandler(registry *Registry, sessions *SessionManager, repo *Repository) *Handler {
-	return &Handler{registry: registry, sessions: sessions, repo: repo}
+func NewHandler(registry *Registry, sessions *SessionManager, repo *Repository, ownerUserID string) *Handler {
+	return &Handler{registry: registry, sessions: sessions, repo: repo, ownerUserID: ownerUserID}
 }
 
 // ListGames serves GET /api/v1/games — the public catalog of verified, healthy minigames.
 func (h *Handler) ListGames(w http.ResponseWriter, r *http.Request) {
 	games := h.registry.List(r.Context())
+	verified, err := h.repo.ListVerifiedPlugins(r.Context())
+	if err == nil {
+		games = append(games, verified...)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(games)
+}
+
+type verificationRequestBody struct {
+	SourceKind   string         `json:"sourceKind"`
+	ManifestURL  *string        `json:"manifestUrl,omitempty"`
+	BundleSHA256 string         `json:"bundleSha256"`
+	Plugin       PluginMetadata `json:"pluginMetadata"`
+}
+
+type reviewVerificationRequestBody struct {
+	Approved bool   `json:"approved"`
+	Notes    string `json:"notes"`
+}
+
+func (h *Handler) isOwner(r *http.Request) bool {
+	return h.ownerUserID != "" && middleware.UserID(r) == h.ownerUserID
+}
+
+func (h *Handler) SubmitVerificationRequest(w http.ResponseWriter, r *http.Request) {
+	var req verificationRequestBody
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&req); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if req.Plugin.ID == "" || req.BundleSHA256 == "" || (req.SourceKind != "url" && req.SourceKind != "file") {
+		jsonError(w, "invalid verification request", http.StatusBadRequest)
+		return
+	}
+	stored, err := h.repo.SubmitVerificationRequest(r.Context(), middleware.UserID(r), req.SourceKind, req.ManifestURL, req.BundleSHA256, req.Plugin)
+	if err != nil {
+		jsonError(w, "failed to submit verification request", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(stored)
+}
+
+func (h *Handler) ListVerificationRequests(w http.ResponseWriter, r *http.Request) {
+	if !h.isOwner(r) {
+		jsonError(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	requests, err := h.repo.ListVerificationRequests(r.Context())
+	if err != nil {
+		jsonError(w, "failed to list verification requests", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(requests)
+}
+
+func (h *Handler) ReviewVerificationRequest(w http.ResponseWriter, r *http.Request) {
+	if !h.isOwner(r) {
+		jsonError(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	requestID := chi.URLParam(r, "id")
+	var req reviewVerificationRequestBody
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<16)).Decode(&req); err != nil {
+		jsonError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	if err := h.repo.ReviewVerificationRequest(r.Context(), requestID, middleware.UserID(r), req.Approved, req.Notes); err != nil {
+		jsonError(w, "failed to review verification request", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 type startSessionRequest struct {

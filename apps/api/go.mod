@@ -1,6 +1,6 @@
 module github.com/district-cg/api
 
-go 1.25.0
+go 1.26.3
 
 require (
 	github.com/district-cg/kernel-contracts v0.1.0

@@ -10,15 +10,17 @@ type Config struct {
 	DatabaseURL       string
 	JWTSecret         string
 	GameSessionSecret string
+	PluginOwnerUserID string
 	GoEnv             string
 	ViteOrigin        string
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		Port:       getEnv("PORT", "8080"),
-		GoEnv:      getEnv("GO_ENV", "production"),
-		ViteOrigin: getEnv("VITE_ORIGIN", "http://localhost:9300"),
+		Port:              getEnv("PORT", "8080"),
+		GoEnv:             getEnv("GO_ENV", "production"),
+		ViteOrigin:        getEnv("VITE_ORIGIN", "http://localhost:9300"),
+		PluginOwnerUserID: getEnv("PLUGIN_OWNER_USER_ID", ""),
 	}
 
 	cfg.DatabaseURL = os.Getenv("DATABASE_URL")

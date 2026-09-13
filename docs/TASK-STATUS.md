@@ -29,7 +29,7 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
-| **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) |
+| **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), trust-gated plugin store, Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) |
 | **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[ ] Planned` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
 | **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[ ] Planned (PoC)` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[ ] Planned (Off-Grid PoC)` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
@@ -59,6 +59,8 @@ Planning: [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](f
 | `apps/web/src/core/kernel/MinigameLoader.ts` — Sandboxed ESM dynamic module loader | `[x]` |
 | `apps/web/src/core/kernel/MinigameContainer.ts` — Canvas/DOM container lifecycle management | `[x]` |
 | `apps/web/src/core/kernel/HostPlatformAPI.ts` — Zustand wallet & state bridge | `[x]` |
+| `apps/web/src/core/kernel/PluginRegistry.ts` — quarantine-first plugin store, update checks, verified-store promotion | `[x]` |
+| `apps/web/src/core/kernel/PluginSandbox.ts` — sandboxed manifest inspector for untrusted bundles | `[x]` |
 | `DistrictGrid.ts` — 12-plot interactive district builder ("Farmville for the Commons") | `[x]` |
 | `ConstructionStages.ts` — 4 visual tiers (Blight -> Scaffolding -> Operational -> Solarpunk) | `[x]` |
 | `TactileEffects.ts` — Hammering audio, wood chip particles, confetti, celebration chimes | `[x]` |
@@ -66,6 +68,7 @@ Planning: [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](f
 | `WorldScene.ts` — In-world physical minigame portals (Cargo bike, kitchen door) | `[x]` |
 | `apps/web/src/minigames/courier-rush/` — Reference *Pizza Taxi* style bike delivery minigame | `[x]` |
 | End-to-end integration test: Courier run completion commits rewards to DB with zero core touch | `[x]` |
+| Third-party plugin verification queue and owner approval workflow | `[x]` |
 
 ---
 

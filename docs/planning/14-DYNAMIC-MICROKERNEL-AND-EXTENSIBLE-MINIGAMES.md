@@ -21,6 +21,7 @@ To make this evergreen, scalable, and sustainable over the next decade (2026–2
 * **Zero Core Modifications:** Creating a new minigame, new city district, or seasonal narrative level must be **100% additive**. It must NEVER require touching the core engine or redeploying the backend.
 * **Runtime Dynamic Discovery:** The Go backend and TypeScript frontend discover, validate, sandbox, and load minigame bundles dynamically at runtime from registries, manifests, or remote URLs.
 * **Strict Contract Separation:** The core platform provides platform services (Player Identity, Wallet, Shared Commons State, Achievements, Leaderboards, Real-World News Pulse) while minigames conform to strict, sandboxed lifecycle interfaces.
+* **Trust-Gated Plugin Store:** Third-party bundles are quarantined on install, inspected before activation, and only promoted into the live catalog after owner approval and server verification.
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
@@ -61,6 +62,13 @@ To make this evergreen, scalable, and sustainable over the next decade (2026–2
 │   • Shared State, Wallet, Progression, Leaderboard & District Pulse Event Bus         │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### 1.3 Trust & Verification Flow
+
+- Third-party plugin bundles enter a quarantine cache first, not the live runtime.
+- The frontend uses a sandbox inspector to read manifests and hash bundles before activation.
+- Verification requests are stored in PostgreSQL and reviewed by the owner identified in `PLUGIN_OWNER_USER_ID`.
+- Approved plugins are merged into the verified catalog and can launch as normal minigame extensions.
 
 ---
 
@@ -204,7 +212,8 @@ apps/web/src/
 │   │   ├── MinigameLoader.ts        # Dynamic remote bundle loader (ESM / Module Federation)
 │   │   ├── MinigameContainer.ts     # Sandboxed Canvas/DOM Mount Wrapper
 │   │   ├── HostPlatformAPI.ts       # Bridge between minigames and Zustand store
-│   │   └── PluginRegistry.ts        # Discovered games catalog & cache
+│   │   ├── PluginRegistry.ts        # Quarantine-first plugin store, update checks, verified promotion
+│   │   └── PluginSandbox.ts         # Sandboxed manifest inspector for untrusted bundles
 │   └── state/                       # Core state (Zustand, idb-keyval, DistrictPulse)
 ├── builder/                         # TIER 1: LIVING DISTRICT BUILDER
 │   ├── DistrictGrid.ts              # Interactive parcel manager & isometric/top-down placement

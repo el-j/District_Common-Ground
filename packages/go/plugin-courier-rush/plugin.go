@@ -9,15 +9,13 @@
 //
 // # How registration works
 //
-// The host binary (apps/api) imports this package and calls Register(r) in its
-// plugin-setup step, passing a Registrar (the kernel.DefaultRegistry):
+// The host binary (apps/api) loads this package as a plugin module and calls
+// Register(r) at runtime, passing a shared Registrar implementation:
 //
-//	import courierrush "github.com/district-cg/plugin-courier-rush"
-//	// ... in setup:
-//	courierrush.Register(kernel.DefaultRegistry)
+//	Register(kernel.DefaultRegistry)
 //
-// This explicit-call pattern avoids init() ordering surprises and keeps each
-// plugin's registration 100% visible at the call site in register.go.
+// This explicit-call pattern keeps each plugin's registration visible while
+// still letting the host discover new plugin binaries without a source edit.
 package courierrush
 
 import (
@@ -31,6 +29,12 @@ import (
 	kc "github.com/district-cg/kernel-contracts"
 )
 
+// Register self-registers this plugin into r. Call this once during host startup,
+// before the game server starts accepting requests. It is idempotent.
+func Register(r kc.Registrar) {
+	r.Register(&Plugin{})
+}
+
 const (
 	pluginID       = "courier-rush"
 	maxDurationSec = 90.0
@@ -39,18 +43,6 @@ const (
 	minSecondsPerDelivery = 6.0
 	completionThreshold   = 3 // matches Test 14.4: deliver 3 soup orders
 )
-
-// Registrar is the minimal interface a host registry must satisfy.
-// The concrete kernel.Registry in apps/api already implements this.
-type Registrar interface {
-	Register(p kc.GamePlugin)
-}
-
-// Register self-registers this plugin into r. Call this once during host startup,
-// before the game server starts accepting requests. It is idempotent.
-func Register(r Registrar) {
-	r.Register(&Plugin{})
-}
 
 // Plugin implements kc.GamePlugin.
 type Plugin struct{}

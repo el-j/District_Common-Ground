@@ -25,10 +25,11 @@ import (
 // Re-export the shared contract types as aliases so the rest of this package
 // and its callers are unaffected by the move to a shared module.
 type (
-	PluginMetadata   = kc.PluginMetadata
-	SessionConfig    = kc.SessionConfig
-	GameInputEvent   = kc.GameInputEvent
-	ResourceGrant    = kc.ResourceGrant
+	PluginMetadata    = kc.PluginMetadata
+	Registrar         = kc.Registrar
+	SessionConfig     = kc.SessionConfig
+	GameInputEvent    = kc.GameInputEvent
+	ResourceGrant     = kc.ResourceGrant
 	GameSessionResult = kc.GameSessionResult
 	// GamePlugin is the contract every minigame backend module implements.
 	// A plugin self-registers into DefaultRegistry from its own init()

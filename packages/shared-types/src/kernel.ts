@@ -16,6 +16,8 @@ export interface MinigameManifest {
   permissions?: string[];
   requiredRole?: MinigameRole;
   targetHardware: MinigameHardwareTarget;
+  sourceUrl?: string;
+  bundleSha256?: string;
 }
 
 export interface GameSessionConfig {

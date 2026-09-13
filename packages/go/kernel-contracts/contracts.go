@@ -12,6 +12,12 @@ package kernelcontracts
 
 import "context"
 
+// Registrar is the minimal host-side contract a plugin needs in order to
+// register itself into the running server.
+type Registrar interface {
+	Register(GamePlugin)
+}
+
 // PluginMetadata describes a registered minigame plugin.
 type PluginMetadata struct {
 	ID          string   `json:"id"`

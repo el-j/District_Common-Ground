@@ -20,6 +20,19 @@ export class MinigameLoader {
     this.registeredModules.set(id, loader);
   }
 
+  static unregisterMinigame(id: string): void {
+    this.manifests.delete(id);
+    this.registeredModules.delete(id);
+  }
+
+  static hasMinigame(id: string): boolean {
+    return this.registeredModules.has(id);
+  }
+
+  static getManifest(id: string): MinigameManifest | undefined {
+    return this.manifests.get(id);
+  }
+
   /**
    * List all known minigames
    */

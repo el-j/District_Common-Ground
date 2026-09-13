@@ -6,6 +6,7 @@ import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
+import { PluginManagerModal } from './PluginManagerModal';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
 export class TopHUD {
@@ -23,6 +24,7 @@ export class TopHUD {
   private muteBtn: HTMLButtonElement;
   private questBtn: HTMLButtonElement;
   private builderBtn: HTMLButtonElement;
+  private pluginsBtn: HTMLButtonElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private scene?: Phaser.Scene;
@@ -134,6 +136,15 @@ export class TopHUD {
     this.builderBtn.addEventListener('click', () => new DistrictBuilderModal(root));
     root.appendChild(this.builderBtn);
 
+    this.pluginsBtn = document.createElement('button');
+    this.pluginsBtn.type = 'button';
+    this.pluginsBtn.className = 'plugin-open-btn interactive';
+    this.pluginsBtn.textContent = '🧩';
+    this.pluginsBtn.hidden = true;
+    this.pluginsBtn.setAttribute('aria-label', 'Open Plugin Library');
+    this.pluginsBtn.addEventListener('click', () => new PluginManagerModal(root));
+    root.appendChild(this.pluginsBtn);
+
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
 
@@ -228,6 +239,7 @@ export class TopHUD {
       this.muteBtn.hidden = true;
       this.questBtn.hidden = true;
       this.builderBtn.hidden = true;
+      this.pluginsBtn.hidden = true;
       return;
     }
 
@@ -239,6 +251,7 @@ export class TopHUD {
     this.muteBtn.hidden = false;
     this.questBtn.hidden = false;
     this.builderBtn.hidden = false;
+    this.pluginsBtn.hidden = false;
     // pulseBadgeEl visibility controlled by fetchPulseBadge response
 
     const roleLabel = player.classRole

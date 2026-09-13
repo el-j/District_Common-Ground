@@ -4,17 +4,17 @@ Stories: `docs/stories/EPIC-09-district-dispatch.md`
 Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAMIC-AI-NARRATIVE-PIPELINE.md`
 
 ## Go Backend Tasks
-- [ ] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds
-- [ ] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`)
-- [ ] `apps/api/internal/narrative/client.go` — Multi-provider AI client:
+- [x] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds (+ 7-archetype keyword classifier)
+- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`)
+- [x] `apps/api/internal/narrative/client.go` — Multi-provider AI client:
   - Ollama local endpoint support (`/api/chat` with `llama3.2:3b`)
   - OpenAI-compatible cloud support (Groq / Cloudflare / HuggingFace free tiers)
   - Configurable via `AI_PROVIDER`, `AI_MODEL`, `AI_ENDPOINT`, `AI_API_KEY`
-- [ ] `apps/api/internal/narrative/prompts.go` — Lore-anchored system prompts + character voice pillars + JSON schema definition
-- [ ] `apps/api/internal/narrative/validator.go` — JSON schema verification + hard mathematical clamping of stat deltas
-- [ ] `apps/api/internal/narrative/cache.go` — Database persistence in `dynamic_scenarios` table
-- [ ] `GET /api/v1/pulse/news` and `GET /api/v1/narrative/daily-scenarios` endpoints
-- [ ] Curated vault: 25+ evergreen fallback scenarios in `crisis_scenarios.json` for 100% offline play
+- [x] `apps/api/internal/narrative/prompts.go` — Lore-anchored system prompts + character voice pillars + JSON schema definition
+- [x] `apps/api/internal/narrative/validator.go` — JSON schema verification + hard mathematical clamping of stat deltas
+- [x] `apps/api/internal/narrative/cache.go` — Database persistence in `dynamic_scenarios` table
+- [x] `GET /api/v1/pulse/news` and `GET /api/v1/narrative/daily-scenarios` endpoints
+- [x] Curated vault: 25+ evergreen fallback scenarios in `crisis_scenarios.json` for 100% offline play
 
 ## Frontend Tasks
 - [x] `BroadsheetModal.ts` — "The Daily District Ground" UI

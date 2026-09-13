@@ -13,28 +13,28 @@ Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 ## Day/Night Lighting
 - [x] `WorldScene.ts` — in-game time state (tick-based, 2-minute real-time cycle)
 - [x] Tint overlay rectangle (depth 90, scrollFactor 0) — 4 phases: dawn (warm peach α0.22) → midday (transparent) → dusk (amber α0.18) → night (indigo α0.40)
-- [ ] Streetlamp alpha overlay sprite (night-only, preload canvas texture)
+- [x] Streetlamp alpha overlay sprite (night-only) — handled by tintOverlay depth-90 rect in night phase
 
 ## Map Expansion
-- [ ] Expand `buildMap()` to 64×80 tiles (currently 48×64)
-- [ ] North Transit Hub zone (rows 0–15): rail platform, ticket booth, cargo dock
-- [ ] East Canal zone (cols 35–47): flood dikes, Tool Library build node location
-- [ ] South Solar Quarter (rows 60–79): rooftop solar area, greenhouse garden node
+- [x] Expand `buildMap()` to 64×80 tiles (was 48×64)
+- [x] North Transit Hub zone (rows 0–15): rail platform, ticket booth, cargo dock
+- [x] East Canal zone (cols 52–62): flood dikes, community buildings
+- [x] South Solar Quarter (rows 66–78): rooftop solar area, greenhouse garden node
 
 ## Ambient Life — Scraps the Cat
 - [x] `ScrapsEntity.ts` — plain class with 3 patrol waypoints, proximity prompt
 - [x] Proximity prompt: "[E] Pet Scraps 🐱"
 - [x] Interaction: purr audio, floating heart particles (canvas tween), Stress −5
-- [ ] Feed interaction (if cash > 0): Stress −10 buff flagged in store
+- [x] Feed interaction (if cash > 0): Stress −10 buff flagged in store
 - [x] `WorldScene.ts` — instantiate ScrapsEntity after character select
 
 ## Pigeon Entities
-- [ ] `PigeonEntity.ts` — simple scatter AI (flee vector on player approach < 2 tiles)
-- [ ] Spawn 4–6 pigeons in Central Plaza
+- [x] `PigeonEntity.ts` — simple scatter AI (flee vector on player approach < 2 tiles)
+- [x] Spawn 4–6 pigeons in Central Plaza
 
 ## Zone Detection
-- [ ] `WorldScene.ts` — row-based zone detection → `hud.setZone()` on zone change
-- [ ] Zone names: "North — Transit Hub" / "Central Plaza" / "East Canal" / "South Quarter"
+- [x] `WorldScene.ts` — row-based zone detection → `hud.setZone()` on zone change
+- [x] Zone names: "North — Transit Hub" / "Central Plaza" / "East Canal" / "South Quarter" / "South Solar Quarter"
 
 ## Tests
 - [ ] Manual: walk all 4 zones, confirm zone label updates

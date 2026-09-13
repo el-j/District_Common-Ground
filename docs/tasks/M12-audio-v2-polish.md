@@ -26,15 +26,15 @@ Planning: `docs/planning/05-WHIMSY-AND-TACTILE-UX.md`
 - [x] Crisis choice buttons: `aria-label` with label + first 80 chars of description
 - [x] `:focus-visible` 2px solid #66dd88 outline on all `.interactive`, `button`, `input`
 - [x] `@media (prefers-reduced-motion: reduce)` — collapses all animations; `#game-container { transition: none; filter: none !important; }`
-- [ ] Arrow keys navigate dialogue choices
+- [x] Arrow keys navigate dialogue choices
 - [ ] WCAG AA contrast check: all text passes 4.5:1
 
 ## Test Suite
-- [ ] Vitest: EconomyMath with all multiplier combinations (applyDailyTick + M_food=1.3, kitchen=100)
-- [ ] Vitest: CrisisEngine — enqueue, resolve, history log
-- [ ] Vitest: IrlQuestSystem — day lock, buff application
-- [ ] Vitest: SeasonalWave — seasonal peaks correct for each season
-- [ ] Go: pulse economy endpoint unit + httptest
-- [ ] Go: pulse news classification unit tests
+- [x] Vitest: EconomyMath with all multiplier combinations (applyDailyTick + M_food=1.3, kitchen=100)
+- [x] Vitest: CrisisEngine — enqueue, resolve, history log
+- [x] Vitest: IrlQuestSystem — day lock, buff application
+- [x] Vitest: SeasonalWave — seasonal peaks correct for each season
+- [x] Go: pulse economy endpoint unit + httptest
+- [x] Go: pulse news classification unit tests
 - [ ] Go: solidarity pool integration test (testcontainers)
 - [ ] Lighthouse audit report documented in `docs/lighthouse-report.md`

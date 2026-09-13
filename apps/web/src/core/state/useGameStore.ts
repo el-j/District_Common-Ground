@@ -24,6 +24,7 @@ export interface GameState {
     tick: number;
     activeSkin: string;
     phase: GamePhase;
+    lastAssemblyDay: number;
   };
   player: {
     classRole: ClassRole | null;
@@ -53,7 +54,7 @@ export interface GameState {
 }
 
 const INITIAL_STATE: GameState = {
-  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select' },
+  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select', lastAssemblyDay: 0 },
   player: {
     classRole: null,
     cash: 0,

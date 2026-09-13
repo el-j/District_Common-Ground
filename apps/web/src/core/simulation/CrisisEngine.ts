@@ -122,6 +122,7 @@ export function resolveCrisis(choice: 'A' | 'B'): void {
 }
 
 function applyWorldEffect(effect: string): void {
+  if (typeof document === 'undefined') return;
   const container = document.getElementById('game-container');
   if (!container) return;
 

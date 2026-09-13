@@ -1,157 +1,416 @@
 [
   {
     "id": "winter-power-surge",
+    "archetype": "CLIMATE_EXTREME",
     "title": "The Winter Power Surge",
     "context": "A brutal cold snap has hit the district. The regional energy monopoly announces a 40% rate increase, citing \"unusual demand patterns.\" Local officials quickly point to immigrant families in the South Quarter as the cause, claiming they run appliances overnight without regard for the grid.",
     "choiceA": {
       "label": "Blame the high-usage households",
       "type": "authoritarian",
       "description": "You repeat the utility's talking points to your neighbors. Anger redirects away from the company. Your bill gets a small credit — a goodwill gesture from the utility for helping manage the narrative.",
-      "consequences": {
-        "cashDelta": 30,
-        "energyDelta": 0,
-        "trustDelta": -20,
-        "resilienceDelta": -15,
-        "stressDelta": -8,
-        "worldEffect": "desaturate"
-      }
+      "consequences": { "cashDelta": 30, "energyDelta": 0, "trustDelta": -20, "resilienceDelta": -15, "stressDelta": -8, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Organize a public hearing",
       "type": "solidarity",
       "description": "You help coordinate a block meeting and a formal challenge to the rate increase. It takes energy, but neighbors pool resources and the utility backs down on the surcharge. Trust deepens.",
-      "consequences": {
-        "cashDelta": 0,
-        "energyDelta": -15,
-        "trustDelta": 15,
-        "resilienceDelta": 20,
-        "stressDelta": 5,
-        "worldEffect": "bloom"
-      }
+      "consequences": { "cashDelta": 0, "energyDelta": -15, "trustDelta": 15, "resilienceDelta": 20, "stressDelta": 5, "worldEffect": "bloom" }
     }
   },
   {
     "id": "social-app-disinfo",
+    "archetype": "CIVIC_DISINFO",
     "title": "The Social App Disinformation Wave",
     "context": "A video goes viral showing a blurry figure near the cultural center late at night, captioned: \"Who is running drugs out of the community center?\" It has 40,000 views. Local Facebook groups are erupting. The cultural center's organizers are facing harassment.",
     "choiceA": {
       "label": "Share the video, let the community decide",
       "type": "authoritarian",
       "description": "You share it without comment. The video spreads further. The cultural center loses half its volunteers from intimidation. Cash flows briefly as anxious neighbors pay for private security instead of communal solutions.",
-      "consequences": {
-        "cashDelta": 20,
-        "energyDelta": 0,
-        "trustDelta": -25,
-        "resilienceDelta": -15,
-        "stressDelta": -5,
-        "worldEffect": "desaturate"
-      }
+      "consequences": { "cashDelta": 20, "energyDelta": 0, "trustDelta": -25, "resilienceDelta": -15, "stressDelta": -5, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Organize a counter-gathering at the center",
       "type": "solidarity",
       "description": "You help the center host an open-doors event and a public rebuttal. The video's origin is traced to a real estate firm looking to devalue the area. Community trust surges. It cost time and money but the center survives.",
-      "consequences": {
-        "cashDelta": -10,
-        "energyDelta": -20,
-        "trustDelta": 20,
-        "resilienceDelta": 20,
-        "stressDelta": 0,
-        "worldEffect": "bloom"
-      }
+      "consequences": { "cashDelta": -10, "energyDelta": -20, "trustDelta": 20, "resilienceDelta": 20, "stressDelta": 0, "worldEffect": "bloom" }
     }
   },
   {
     "id": "housing-speculation",
+    "archetype": "HOUSING_SPECULATE",
     "title": "The Speculation Wave",
     "context": "Horizon Capital Group has quietly purchased three apartment buildings on your block. 47 households received eviction notices this morning — 90-day compliance required. A buyout offer for your unit arrives by the afternoon: $8,000 to leave early and quietly.",
     "choiceA": {
       "label": "Accept the buyout, move on",
       "type": "authoritarian",
       "description": "You take the money and secure yourself a room elsewhere. The block loses a voice. More neighbors accept buyouts over the next month. Horizon begins renovating for market-rate renters.",
-      "consequences": {
-        "cashDelta": 100,
-        "energyDelta": 0,
-        "trustDelta": -15,
-        "resilienceDelta": -20,
-        "stressDelta": -15,
-        "worldEffect": "desaturate"
-      }
+      "consequences": { "cashDelta": 100, "energyDelta": 0, "trustDelta": -15, "resilienceDelta": -20, "stressDelta": -15, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Join the tenant coalition, withhold rent together",
       "type": "solidarity",
       "description": "You help organize collective rent withholding and a formal legal challenge. It's expensive and draining. But the coalition holds 34 households together, Horizon's timeline slips, and the press coverage forces a city council hearing.",
-      "consequences": {
-        "cashDelta": -20,
-        "energyDelta": -25,
-        "trustDelta": 10,
-        "resilienceDelta": 25,
-        "stressDelta": 15,
-        "worldEffect": "bloom"
-      }
+      "consequences": { "cashDelta": -20, "energyDelta": -25, "trustDelta": 10, "resilienceDelta": 25, "stressDelta": 15, "worldEffect": "bloom" }
     }
   },
   {
     "id": "utility-shutoff",
+    "archetype": "FOOD_HEALTH",
     "title": "The Water Authority Threat",
     "context": "The municipal water authority has issued shutoff notices to 22 households on your block — anyone 30+ days overdue on their bill. The temperature is dropping. An authority spokesperson says \"individual responsibility for utility payments remains non-negotiable.\"",
     "choiceA": {
       "label": "Pay your own bill early, stay out of it",
       "type": "authoritarian",
       "description": "You secure your own water supply and don't engage. Twelve households lose water access for three days. Stress concentrates in those families. The block grows more fragmented.",
-      "consequences": {
-        "cashDelta": -5,
-        "energyDelta": 0,
-        "trustDelta": -15,
-        "resilienceDelta": -10,
-        "stressDelta": -10,
-        "worldEffect": "desaturate"
-      }
+      "consequences": { "cashDelta": -5, "energyDelta": 0, "trustDelta": -15, "resilienceDelta": -10, "stressDelta": -10, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Organize a delegation and a community bucket brigade",
       "type": "solidarity",
       "description": "Neighbors coordinate to share water and you lead a formal negotiation delegation to the water authority. An emergency hardship deferral is won for 18 of the 22 households. The collective action becomes a model.",
-      "consequences": {
-        "cashDelta": 0,
-        "energyDelta": -15,
-        "trustDelta": 20,
-        "resilienceDelta": 15,
-        "stressDelta": 5,
-        "worldEffect": "bloom"
-      }
+      "consequences": { "cashDelta": 0, "energyDelta": -15, "trustDelta": 20, "resilienceDelta": 15, "stressDelta": 5, "worldEffect": "bloom" }
     }
   },
   {
     "id": "mutual-aid-raid",
+    "archetype": "FOOD_HEALTH",
     "title": "The Community Fridge Shutdown",
     "context": "City health inspectors have cited the community fridge outside the Corner Grocer for seven \"code violations\" — the main one being its location on public sidewalk. The organizers have 72 hours to comply or face a $2,000 fine. The fridge feeds 40 families a week.",
     "choiceA": {
       "label": "Advise the organizers to comply and close it",
       "type": "authoritarian",
       "description": "You counsel caution. The fridge closes to avoid the fine. 40 families lose a reliable food source. The city inspector marks it as resolved. The organizers are demoralized.",
-      "consequences": {
-        "cashDelta": 15,
-        "energyDelta": 0,
-        "trustDelta": -20,
-        "resilienceDelta": -20,
-        "stressDelta": -5,
-        "worldEffect": "desaturate"
-      }
+      "consequences": { "cashDelta": 15, "energyDelta": 0, "trustDelta": -20, "resilienceDelta": -20, "stressDelta": -5, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Mobilize a rapid legal and media response",
       "type": "solidarity",
       "description": "You activate the Legal Defense Fund and contact two local journalists. Within 48 hours the story is citywide news. The city quietly drops four of the seven violations. The fridge stays open with a temporary permit and 200 new supporters.",
-      "consequences": {
-        "cashDelta": 0,
-        "energyDelta": -10,
-        "trustDelta": 15,
-        "resilienceDelta": 20,
-        "stressDelta": 0,
-        "worldEffect": "bloom"
-      }
+      "consequences": { "cashDelta": 0, "energyDelta": -10, "trustDelta": 15, "resilienceDelta": 20, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "gig-fare-cut",
+    "archetype": "LABOR_TRANSIT",
+    "title": "The Platform Rate Slash",
+    "context": "MeshRide announces an algorithmic \"adjustment\" cutting delivery rates by 30% effective midnight. No negotiation, no notice period. 200 gig couriers in the district depend on this income. The company's PR team is calling it \"optimizing for sustainability.\"",
+    "choiceA": {
+      "label": "Accept the rate cut and keep grinding",
+      "type": "authoritarian",
+      "description": "You absorb the cut and work longer hours to make up the difference. Other couriers follow suit. The platform pockets the margin. Burnout rises across the district.",
+      "consequences": { "cashDelta": -15, "energyDelta": -10, "trustDelta": -10, "resilienceDelta": -15, "stressDelta": 15, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Help coordinate a courier work stoppage",
+      "type": "solidarity",
+      "description": "You join 80 couriers in a 48-hour stoppage coordinated through Signal. The platform's delivery time collapses. After media coverage, they partially restore the rate. Three couriers are algorithmically deactivated — the legal fund covers their challenge.",
+      "consequences": { "cashDelta": 5, "energyDelta": -20, "trustDelta": 15, "resilienceDelta": 15, "stressDelta": 5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "transit-fare-hike",
+    "archetype": "LABOR_TRANSIT",
+    "title": "The Bus Fare Hike",
+    "context": "The transit authority has approved a 25% fare increase and cancelled two bus routes serving the East Canal and South Quarter. Official reason: \"fiscal sustainability.\" Working families with no other transit options are facing impossible choices.",
+    "choiceA": {
+      "label": "Accept it as a necessary financial reality",
+      "type": "authoritarian",
+      "description": "You shrug and factor the cost into your budget. Most neighbors do the same. Two families move further out of the city. The South Quarter loses foot traffic. Small businesses suffer.",
+      "consequences": { "cashDelta": -10, "energyDelta": 0, "trustDelta": -10, "resilienceDelta": -10, "stressDelta": 5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Organize transit justice coalition",
+      "type": "solidarity",
+      "description": "You help form a coalition of affected riders, transit workers, and small business owners. A campaign of fare-evasion solidarity, press coverage, and city council testimony wins a low-income fare discount program.",
+      "consequences": { "cashDelta": 0, "energyDelta": -15, "trustDelta": 20, "resilienceDelta": 20, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "warehouse-displacement",
+    "archetype": "LABOR_TRANSIT",
+    "title": "The Distribution Centre Comes to Town",
+    "context": "A logistics giant has broken ground on a fulfillment warehouse that will employ 400 people — all contractors, no benefits. It replaces a factory that employed 80 unionized workers. The city calls it \"economic development.\" The factory workers are furious.",
+    "choiceA": {
+      "label": "Welcome the investment, look for contract work",
+      "type": "authoritarian",
+      "description": "You apply for a contract shift and get it. The 80 ex-factory workers can't meet gig-economy standards and scatter. Union density in the district collapses. The warehouse sets the new employment floor.",
+      "consequences": { "cashDelta": 25, "energyDelta": -10, "trustDelta": -15, "resilienceDelta": -20, "stressDelta": -5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Support the factory workers' campaign",
+      "type": "solidarity",
+      "description": "You help the displaced union workers run a public campaign exposing the precarious contract terms. Three city councillors withdraw support. The developer agrees to a community benefit agreement: 60 permanent positions with benefits.",
+      "consequences": { "cashDelta": -5, "energyDelta": -20, "trustDelta": 20, "resilienceDelta": 25, "stressDelta": 10, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "heat-dome-crisis",
+    "archetype": "CLIMATE_EXTREME",
+    "title": "The Heat Dome",
+    "context": "A five-day heat dome settles over the city. 42°C forecast. No cooling centers are open after hours. Three elderly residents on your floor have no air conditioning. The city's automated wellness check system is behind by two days.",
+    "choiceA": {
+      "label": "Focus on keeping yourself cool",
+      "type": "authoritarian",
+      "description": "You keep your door closed and your A/C running. One elderly neighbor is hospitalized on day three. The city issues a response that mostly blames individual preparedness.",
+      "consequences": { "cashDelta": -8, "energyDelta": 10, "trustDelta": -20, "resilienceDelta": -15, "stressDelta": -10, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Organize a floor cooling network",
+      "type": "solidarity",
+      "description": "You knock on every door and help set up a rotation of cooling visits and shared meals. All three vulnerable neighbors make it through. The mutual check-ins outlast the heat dome.",
+      "consequences": { "cashDelta": -5, "energyDelta": -15, "trustDelta": 25, "resilienceDelta": 20, "stressDelta": 5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "flood-denial",
+    "archetype": "CLIMATE_EXTREME",
+    "title": "The Basement Flood",
+    "context": "Overnight flash flooding submerges 12 basement apartments in the block. The city's emergency line is unresponsive. The landlord cites an \"act of nature\" clause. Families are losing furniture, electronics, documents. Insurance companies are disputing coverage.",
+    "choiceA": {
+      "label": "Secure your unit and document for personal claim",
+      "type": "authoritarian",
+      "description": "You focus on your own loss. The families without proper insurance get nothing. The block's lowest-income residents bear the full cost of the flood. Three households don't recover financially.",
+      "consequences": { "cashDelta": 15, "energyDelta": 0, "trustDelta": -15, "resilienceDelta": -10, "stressDelta": -8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Form an emergency tenant-led response team",
+      "type": "solidarity",
+      "description": "You organize a coordinated cleanup crew, pool contacts to find temporary storage, and file a joint complaint to the city citing code violations in the drainage system. A legal challenge to the landlord succeeds in partial compensation for three families.",
+      "consequences": { "cashDelta": -10, "energyDelta": -20, "trustDelta": 20, "resilienceDelta": 15, "stressDelta": 5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "airbnb-takeover",
+    "archetype": "HOUSING_SPECULATE",
+    "title": "The Short-Term Rental Creep",
+    "context": "An entire floor of the East Canal building has been converted to Airbnb units. Long-term residents complain of constant noise, rotating strangers, and a garbage system that can't keep up. The owner says the units are \"more profitable this way.\"",
+    "choiceA": {
+      "label": "Report individual noise incidents to the landlord",
+      "type": "authoritarian",
+      "description": "You send emails and get polite non-responses. The situation continues. Two more floors are converted. Three permanent residents move out. The building becomes unliveable for long-term community members.",
+      "consequences": { "cashDelta": 0, "energyDelta": 0, "trustDelta": -10, "resilienceDelta": -15, "stressDelta": 8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "File a collective housing violation complaint",
+      "type": "solidarity",
+      "description": "You coordinate 11 residents in a formal complaint citing zoning violations. A city housing inspector issues fines and mandates a cap. The owner must restore two floors to long-term tenancy. Your coalition becomes a model for the East Canal area.",
+      "consequences": { "cashDelta": 0, "energyDelta": -10, "trustDelta": 20, "resilienceDelta": 15, "stressDelta": -5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "corner-store-closure",
+    "archetype": "FOOD_HEALTH",
+    "title": "The Last Affordable Grocer",
+    "context": "Sal's Corner Store — the last affordable grocer in a half-mile radius — has posted a closure notice. Sal says the commercial rent tripled after the building sold to a national property group. Without Sal's, residents relying on cash and foot travel have no food access.",
+    "choiceA": {
+      "label": "Accept it and start driving further for groceries",
+      "type": "authoritarian",
+      "description": "You adjust your routine and drive to a big-box store. Families without cars have no good option. Two households start skipping meals. The community fridge becomes the only food resource.",
+      "consequences": { "cashDelta": -8, "energyDelta": -5, "trustDelta": -10, "resilienceDelta": -15, "stressDelta": 8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Organise a food cooperative buyout",
+      "type": "solidarity",
+      "description": "You mobilize 60 residents to pledge a buy-in and convert Sal's to a co-operative. Sal stays on as manager. The co-op fixes prices at cost. The property group couldn't outbid a community that pooled its resources.",
+      "consequences": { "cashDelta": -15, "energyDelta": -15, "trustDelta": 25, "resilienceDelta": 25, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "polling-suppression",
+    "archetype": "CIVIC_DISINFO",
+    "title": "The Polling Place Removal",
+    "context": "The electoral authority has announced the closure of the South Quarter polling location. Residents must now travel to a location served only by bus routes that were recently cut. The reason given is \"low turnout\" — which correlates exactly with past voter suppression.",
+    "choiceA": {
+      "label": "Accept the administrative decision",
+      "type": "authoritarian",
+      "description": "You find your own way to vote and don't make an issue of it. Turnout in the South Quarter drops by 38%. The redistricting that follows removes housing protections from the ward.",
+      "consequences": { "cashDelta": 0, "energyDelta": -5, "trustDelta": -20, "resilienceDelta": -15, "stressDelta": 5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Run a voter transport and legal challenge campaign",
+      "type": "solidarity",
+      "description": "You organize a carpool network and file a formal objection citing demographic disparate impact. A community legal observer documents the lines. The challenge makes regional news. A temporary polling site is reinstated for the election.",
+      "consequences": { "cashDelta": -5, "energyDelta": -20, "trustDelta": 20, "resilienceDelta": 20, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "union-disinformation",
+    "archetype": "CIVIC_DISINFO",
+    "title": "The Anti-Union Flyer Campaign",
+    "context": "An anonymous campaign of flyers and SMS messages is circulating false claims about the tenant union: that it's linked to crime, that membership costs $200/month, and that its leadership is corrupt. The campaign coincides exactly with a rent strike vote.",
+    "choiceA": {
+      "label": "Stay quiet — you don't want to be targeted",
+      "type": "authoritarian",
+      "description": "You don't speak out. The disinformation spreads. 30 households withdraw from the strike. The rent increase goes through. Researchers later trace the campaign to the building's management company.",
+      "consequences": { "cashDelta": -12, "energyDelta": 0, "trustDelta": -20, "resilienceDelta": -20, "stressDelta": 8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Counter-organize with verified information",
+      "type": "solidarity",
+      "description": "You help the union produce and distribute factual rebuttals through trusted neighborhood channels. A door-knock campaign reaches 80% of households. The strike vote passes. The origin of the campaign is traced and exposed.",
+      "consequences": { "cashDelta": 0, "energyDelta": -15, "trustDelta": 25, "resilienceDelta": 20, "stressDelta": -5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "ice-raid-threat",
+    "archetype": "MIGRATION_SANCT",
+    "title": "The Enforcement Sweep",
+    "context": "Immigration enforcement has announced a targeted operation in the district. Community members are terrified. Families are keeping children home from school. Three households have gone into hiding. The local police chief has declined to confirm or deny cooperation with federal agents.",
+    "choiceA": {
+      "label": "Keep your head down and avoid involvement",
+      "type": "authoritarian",
+      "description": "You say nothing and stay out of it. Two households are separated. The community's trust in neighbors who stayed silent collapses. Fear becomes a permanent feature of daily life in the block.",
+      "consequences": { "cashDelta": 0, "energyDelta": 0, "trustDelta": -25, "resilienceDelta": -20, "stressDelta": -5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Activate the sanctuary network",
+      "type": "solidarity",
+      "description": "You coordinate with the legal defense fund and local churches to establish a rapid-response know-your-rights network. An emergency hotline goes live. Enforcement agents depart without arrests. The district declares itself a sanctuary block.",
+      "consequences": { "cashDelta": -10, "energyDelta": -20, "trustDelta": 25, "resilienceDelta": 25, "stressDelta": 10, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "sanctuary-council-vote",
+    "archetype": "MIGRATION_SANCT",
+    "title": "The Sanctuary City Vote",
+    "context": "The city council is voting tonight on a sanctuary city resolution. Opponents have flooded the council's inbox with organized opposition. The vote is tied. A final public comment period opens at 7pm. Three council members are undecided. The district is watching.",
+    "choiceA": {
+      "label": "Stay home — politics is too exhausting",
+      "type": "authoritarian",
+      "description": "You don't attend. The undecided members vote against, citing \"insufficient community support.\" The resolution fails. Enforcement cooperation resumes. Two families you know leave the city.",
+      "consequences": { "cashDelta": 0, "energyDelta": 5, "trustDelta": -20, "resilienceDelta": -20, "stressDelta": -10, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Mobilize neighbors to the public comment session",
+      "type": "solidarity",
+      "description": "You help organize 40 district residents to attend and give testimony. The three undecided councillors are moved. The resolution passes 6-3. The celebration on the steps becomes a founding moment for the district's sanctuary coalition.",
+      "consequences": { "cashDelta": 0, "energyDelta": -15, "trustDelta": 25, "resilienceDelta": 25, "stressDelta": 5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "refugee-housing-crisis",
+    "archetype": "MIGRATION_SANCT",
+    "title": "The Emergency Placement",
+    "context": "Thirty refugee families — 94 people — have arrived with emergency placement status. The city's processing is 4 weeks behind. Families are sleeping in church basements. The North Transit Hub shelter has reached capacity. Right-wing accounts online are amplifying stories about \"the invasion.\"",
+    "choiceA": {
+      "label": "Express concerns about capacity to your councillor",
+      "type": "authoritarian",
+      "description": "You send a complaint letter. The media picks up the opposition angle. Three families are pushed to a facility outside the city. Online harassment of shelter workers increases.",
+      "consequences": { "cashDelta": 0, "energyDelta": 0, "trustDelta": -25, "resilienceDelta": -20, "stressDelta": -8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Open the district's community spaces and organize support",
+      "type": "solidarity",
+      "description": "You coordinate with the tool library, community kitchen, and land trust network to open space and provide meals. Twenty families are housed within the week. Three become permanent residents who join the district's construction crews.",
+      "consequences": { "cashDelta": -15, "energyDelta": -20, "trustDelta": 30, "resilienceDelta": 30, "stressDelta": 10, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "neo-fascist-flyers",
+    "archetype": "FASCIST_AGITATION",
+    "title": "The Overnight Papering",
+    "context": "You wake to find the block covered in neo-fascist flyers targeting migrant neighbors by name of nationality. Forty flyers on lampposts, doorways, and the community bulletin board. A QR code links to an anonymous organizing channel. Some neighbors are photographing them — but not to report.",
+    "choiceA": {
+      "label": "Leave it for the city to clean up",
+      "type": "authoritarian",
+      "description": "The flyers stay up for three days. Seven migrant families report feeling unsafe and avoid common areas. Two families receive follow-up harassment messages. The QR channel gains 200 followers.",
+      "consequences": { "cashDelta": 0, "energyDelta": 0, "trustDelta": -25, "resilienceDelta": -20, "stressDelta": 8, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Organize a coordinated tear-down and counter-presence",
+      "type": "solidarity",
+      "description": "You and 15 neighbors systematically remove every flyer within the hour and hold a brief gathering at the bulletin board. The organizing channel is reported and removed. Targeted families receive direct solidarity visits.",
+      "consequences": { "cashDelta": 0, "energyDelta": -10, "trustDelta": 25, "resilienceDelta": 20, "stressDelta": -5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "fascist-march",
+    "archetype": "FASCIST_AGITATION",
+    "title": "The Permitted March",
+    "context": "A far-right group has obtained a permit to march through the district's immigrant neighborhood this Saturday. They have 200 confirmed attendees and a social media following of 40,000. The city has assigned minimal police presence and told residents to \"stay indoors.\"",
+    "choiceA": {
+      "label": "Stay indoors as advised",
+      "type": "authoritarian",
+      "description": "You comply. The march goes through unopposed. Footage of an \"uncontested march\" is shared nationally as a propaganda victory. Local far-right membership triples. Three more marches are planned.",
+      "consequences": { "cashDelta": 0, "energyDelta": 5, "trustDelta": -20, "resilienceDelta": -20, "stressDelta": -5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Build a counter-presence with legal observers and community shields",
+      "type": "solidarity",
+      "description": "You help coordinate a community presence ten times larger than the march, with legal observers and a human shield at the most vulnerable streets. The march is contained, filmed, and humiliated. Far-right membership in the district collapses.",
+      "consequences": { "cashDelta": 0, "energyDelta": -20, "trustDelta": 30, "resilienceDelta": 25, "stressDelta": 10, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "fascist-youth-recruitment",
+    "archetype": "FASCIST_AGITATION",
+    "title": "The Transit Stop Recruiters",
+    "context": "Far-right organizers have been approaching youth at the North Transit Hub for three weeks, handing out materials and offering rides to \"community events.\" Two teenagers from the block have been seen attending these events. Parents are worried and divided on how to respond.",
+    "choiceA": {
+      "label": "Warn the kids individually and hope for the best",
+      "type": "authoritarian",
+      "description": "You talk to the teenagers one-on-one. They feel lectured at and push back. The organizing continues. A third teen gets involved. The recruiters expand to the South Quarter stop.",
+      "consequences": { "cashDelta": 0, "energyDelta": -5, "trustDelta": -10, "resilienceDelta": -10, "stressDelta": 5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Build a community youth program at the Transit Hub",
+      "type": "solidarity",
+      "description": "You work with local organisers to create an after-school mutual aid program at the transit hub. Twelve youth participate. The far-right recruiters leave after finding no foothold. The program continues past the crisis.",
+      "consequences": { "cashDelta": -10, "energyDelta": -20, "trustDelta": 25, "resilienceDelta": 25, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "solar-company-takeover",
+    "archetype": "HOUSING_SPECULATE",
+    "title": "The Solar Greenwashing Buyout",
+    "context": "A venture capital firm has made an offer to acquire the district's community solar cooperative at twice its book value. Their pitch: scale, efficiency, professional management. The fine print: variable pricing, private ownership, and profit extraction from the grid the community built.",
+    "choiceA": {
+      "label": "Vote yes — the payout helps the district",
+      "type": "authoritarian",
+      "description": "The vote passes narrowly. Within six months, rates increase 20%. The community loses governance of the grid it built. The VC firm's next annual report features the district as a \"sustainability acquisition.\"",
+      "consequences": { "cashDelta": 50, "energyDelta": 0, "trustDelta": -15, "resilienceDelta": -25, "stressDelta": -10, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Protect the cooperative model through collective vote",
+      "type": "solidarity",
+      "description": "You organize member education sessions and a vote that rejects the buyout 68% to 32%. The co-op amends its charter to prevent future privatization. The district retains energy sovereignty.",
+      "consequences": { "cashDelta": 0, "energyDelta": 0, "trustDelta": 20, "resilienceDelta": 25, "stressDelta": 5, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "school-lunch-cuts",
+    "archetype": "FOOD_HEALTH",
+    "title": "The School Meal Budget Cut",
+    "context": "The school board has approved a 40% cut to the free school meals program citing budget shortfalls. 320 students who relied on school meals will lose access. A board member called it \"an opportunity to teach self-reliance.\" The vote was 4-3.",
+    "choiceA": {
+      "label": "Focus on funding your own kids' lunches",
+      "type": "authoritarian",
+      "description": "You manage your own household. Dozens of low-income families can't. Attendance drops. Teachers report students unable to concentrate. The district's education performance metrics fall, triggering further cuts.",
+      "consequences": { "cashDelta": -8, "energyDelta": 0, "trustDelta": -15, "resilienceDelta": -15, "stressDelta": 0, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Organise a community school meal fund and board challenge",
+      "type": "solidarity",
+      "description": "You help launch a neighborhood meal fund that covers 200 students immediately while a recall campaign targets the four yes-voting board members. Three resign. The program is reinstated with a community co-sponsorship model.",
+      "consequences": { "cashDelta": -10, "energyDelta": -15, "trustDelta": 25, "resilienceDelta": 20, "stressDelta": 0, "worldEffect": "bloom" }
+    }
+  },
+  {
+    "id": "precarious-reclassification",
+    "archetype": "LABOR_TRANSIT",
+    "title": "The Classification Hearing",
+    "context": "The city council is holding a hearing on whether to mandate employee classification for gig workers. Platform companies have spent $4M lobbying against it. 300 local gig workers stand to gain benefits, sick leave, and minimum wage protections. The vote is in two days.",
+    "choiceA": {
+      "label": "Stay out of it — politics rarely helps workers",
+      "type": "authoritarian",
+      "description": "Low turnout at the hearing signals weak community support. The motion fails 5-4. Platforms announce \"enhanced flexibility\" as a consolation. Nothing changes. Gig work remains the precarious baseline.",
+      "consequences": { "cashDelta": 0, "energyDelta": 5, "trustDelta": -15, "resilienceDelta": -10, "stressDelta": -5, "worldEffect": "desaturate" }
+    },
+    "choiceB": {
+      "label": "Pack the hearing with affected workers and allies",
+      "type": "solidarity",
+      "description": "You help coordinate testimony from 80 gig workers. The council chambers overflow. Three undecided members vote yes. The classification passes. Monthly income for 300 district workers increases by an average of $400.",
+      "consequences": { "cashDelta": 15, "energyDelta": -15, "trustDelta": 20, "resilienceDelta": 20, "stressDelta": -5, "worldEffect": "bloom" }
     }
   }
 ]

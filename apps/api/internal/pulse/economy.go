@@ -16,6 +16,11 @@ var (
 	cacheDuration = 24 * time.Hour
 )
 
+// GetPulseStateAt generates seasonal fallback for the given time (used in tests).
+func GetPulseStateAt(t time.Time) *DistrictPulseState {
+	return seasonalFallback(t)
+}
+
 // GetPulseState returns cached pulse state or generates seasonal fallback.
 func GetPulseState() *DistrictPulseState {
 	cacheMu.RLock()

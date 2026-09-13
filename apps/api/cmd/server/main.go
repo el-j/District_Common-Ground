@@ -13,6 +13,7 @@ import (
 	"github.com/district-cg/api/internal/db"
 	"github.com/district-cg/api/internal/gamedata"
 	"github.com/district-cg/api/internal/middleware"
+	"github.com/district-cg/api/internal/narrative"
 	"github.com/district-cg/api/internal/pulse"
 	"github.com/district-cg/api/internal/save"
 )
@@ -42,6 +43,7 @@ func main() {
 	solidarityHandler := save.NewSolidarityHandler(pool)
 
 	gamedataHandler := gamedata.NewHandler()
+	narrativeHandler := narrative.NewHandler(pool)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
@@ -63,6 +65,8 @@ func main() {
 		r.Get("/data/crises", gamedataHandler.Crises)
 		r.Get("/pulse/economy", pulse.HandleEconomy)
 		r.Get("/pulse/climate", pulse.HandleClimate)
+		r.Get("/pulse/news", pulse.HandleNews)
+		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
 	})
 

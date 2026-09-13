@@ -10,6 +10,7 @@ export class TopHUD {
   private statsEl: HTMLElement;
   private zoneEl: HTMLElement;
   private barometerEl: HTMLElement;
+  private pulseBadgeEl: HTMLElement;
   private actionButton: HTMLButtonElement | null = null;
   private actionHandler: (() => void) | null = null;
   private endDayBtn: HTMLButtonElement;
@@ -39,6 +40,12 @@ export class TopHUD {
     this.barometerEl = document.createElement('div');
     this.barometerEl.id = 'hud-barometer';
     this.el.appendChild(this.barometerEl);
+
+    this.pulseBadgeEl = document.createElement('div');
+    this.pulseBadgeEl.id = 'hud-pulse-badge';
+    this.pulseBadgeEl.setAttribute('title', 'District Solidarity Index');
+    this.pulseBadgeEl.hidden = true;
+    this.el.appendChild(this.pulseBadgeEl);
 
     // Broadsheet + radio instances (persistent, opened on demand)
     this.broadsheet = new BroadsheetModal(root);
@@ -88,6 +95,28 @@ export class TopHUD {
 
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
+
+    // Fetch district resilience badge (non-blocking)
+    this.fetchPulseBadge();
+  }
+
+  private fetchPulseBadge(): void {
+    fetch('/api/v1/district/resilience')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { globalIndex?: number; message?: string } | null) => {
+        if (!data || data.globalIndex === undefined) return;
+        const idx = data.globalIndex;
+        const dot = idx >= 70 ? '🟢' : idx >= 50 ? '🟡' : '🔴';
+        const tier = idx >= 70 ? 'high' : idx >= 50 ? 'mid' : 'low';
+        this.pulseBadgeEl.innerHTML = `
+          <span class="pulse-dot">${dot}</span>
+          <span class="pulse-label">District Pulse</span>
+        `;
+        this.pulseBadgeEl.dataset['tier'] = tier;
+        this.pulseBadgeEl.hidden = false;
+        this.pulseBadgeEl.setAttribute('title', `District Solidarity: ${Math.round(idx)}% — ${data.message ?? ''}`);
+      })
+      .catch(() => { /* silently skip if API unreachable */ });
   }
 
   private onEndDay(_root: HTMLElement): void {
@@ -163,6 +192,7 @@ export class TopHUD {
     this.settingsBtn.hidden = false;
     this.shareBtn.hidden = false;
     this.radioBtn.hidden = false;
+    // pulseBadgeEl visibility controlled by fetchPulseBadge response
 
     const roleLabel = player.classRole
       ? { pip: 'Pip', morgan: 'Morgan', arthur: 'Arthur' }[player.classRole] ?? '?'

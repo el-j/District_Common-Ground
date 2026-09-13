@@ -23,12 +23,14 @@ const ENERGY_REGEN: Record<string, number> = {
 
 export function applyDailyTick(
   classRole: string | null,
-  commons: { kitchenProgress: number; solarGridProgress: number; legalFundProgress: number },
+  commons: { kitchenProgress: number; solarGridProgress: number; legalFundProgress: number; toolLibraryProgress?: number },
   socialTrust: number,
   multipliers: EconomicMultipliers = DEFAULT_MULTIPLIERS,
 ): DailyTickResult {
   const regen = ENERGY_REGEN[classRole ?? ''] ?? 8;
-  const energyUpkeep = 10;
+  // Tool Library at 100% reduces upkeep by 20% (covers shared repair tools)
+  const toolLibraryBuilt = (commons.toolLibraryProgress ?? 0) >= BUILD_COMPLETION_THRESHOLD;
+  const energyUpkeep = toolLibraryBuilt ? 8 : 10;
   const energyDelta = regen - energyUpkeep;
 
   // Cash: base food upkeep multiplied by food index; kitchen built → free food

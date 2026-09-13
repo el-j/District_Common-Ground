@@ -7,7 +7,7 @@ Planning: `docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md`
 - [x] Create `apps/api/internal/pulse/` package (`economy.go` + `types.go`)
 - [x] `economy.go` — `DistrictPulseState` struct; sinusoidal seasonal multipliers; 24h in-memory cache with `sync.RWMutex`
 - [x] `economy.go` — fail-safe defaults (all multipliers = 1.0) via `seasonalFallback()` when fetch fails
-- [ ] `news.go` stub — placeholder returning empty news array (full impl in M9)
+- [x] `news.go` stub — placeholder returning empty news array (full impl in M9)
 - [x] `GET /api/v1/pulse/economy` handler wired into chi router
 - [x] `GET /api/v1/pulse/climate` handler (heat + displacement)
 - [x] `packages/shared-types/src/index.ts` — `DistrictPulseState`, `EconomicMultipliers`
@@ -22,7 +22,7 @@ Planning: `docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md`
 - [x] `TopHUD.ts` — Economic Barometer chip: food index icon + energy index icon with tier colour (green/amber/red)
 
 ## Tests
-- [ ] Vitest: `EconomyMath.ts` with $M_\text{food} = 1.3$ and kitchen built → food upkeep = 0
-- [ ] Vitest: seasonal wave returns 1.0 in spring, peaks ≥ 1.3 in winter (food)
-- [ ] Go httptest: `/api/v1/pulse/economy` returns 200 with valid JSON when external fetch succeeds
-- [ ] Go httptest: `/api/v1/pulse/economy` returns fail-safe defaults on network error
+- [x] Vitest: `EconomyMath.ts` with $M_\text{food} = 1.3$ and kitchen built → food upkeep = 0
+- [x] Vitest: seasonal wave returns 1.0 in spring, peaks ≥ 1.3 in winter (food)
+- [x] Go httptest: `/api/v1/pulse/economy` returns 200 with valid JSON when external fetch succeeds
+- [x] Go httptest: `/api/v1/pulse/economy` returns fail-safe defaults on network error

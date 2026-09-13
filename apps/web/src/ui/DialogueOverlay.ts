@@ -18,6 +18,8 @@ export class DialogueOverlay {
   private readonly onClose?: () => void;
   private currentKey: string;
   private typewriterTimer: number | null = null;
+  private focusedChoice = 0;
+  private readonly keyHandler: (e: KeyboardEvent) => void;
 
   constructor(root: HTMLElement, tree: DialogueTree, startKey: string, title = 'Town Talk', onClose?: () => void) {
     this.tree = tree;
@@ -39,8 +41,29 @@ export class DialogueOverlay {
 
     root.appendChild(this.el);
     inputManager.setLocked(true);
+
+    this.keyHandler = (e: KeyboardEvent) => this.onKey(e);
+    window.addEventListener('keydown', this.keyHandler);
+
     this.bindEvents();
     this.renderNode(this.currentKey);
+  }
+
+  private onKey(e: KeyboardEvent): void {
+    const buttons = Array.from(this.el.querySelectorAll<HTMLButtonElement>('.dialogue-choice'));
+    if (buttons.length === 0) return;
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      this.focusedChoice = (this.focusedChoice + 1) % buttons.length;
+      buttons[this.focusedChoice]?.focus();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      this.focusedChoice = (this.focusedChoice - 1 + buttons.length) % buttons.length;
+      buttons[this.focusedChoice]?.focus();
+    } else if (e.key === 'Escape') {
+      this.close();
+    }
   }
 
   private bindEvents(): void {
@@ -63,6 +86,7 @@ export class DialogueOverlay {
     }
 
     this.currentKey = key;
+    this.focusedChoice = 0;
     const textEl = this.el.querySelector<HTMLElement>('.dialogue-text');
     const actionsEl = this.el.querySelector<HTMLElement>('.dialogue-actions');
     if (!textEl || !actionsEl) return;
@@ -72,11 +96,12 @@ export class DialogueOverlay {
 
     this.typewriter(textEl, node.text);
 
-    node.responses.forEach((choice) => {
+    node.responses.forEach((choice, i) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'dialogue-choice';
       button.textContent = choice.label;
+      if (i === 0) button.autofocus = true;
       button.addEventListener('click', () => {
         if (choice.next) {
           this.renderNode(choice.next);
@@ -86,6 +111,10 @@ export class DialogueOverlay {
       });
       actionsEl.appendChild(button);
     });
+
+    // Focus first choice after render
+    const first = actionsEl.querySelector<HTMLButtonElement>('.dialogue-choice');
+    first?.focus();
   }
 
   private typewriter(target: HTMLElement, text: string): void {
@@ -123,6 +152,7 @@ export class DialogueOverlay {
       window.clearTimeout(this.typewriterTimer);
       this.typewriterTimer = null;
     }
+    window.removeEventListener('keydown', this.keyHandler);
     inputManager.setLocked(false);
     this.el.remove();
     this.onClose?.();

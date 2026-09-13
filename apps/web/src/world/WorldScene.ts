@@ -4,18 +4,21 @@ import { setupTilemapCollision } from './CollisionSystem';
 import { PlayerEntity } from './entities/PlayerEntity';
 import { NPCEntity } from './entities/NPCEntity';
 import { ScrapsEntity } from './entities/ScrapsEntity';
+import { PigeonEntity } from './entities/PigeonEntity';
 import { DialogueOverlay } from '../ui/DialogueOverlay';
 import { ConstructionModal, type ConstructionNodeData } from '../ui/ConstructionModal';
 import { CrisisWireModal } from '../ui/CrisisWireModal';
 import { HistoryModal } from '../ui/HistoryModal';
+import { TownHallAssembly } from '../ui/TownHallAssembly';
 import { TopHUD } from '../ui/TopHUD';
 import { useGameStore } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
+import { addTrust, spendEnergy, reduceStress } from '../core/state/actions';
 import { startBGMLoop } from '../core/audio/SoundSynth';
 
 const TS = 16;
-const COLS = 48;
-const ROWS = 64;
+const COLS = 64;
+const ROWS = 80;
 
 const T = { FLOOR: 0, WALL: 1, GRASS: 2, ROAD: 3, PLAZA: 4, DOOR: 5, BUILT: 6 } as const;
 
@@ -48,8 +51,10 @@ function buildMap(): number[][] {
   fillRect(m, COLS - 1, 0, COLS - 1, ROWS - 1, T.WALL);
 
   // Roads
-  fillRect(m, 1, 20, COLS - 2, 22, T.ROAD);
-  fillRect(m, 1, 41, COLS - 2, 43, T.ROAD);
+  fillRect(m, 1, 20, COLS - 2, 22, T.ROAD);   // North cross-street
+  fillRect(m, 1, 41, COLS - 2, 43, T.ROAD);   // South cross-street
+  fillRect(m, 1, 63, COLS - 2, 65, T.ROAD);   // Solar Quarter border road
+  fillRect(m, 49, 1, 51, ROWS - 2, T.ROAD);   // East Canal access road
 
   // Central plaza floor
   fillRect(m, 9, 23, 38, 40, T.PLAZA);
@@ -57,18 +62,43 @@ function buildMap(): number[][] {
   // South courtyard
   fillRect(m, 15, 46, 32, 60, T.PLAZA);
 
-  // North buildings
+  // ── North Transit Hub (rows 0–15) ──────────────────────────────────────────
+  // Rail platform
+  fillRect(m, 3, 2, 26, 14, T.FLOOR);
+  fillRect(m, 3, 2, 26, 2, T.WALL);    // platform edge north
+  fillRect(m, 3, 14, 26, 14, T.ROAD);  // track strip
+  // Ticket booth
+  drawBuilding(m, 28, 3, 34, 10, 31);
+  // Cargo dock
+  fillRect(m, 36, 3, 46, 13, T.FLOOR);
+  fillRect(m, 36, 3, 46, 3, T.WALL);
+
+  // ── Original north buildings (shifted east) ────────────────────────────────
   drawBuilding(m, 2, 2, 13, 17, 7);     // High-Rise / Corporate Block
   drawBuilding(m, 33, 2, 46, 17, 39);   // Utility Station
 
-  // Central buildings
+  // ── Central buildings ──────────────────────────────────────────────────────
   drawBuilding(m, 2, 24, 8, 35, 5);     // Town Hall
   drawBuilding(m, 39, 24, 46, 35, 42);  // Tool Library / Old Warehouse
 
-  // South buildings
+  // ── South buildings (original zone) ───────────────────────────────────────
   drawBuilding(m, 2, 45, 13, 61, 7);    // Apartment Block A
   drawBuilding(m, 33, 45, 46, 61, 39);  // Apartment Block B
   drawBuilding(m, 17, 49, 23, 57, 20);  // Corner Grocer / Community Fridge
+
+  // ── East Canal zone (cols 52–62) ──────────────────────────────────────────
+  fillRect(m, 52, 5, 62, 38, T.PLAZA);   // canal walkway
+  fillRect(m, 53, 15, 62, 17, T.ROAD);   // flood dike strip
+  fillRect(m, 53, 28, 62, 30, T.ROAD);   // second dike
+  drawBuilding(m, 54, 5, 61, 12, 57);    // East Canal community building
+  drawBuilding(m, 54, 20, 61, 27, 57);   // Flood management office
+
+  // ── South Solar Quarter (rows 66–78) ──────────────────────────────────────
+  fillRect(m, 5, 66, 58, 78, T.PLAZA);  // rooftop plaza
+  drawBuilding(m, 5, 66, 18, 75, 11);   // Solar building A
+  drawBuilding(m, 22, 66, 35, 75, 28);  // Greenhouse garden node
+  drawBuilding(m, 40, 66, 53, 75, 46);  // Solar building B
+  fillRect(m, 7, 77, 55, 78, T.BUILT);  // Completed solar field (decorative)
 
   return m;
 }
@@ -325,6 +355,12 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
 // ── WorldScene ─────────────────────────────────────────────────────────────────
 
 
+interface FlyerObject {
+  sprite: Phaser.GameObjects.Rectangle;
+  x: number;
+  y: number;
+}
+
 export class WorldScene extends Phaser.Scene {
   private static hud: TopHUD | null = null;
   private player!: PlayerEntity;
@@ -338,10 +374,14 @@ export class WorldScene extends Phaser.Scene {
   private buildOpen = false;
   private crisisOpen = false;
   private historyOpen = false;
+  private assemblyOpen = false;
   private actionKey!: Phaser.Input.Keyboard.Key;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private completedIds = new Set<string>();
   private scraps!: ScrapsEntity;
+  private pigeons: PigeonEntity[] = [];
+  private flyers: FlyerObject[] = [];
+  private fascistCrisisActive = false;
   private ticksSinceDay = 0;
   private bgmStarted = false;
   private tintOverlay!: Phaser.GameObjects.Rectangle;
@@ -417,9 +457,27 @@ export class WorldScene extends Phaser.Scene {
 
     // Zone labels
     const lStyle = { fontFamily: 'monospace', fontSize: '9px', color: '#555577', alpha: 0.6 };
-    this.add.text(COLS/2*TS, 1*TS+4,  '— NORTH DISTRICT —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
-    this.add.text(COLS/2*TS, 23*TS+4, '— CENTRAL PLAZA —',  lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
-    this.add.text(COLS/2*TS, 44*TS+4, '— SOUTH QUARTER —',  lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+    this.add.text(COLS/2*TS, 1*TS+4,  '— NORTH — TRANSIT HUB —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+    this.add.text(COLS/2*TS, 23*TS+4, '— CENTRAL PLAZA —',       lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+    this.add.text(COLS/2*TS, 44*TS+4, '— SOUTH QUARTER —',       lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+    this.add.text(55*TS, 20*TS,       '— EAST CANAL —',          lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+    this.add.text(COLS/2*TS, 66*TS+4, '— SOUTH SOLAR QUARTER —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
+
+    // Subscribe to crisis state to spawn/remove fascist flyers
+    useGameStore.subscribe((state) => {
+      const crisis = state.crisisState;
+      const id = crisis.activeCrisisId;
+      const isFascist = id != null && (
+        id.startsWith('neo-fascist') || id.startsWith('fascist') || id === 'fascist-youth-recruitment'
+      );
+      if (isFascist && !this.fascistCrisisActive) {
+        this.fascistCrisisActive = true;
+        this.spawnFlyers();
+      } else if (!isFascist && this.fascistCrisisActive) {
+        this.fascistCrisisActive = false;
+        this.removeAllFlyers();
+      }
+    });
 
     // Camera
     this.cameras.main.setBounds(0, 0, worldW, worldH);
@@ -445,6 +503,15 @@ export class WorldScene extends Phaser.Scene {
 
     // Scraps the cat
     this.scraps = new ScrapsEntity(this, 160, 53 * 16);
+
+    // Pigeons in Central Plaza (4–6 birds)
+    const pigeonBounds = new Phaser.Geom.Rectangle(9 * TS, 23 * TS, 29 * TS, 17 * TS);
+    const pigeonCount = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < pigeonCount; i++) {
+      const px = pigeonBounds.x + Math.random() * pigeonBounds.width;
+      const py = pigeonBounds.y + Math.random() * pigeonBounds.height;
+      this.pigeons.push(new PigeonEntity(this, px, py, pigeonBounds));
+    }
 
     // Tint overlay for day/night lighting (depth 90, scrollFactor 0 = fixed to screen)
     const screenW = this.scale.width, screenH = this.scale.height;
@@ -484,9 +551,11 @@ export class WorldScene extends Phaser.Scene {
     this.scraps.update(this.player.x, this.player.y, ePressed, delta);
 
     this.npcs.forEach(npc => npc.update(this.player.x, this.player.y));
+    this.pigeons.forEach(p => p.update(this.player.x, this.player.y, delta));
     this.syncCompletedBuilds();
     this.updateZone();
     this.checkCrisis();
+    this.checkAssembly();
     this.handleInteractions();
     this.drawThumbstick();
   }
@@ -535,12 +604,48 @@ export class WorldScene extends Phaser.Scene {
     new CrisisWireModal(uiRoot, activeCrisisId, () => { this.crisisOpen = false; });
   }
 
+  private checkAssembly(): void {
+    if (this.assemblyOpen || this.crisisOpen || this.dialogueOpen || this.buildOpen) return;
+    if (!TownHallAssembly.shouldOpen()) return;
+    const uiRoot = document.getElementById('ui-root');
+    if (!uiRoot) return;
+    this.assemblyOpen = true;
+    new TownHallAssembly(uiRoot, () => { this.assemblyOpen = false; });
+  }
+
+  private spawnFlyers(): void {
+    // 3–5 flyers near alley tiles around south courtyard
+    const positions = [
+      { x: 14 * TS, y: 50 * TS }, { x: 7 * TS,  y: 47 * TS },
+      { x: 34 * TS, y: 48 * TS }, { x: 28 * TS, y: 62 * TS },
+      { x: 11 * TS, y: 44 * TS },
+    ];
+    positions.slice(0, 3 + Math.floor(Math.random() * 3)).forEach(pos => {
+      const sprite = this.add.rectangle(pos.x, pos.y, 10, 7, 0xeecc22).setDepth(3);
+      this.flyers.push({ sprite, x: pos.x, y: pos.y });
+    });
+  }
+
+  private removeAllFlyers(): void {
+    this.flyers.forEach(f => f.sprite.destroy());
+    this.flyers = [];
+  }
+
   private updateZone(): void {
+    const px = this.player.x;
     const py = this.player.y;
     let zone = '';
-    if (py < 20 * TS)        zone = 'NORTH DISTRICT';
-    else if (py > 44 * TS)   zone = 'SOUTH QUARTER';
-    else if (py > 23 * TS && py < 40 * TS) zone = 'CENTRAL PLAZA';
+    if (px > 50 * TS) {
+      zone = 'East Canal';
+    } else if (py < 20 * TS) {
+      zone = 'North — Transit Hub';
+    } else if (py > 65 * TS) {
+      zone = 'South Solar Quarter';
+    } else if (py > 44 * TS) {
+      zone = 'South Quarter';
+    } else if (py > 23 * TS && py < 40 * TS) {
+      zone = 'Central Plaza';
+    }
     WorldScene.hud?.setZone(zone);
   }
 
@@ -555,17 +660,39 @@ export class WorldScene extends Phaser.Scene {
     const th = WorldScene.TOWN_HALL;
     const nearTownHall = Math.hypot(this.player.x - th.x, this.player.y - th.y) <= 48;
 
-    if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen) {
+    // Scraps feed (only when player has cash)
+    const scrapsDist = Math.hypot(this.player.x - this.scraps['sprite']['x'], this.player.y - this.scraps['sprite']['y']);
+    const scrapsInRange = scrapsDist < 48;
+    const hasCash = useGameStore.getState().player.cash > 0;
+
+    // Nearest flyer
+    const nearbyFlyer = this.flyers.find(f =>
+      Math.hypot(this.player.x - f.x, this.player.y - f.y) <= 32,
+    );
+
+    if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen && !this.assemblyOpen) {
       const pressed = Phaser.Input.Keyboard.JustDown(this.actionKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
       if (pressed) {
-        if (nearTownHall)    this.openHistory();
-        else if (nearbyBuild) this.openBuild(nearbyBuild);
-        else if (nearbyNpc)   this.openTalk(nearbyNpc);
+        if (nearbyFlyer) {
+          this.tearDownFlyer(nearbyFlyer);
+        } else if (scrapsInRange && hasCash) {
+          this.feedScraps();
+        } else if (nearTownHall) {
+          this.openHistory();
+        } else if (nearbyBuild) {
+          this.openBuild(nearbyBuild);
+        } else if (nearbyNpc) {
+          this.openTalk(nearbyNpc);
+        }
       }
     }
 
-    if (this.dialogueOpen || this.buildOpen || this.historyOpen) {
+    if (this.dialogueOpen || this.buildOpen || this.historyOpen || this.assemblyOpen) {
       WorldScene.hud?.hideAction();
+    } else if (nearbyFlyer) {
+      WorldScene.hud?.setAction('Tear down flyer [E] ✊', () => this.tearDownFlyer(nearbyFlyer));
+    } else if (scrapsInRange && hasCash) {
+      WorldScene.hud?.setAction('[E] Feed Scraps 🐟', () => this.feedScraps());
     } else if (nearTownHall) {
       WorldScene.hud?.setAction('Town Hall 📜', () => this.openHistory());
     } else if (nearbyBuild) {
@@ -575,6 +702,35 @@ export class WorldScene extends Phaser.Scene {
     } else {
       WorldScene.hud?.hideAction();
     }
+  }
+
+  private feedScraps(): void {
+    const state = useGameStore.getState();
+    if (state.player.cash <= 0) return;
+    useGameStore.setState(s => ({
+      player: {
+        ...s.player,
+        cash: Math.max(0, s.player.cash - 1),
+        stressLevel: Math.max(0, s.player.stressLevel - 10),
+      },
+    }));
+    this.scraps['spawnHearts']();
+  }
+
+  private tearDownFlyer(flyer: FlyerObject): void {
+    flyer.sprite.destroy();
+    this.flyers = this.flyers.filter(f => f !== flyer);
+    addTrust(5);
+    spendEnergy(2);
+    // Show brief confirmation
+    const txt = this.add.text(flyer.x, flyer.y - 12, '✊ +5 Trust', {
+      fontSize: '10px', color: '#88ff88', backgroundColor: '#1a2a1a', padding: { x: 3, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(20);
+    this.tweens.add({
+      targets: txt, y: txt.y - 24, alpha: 0, duration: 900,
+      ease: 'Power2', onComplete: () => txt.destroy(),
+    });
+    reduceStress(0); // placeholder — community effect captured in trust
   }
 
   private openHistory(): void {

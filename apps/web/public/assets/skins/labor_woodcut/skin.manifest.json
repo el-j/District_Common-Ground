@@ -1,0 +1,31 @@
+{
+  "skinId": "labor_woodcut",
+  "version": "1.0.0",
+  "displayName": "1930s Labor Woodcut",
+  "palette": {
+    "background": "#1c1712",
+    "surface": "#2b241c",
+    "accent": "#d8a13a",
+    "text": "#f0e6d2",
+    "hudBg": "rgba(20,16,12,0.92)",
+    "hudBorder": "#4a3c26",
+    "hudText": "#e0c68a"
+  },
+  "assetMap": {
+    "TILES_ATLAS": {},
+    "HERO_ATLAS": {},
+    "NPC_MIRA_ATLAS": {},
+    "NPC_LEO_ATLAS": {},
+    "NPC_ELENA_ATLAS": {},
+    "BUILD_KITCHEN_IDLE": {},
+    "BUILD_KITCHEN_BUILT": {},
+    "BUILD_SOLAR_IDLE": {},
+    "BUILD_SOLAR_BUILT": {},
+    "BUILD_LEGAL_IDLE": {},
+    "BUILD_LEGAL_BUILT": {}
+  },
+  "audioProfile": {
+    "sfxType": "print_press",
+    "bgmType": "solidarity_hymn"
+  }
+}

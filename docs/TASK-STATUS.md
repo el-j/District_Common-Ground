@@ -30,7 +30,7 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
 | **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), trust-gated plugin store, Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) |
-| **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[ ] Planned` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
+| **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[~] In Progress` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
 | **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[ ] Planned (PoC)` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[ ] Planned (Off-Grid PoC)` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
 | **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[ ] Planned (Offline Architecture)` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
@@ -40,6 +40,14 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[~] In Progress` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
 | M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] In Progress` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
 | M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[~] In Progress` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
+
+---
+
+## Known Issues / Technical Debt
+
+| # | Issue | Status | Task |
+|---|---|---|---|
+| TD1 | `internal/plugins/register.go`'s runtime `.so` hot-loader uses Go's native `plugin` package, which conflicts with `CGO_ENABLED=0` + `FROM scratch` — fails safe (dead code in prod), not build/crash breaking | `[!] Blocked` | [TD1 task](tasks/TD1-native-plugin-loader-cgo-conflict.md) |
 
 ---
 
@@ -80,16 +88,16 @@ Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md
 
 | Task | Status |
 |---|---|
-| `packages/shared-types` — `ThemeManifest`, `ShopItem`, `FriendProfile`, `CivicAction` | `[ ]` |
-| `apps/api/migrations/` — `000003_social_and_shop.up.sql` (inventory, wallets, friends, caravans, ticker) | `[ ]` |
-| `apps/api/internal/theme/` — Dynamic theme catalog & manifest loader | `[ ]` |
-| `apps/api/internal/shop/` — In-game Commons Bazaar catalog & atomic purchase handler | `[ ]` |
-| `apps/api/internal/social/` — Friend graph, district snapshot serializer & mutual-aid caravan queue | `[ ]` |
+| `packages/shared-types` — `ThemeManifest`, `ShopItem`, `FriendProfile`, `CivicAction` | `[~]` (Theme + Shop + Social done; Civic pending) |
+| `apps/api/migrations/` — wallets, inventory (`007`); friends, caravans (`008`); ticker still pending | `[~]` |
+| `apps/api/internal/theme/` — Dynamic theme catalog & manifest loader | `[x]` |
+| `apps/api/internal/shop/` — In-game Commons Bazaar catalog & atomic purchase handler | `[x]` |
+| `apps/api/internal/social/` — Friend graph, district snapshot serializer & mutual-aid caravan queue | `[x]` |
 | `apps/api/internal/civic/` — Regional democratic protest & strike aggregator (RSS / Civic Open Feeds) | `[ ]` |
-| `ThemePluginManager.ts` — Dynamic theme loader, palette swapper, building facade overrides | `[ ]` |
-| `ShopModal.ts` — Tactile wooden storefront modal, ST wallet counter, cosmetic unlocks | `[ ]` |
-| `SocialHubModal.ts` & `FriendDistrictViewer.ts` — Friend browser, invite codes, read-only visiting | `[ ]` |
-| Caravan Dispatch Widget — Send emergency kilowatts, soup, or legal kits to friends in crisis | `[ ]` |
+| `ThemePluginManager.ts` — Dynamic theme loader, palette swapper, building facade overrides | `[x]` |
+| `ShopModal.ts` — Tactile wooden storefront modal, ST wallet counter, cosmetic unlocks | `[x]` |
+| `SocialHubModal.ts` & `FriendDistrictViewer.ts` — Friend browser, invite codes, read-only visiting | `[x]` |
+| Caravan Dispatch Widget — Send emergency kilowatts, soup, or legal kits to friends in crisis | `[x]` |
 | `CivicTickerWidget.ts` — Rolling democratic rally alert ticker on morning broadsheet & HUD | `[ ]` |
 | `CivicDirectoryModal.ts` — Searchable real-world mutual-aid directory & "Found a Commons" PDF toolkit | `[ ]` |
 

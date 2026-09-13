@@ -18,6 +18,9 @@ import (
 	"github.com/district-cg/api/internal/plugins" // plugin manifest: RegisterAll() wires minigames
 	"github.com/district-cg/api/internal/pulse"
 	"github.com/district-cg/api/internal/save"
+	"github.com/district-cg/api/internal/shop"
+	"github.com/district-cg/api/internal/social"
+	"github.com/district-cg/api/internal/theme"
 )
 
 func main() {
@@ -51,7 +54,11 @@ func main() {
 	gamedataHandler := gamedata.NewHandler()
 	narrativeHandler := narrative.NewHandler(pool)
 
-	kernelHandler := kernel.NewHandler(kernel.DefaultRegistry, kernel.NewSessionManager(cfg.GameSessionSecret), kernel.NewRepository(pool), cfg.PluginOwnerUserID)
+	kernelRepo := kernel.NewRepository(pool)
+	kernelHandler := kernel.NewHandler(kernel.DefaultRegistry, kernel.NewSessionManager(cfg.GameSessionSecret), kernelRepo, cfg.PluginOwnerUserID)
+	themeHandler := theme.NewHandler(kernelRepo)
+	shopHandler := shop.NewHandler(shop.NewRepository(pool))
+	socialHandler := social.NewHandler(social.NewRepository(pool))
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
@@ -77,6 +84,18 @@ func main() {
 		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
 		r.Get("/games", kernelHandler.ListGames)
+		r.Get("/themes", themeHandler.List)
+		r.Get("/shop/catalog", shopHandler.Catalog)
+		r.With(requireAuth).Get("/shop/wallet", shopHandler.Wallet)
+		r.With(requireAuth).Get("/shop/inventory", shopHandler.Inventory)
+		r.With(requireAuth).Post("/shop/purchase", shopHandler.Purchase)
+		r.With(requireAuth).Get("/social/me", socialHandler.Me)
+		r.With(requireAuth).Get("/social/friends", socialHandler.Friends)
+		r.With(requireAuth).Post("/social/friends/add", socialHandler.AddFriend)
+		r.With(requireAuth).Get("/social/district/{userId}", socialHandler.District)
+		r.With(requireAuth).Post("/social/caravan/dispatch", socialHandler.DispatchCaravan)
+		r.With(requireAuth).Get("/social/caravan/inbox", socialHandler.Inbox)
+		r.With(requireAuth).Post("/social/caravan/{id}/claim", socialHandler.ClaimCaravan)
 		r.With(requireAuth).Post("/plugins/verification-requests", kernelHandler.SubmitVerificationRequest)
 		r.With(requireAuth).Get("/plugins/verification-requests", kernelHandler.ListVerificationRequests)
 		r.With(requireAuth).Post("/plugins/verification-requests/{id}/review", kernelHandler.ReviewVerificationRequest)

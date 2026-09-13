@@ -17,6 +17,22 @@ async function fetchManifest(skinId: string): Promise<SkinManifest> {
   return manifest;
 }
 
+/**
+ * Seeds the manifest cache for a theme whose manifest lives at an arbitrary
+ * URL (a verified community theme's `entrypoint`) rather than the built-in
+ * `assets/skins/<id>/` convention. Called by ThemePluginManager before
+ * switchSkin() so community themes resolve through the same palette/audio
+ * application path as built-ins.
+ */
+export async function registerRemoteThemeManifest(skinId: string, manifestUrl: string): Promise<SkinManifest> {
+  const res = await fetch(manifestUrl);
+  if (!res.ok) throw new Error(`Theme manifest not found: ${manifestUrl}`);
+  const manifest = (await res.json()) as SkinManifest;
+  validateManifest(manifest);
+  MANIFEST_CACHE.set(skinId, manifest);
+  return manifest;
+}
+
 function applyPalette(manifest: SkinManifest): void {
   const { palette } = manifest;
   const root = document.documentElement;

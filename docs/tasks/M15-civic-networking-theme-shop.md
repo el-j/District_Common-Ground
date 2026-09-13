@@ -2,22 +2,23 @@
 
 Story: [`docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md)  
 Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md)  
-Status: `[ ] Planned`
+Status: `[~] In Progress`
 
 > System guardrail: all future theme/shop/social integrations remain standalone modules, but they must follow the M14 trust gate: install -> quarantine -> manifest + hash validation -> owner review -> sandboxed runtime approval. No theme or plugin is allowed to execute directly in the host app without passing this flow.
 
 ---
 
 ## 1. Shared Types (`packages/shared-types/src/`)
-- [ ] `theme.ts`:
-  - [ ] `ThemeManifest` (palette, assetOverrides, shaderPreset, author, version)
-  - [ ] `BuildingSkinOverride` (stage0..stage3 sprite URLs)
-- [ ] `shop.ts`:
-  - [ ] `ShopItem` (id, title, category, priceST, priceCAB, unlockCriteria, previewUrl)
-  - [ ] `UserInventory` & `UserWallet` (solidarityTokens, civicBadges)
-- [ ] `social.ts`:
-  - [ ] `FriendProfile` (userId, handle, districtName, day, resilienceScore, activeCrisis)
-  - [ ] `SolidarityCaravan` (id, senderHandle, resourceType, amount, note, claimed)
+- [x] `theme.ts`:
+  - [x] `ThemeManifest` (palette, assetOverrides, shaderPreset, author, version)
+  - [x] `BuildingSkinOverride` (stage0..stage3 sprite URLs)
+- [x] `shop.ts`:
+  - [x] `ShopItem` (id, title, category, priceST, priceCAB, unlockCriteria, previewUrl)
+  - [x] `UserInventory` & `UserWallet` (solidarityTokens, civicBadges)
+- [x] `social.ts`:
+  - [x] `FriendProfile` (userId, handle, districtName, day, resilienceScore, activeCrisis)
+  - [x] `SolidarityCaravan` (id, senderHandle, resourceType, amount, note, claimed)
+  - [x] `DistrictSnapshot`, `MyProfile` — added beyond the literal spec; needed by the district viewer and the invite-code copy button respectively
 - [ ] `civic.ts`:
   - [ ] `CivicAction` (id, title, organizer, startTime, locationSummary, sourceUrl, regionCode)
   - [ ] `LocalChapter` (id, name, type, distanceKm, address, websiteUrl)
@@ -25,19 +26,23 @@ Status: `[ ] Planned`
 ---
 
 ## 2. Go Backend Tasks (`apps/api/`)
-- [ ] Database Migrations:
-  - [ ] `000003_social_and_shop.up.sql` (`user_inventory`, `user_wallets`, `user_friends`, `mutual_aid_caravans`, `civic_actions`)
-- [ ] Theming Engine (`internal/theme/`):
-  - [ ] `GET /api/v1/themes` — List verified installed theme bundles
-- [ ] Commons Bazaar (`internal/shop/`):
-  - [ ] `GET /api/v1/shop/catalog` — Return available blueprints and skins
-  - [ ] `POST /api/v1/shop/purchase` — Validate balance, debit ST, grant item atomically
-- [ ] Social Graph & Visiting (`internal/social/`):
-  - [ ] `GET /api/v1/social/friends` — List player's connected friends and live crisis status
-  - [ ] `POST /api/v1/social/friends/add` — Add friend by handle or invite code
-  - [ ] `GET /api/v1/social/district/:userId` — Return sanitized snapshot of friend's district layout
-  - [ ] `POST /api/v1/social/caravan/dispatch` — Send mutual aid caravan to friend
-  - [ ] `POST /api/v1/social/caravan/:id/claim` — Claim incoming caravan shipment
+- [~] Database Migrations:
+  - [x] `007_create_shop_wallets.up.sql` (`user_wallets`, `user_inventory`)
+  - [x] `008_create_social_graph.up.sql` (`handle`/`invite_code` columns on `users`, `user_friends`, `mutual_aid_caravans`)
+  - [ ] `civic_actions` (civic ticker migration — pending)
+- [x] Theming Engine (`internal/theme/`):
+  - [x] `GET /api/v1/themes` — List verified installed theme bundles
+- [x] Commons Bazaar (`internal/shop/`):
+  - [x] `GET /api/v1/shop/catalog` — Return available blueprints and skins
+  - [x] `GET /api/v1/shop/wallet` & `GET /api/v1/shop/inventory` — Read current balance/ownership (auth required)
+  - [x] `POST /api/v1/shop/purchase` — Validate balance, debit ST, grant item atomically (row-locked transaction; rejects insufficient funds and duplicate ownership)
+- [x] Social Graph & Visiting (`internal/social/`):
+  - [x] `GET /api/v1/social/friends` — List player's connected friends and live crisis status (joins `game_saves` JSONB for live day/resilience/activeCrisis)
+  - [x] `POST /api/v1/social/friends/add` — Add friend by handle or invite code (symmetric friendship, rejects self-add and duplicates)
+  - [x] `GET /api/v1/social/district/:userId` — Return sanitized snapshot of friend's district layout (friendship-gated, 403 otherwise)
+  - [x] `POST /api/v1/social/caravan/dispatch` — Send mutual aid caravan to friend (friendship-gated)
+  - [x] `POST /api/v1/social/caravan/:id/claim` — Claim incoming caravan shipment (row-locked; idempotent — a second claim is rejected)
+  - [x] `GET /api/v1/social/me` & `GET /api/v1/social/caravan/inbox` — added beyond the literal spec; needed for the invite-code display and the Caravan Dispatch Widget's inbox
 - [ ] Civic Action & Protest Ticker (`internal/civic/`):
   - [ ] `GET /api/v1/civic/ticker` — Fetch upcoming verified pro-democracy rallies filtered by regional code
   - [ ] `GET /api/v1/civic/chapters` — Query nearest mutual aid tool libraries, fridges, and community land trusts
@@ -45,18 +50,18 @@ Status: `[ ] Planned`
 ---
 
 ## 3. Frontend Tasks (`apps/web/`)
-- [ ] Theming & Skin Engine:
-  - [ ] `ThemePluginManager.ts` — Dynamic theme loader applying color variables and sprite swaps
-  - [ ] Build 3 initial starter themes: Solarpunk 2036, Retro Game Boy 1989, 1930s Labor Woodcut
-  - [ ] Theme switcher dropdown in Game Settings modal
-- [ ] The Commons Bazaar (Shop UI):
-  - [ ] `ShopModal.ts` — Tactile wooden storefront modal with tabbed item categories
-  - [ ] Live ST wallet balance counter in HUD
-  - [ ] One-click preview & purchase confirmation with celebratory sound chime
-- [ ] "Common Grounds" Social Hub:
-  - [ ] `SocialHubModal.ts` — Friends list, invite code copy button, friend request form
-  - [ ] `FriendDistrictViewer.ts` — Read-only overlay rendering friend's district parcels and status
-  - [ ] Caravan Dispatch Widget: Send battery power or food rations to friends during crises
+- [x] Theming & Skin Engine:
+  - [x] `ThemePluginManager.ts` — Dynamic theme loader applying color variables and sprite swaps
+  - [x] Build 3 initial starter themes: Solarpunk 2036, Retro Game Boy 1989, 1930s Labor Woodcut
+  - [x] Theme switcher dropdown in Game Settings modal
+- [x] The Commons Bazaar (Shop UI):
+  - [x] `ShopModal.ts` — Wooden storefront modal with tabbed item categories (facade/cosmetic/blueprint)
+  - [x] Live ST wallet balance counter in HUD
+  - [x] One-click preview & purchase confirmation with celebratory sound chime (`playSolidarityChime`)
+- [x] "Common Grounds" Social Hub:
+  - [x] `SocialHubModal.ts` — Friends list, invite code copy button, friend request form
+  - [x] `FriendDistrictViewer.ts` — Read-only overlay rendering friend's district parcels and status
+  - [x] Caravan Dispatch Widget: Send energy/food/cash to friends during crises (built as the modal's "Caravans" tab rather than a separate widget file — same consolidation `ShopModal.ts` already used for its tabs)
 - [ ] Civic Action Ticker & Real-World Bridge:
   - [ ] `CivicTickerWidget.ts` — Rolling alert ticker at bottom of morning broadsheet and HUD
   - [ ] `CivicDirectoryModal.ts` — Searchable local chapter directory with map links
@@ -65,7 +70,7 @@ Status: `[ ] Planned`
 ---
 
 ## 4. Tests & Quality Verification
-- [ ] Unit Test: Purchasing a 50 ST building facade correctly debits wallet and rejects on insufficient funds
+- [x] Unit Test: Purchasing a 50 ST building facade correctly debits wallet and rejects on insufficient funds (`apps/api/internal/shop/repository_test.go`, verified against real Postgres via testcontainers)
 - [ ] Unit Test: Dynamic theme loading overrides building stage textures without full page reload
-- [ ] Integration Test: Dispatched caravan correctly decrements sender resources and credits recipient upon claim
+- [x] Integration Test: Dispatched caravan correctly decrements sender resources and credits recipient upon claim (`apps/api/internal/social/repository_test.go`, verified against real Postgres — dispatch is friendship-gated, a stranger cannot claim, and a second claim is rejected as already-claimed; the actual client-side resource debit/credit reuses the already-tested `spendCash`/`spendEnergy`/`gainCash` actions in `apps/web/src/core/state/actions.test.ts`, per the same reward-settlement pattern used for minigame rewards)
 - [ ] Security & Privacy: Verify `/api/v1/civic/ticker` requires only coarse region code (no GPS/IP storage)

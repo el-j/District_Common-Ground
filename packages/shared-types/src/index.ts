@@ -1,6 +1,9 @@
 // Shared types between apps/web and apps/api
 
 export * from './kernel';
+export * from './theme';
+export * from './shop';
+export * from './social';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';

@@ -7,6 +7,9 @@ import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { PluginManagerModal } from './PluginManagerModal';
+import { ShopModal } from './ShopModal';
+import { SocialHubModal } from './SocialHubModal';
+import { getWallet } from '../api/endpoints/shop';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
 export class TopHUD {
@@ -25,6 +28,9 @@ export class TopHUD {
   private questBtn: HTMLButtonElement;
   private builderBtn: HTMLButtonElement;
   private pluginsBtn: HTMLButtonElement;
+  private shopBtn: HTMLButtonElement;
+  private socialBtn: HTMLButtonElement;
+  private walletChipEl: HTMLElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private scene?: Phaser.Scene;
@@ -145,11 +151,50 @@ export class TopHUD {
     this.pluginsBtn.addEventListener('click', () => new PluginManagerModal(root));
     root.appendChild(this.pluginsBtn);
 
+    // Commons Bazaar (shop) button
+    this.shopBtn = document.createElement('button');
+    this.shopBtn.type = 'button';
+    this.shopBtn.className = 'shop-open-btn interactive';
+    this.shopBtn.textContent = '🏪';
+    this.shopBtn.hidden = true;
+    this.shopBtn.setAttribute('aria-label', 'Open the Commons Bazaar');
+    this.shopBtn.addEventListener('click', () => new ShopModal(root, () => this.fetchWalletBalance()));
+    root.appendChild(this.shopBtn);
+
+    // Common Grounds (social hub) button
+    this.socialBtn = document.createElement('button');
+    this.socialBtn.type = 'button';
+    this.socialBtn.className = 'social-open-btn interactive';
+    this.socialBtn.textContent = '🤝';
+    this.socialBtn.hidden = true;
+    this.socialBtn.setAttribute('aria-label', 'Open Common Grounds');
+    this.socialBtn.addEventListener('click', () => new SocialHubModal(root));
+    root.appendChild(this.socialBtn);
+
+    // Solidarity Token wallet balance chip (only shown once fetched for a signed-in user)
+    this.walletChipEl = document.createElement('div');
+    this.walletChipEl.className = 'hud-wallet-chip';
+    this.walletChipEl.hidden = true;
+    root.appendChild(this.walletChipEl);
+
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
 
     // Fetch district resilience badge (non-blocking)
     this.fetchPulseBadge();
+    this.fetchWalletBalance();
+  }
+
+  private fetchWalletBalance(): void {
+    getWallet()
+      .then(wallet => {
+        this.walletChipEl.textContent = `🪙 ${wallet.solidarityTokens} ST`;
+        this.walletChipEl.hidden = false;
+      })
+      .catch(() => {
+        // Not signed in or server unreachable — keep the chip hidden.
+        this.walletChipEl.hidden = true;
+      });
   }
 
   private fetchPulseBadge(): void {
@@ -240,6 +285,8 @@ export class TopHUD {
       this.questBtn.hidden = true;
       this.builderBtn.hidden = true;
       this.pluginsBtn.hidden = true;
+      this.shopBtn.hidden = true;
+      this.socialBtn.hidden = true;
       return;
     }
 
@@ -252,7 +299,9 @@ export class TopHUD {
     this.questBtn.hidden = false;
     this.builderBtn.hidden = false;
     this.pluginsBtn.hidden = false;
-    // pulseBadgeEl visibility controlled by fetchPulseBadge response
+    this.shopBtn.hidden = false;
+    this.socialBtn.hidden = false;
+    // pulseBadgeEl / walletChipEl visibility controlled by their own fetch responses
 
     const roleLabel = player.classRole
       ? { pip: 'Pip', morgan: 'Morgan', arthur: 'Arthur' }[player.classRole] ?? '?'

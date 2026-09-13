@@ -798,6 +798,65 @@
 }
 .plugin-open-btn:hover { color: #d4e9ff; border-color: #6d8eb4; }
 
+/* ── Commons Bazaar Button ──────────────────────────────── */
+
+.shop-open-btn {
+  position: absolute;
+  right: 9.35rem;
+  bottom: 0.85rem;
+  background: rgba(26, 18, 10, 0.9);
+  border: 1px solid #6a4f2e;
+  border-radius: 50%;
+  color: #d8a13a;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.shop-open-btn:hover { color: #f0c775; border-color: #8a6b3e; }
+
+/* ── Common Grounds Button ──────────────────────────────── */
+
+.social-open-btn {
+  position: absolute;
+  right: 11.1rem;
+  bottom: 0.85rem;
+  background: rgba(12, 22, 16, 0.9);
+  border: 1px solid #2e6a4f;
+  border-radius: 50%;
+  color: #6fd8a1;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.social-open-btn:hover { color: #a0f0c4; border-color: #3e8a6b; }
+
+.hud-wallet-chip {
+  position: absolute;
+  right: 9.35rem;
+  bottom: 3.3rem;
+  background: rgba(26, 18, 10, 0.85);
+  border: 1px solid #6a4f2e;
+  border-radius: 999px;
+  color: #f0c775;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  padding: 0.3rem 0.65rem;
+  z-index: 30;
+  white-space: nowrap;
+}
+
 /* ── Settings Modal ─────────────────────────────────────── */
 
 .settings-overlay {
@@ -1135,6 +1194,267 @@
 .skin-card--locked {
   opacity: 0.45;
   cursor: default;
+}
+
+/* ── Commons Bazaar Modal ───────────────────────────────── */
+
+.shop-panel {
+  width: min(620px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #1c140c, #14100a);
+  border-color: #4a3620;
+}
+
+.shop-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem 0;
+}
+
+.shop-wallet-chip {
+  background: rgba(216, 161, 58, 0.15);
+  border: 1px solid #6a4f2e;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  color: #f0c775;
+  font-size: 0.7rem;
+}
+
+.shop-guest-note {
+  font-size: 0.62rem;
+  color: #9a8a6f;
+}
+
+.shop-status {
+  font-size: 0.7rem;
+  color: #c79a4a;
+  margin: 0 0 0.75rem;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: rgba(20, 15, 9, 0.8);
+  border: 1px solid #4a3620;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.shop-card--owned { opacity: 0.8; }
+
+.shop-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.shop-item-title {
+  font-size: 0.72rem;
+  color: #f0c775;
+  font-weight: bold;
+}
+
+.shop-item-category {
+  font-size: 0.58rem;
+  color: #9a8a6f;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.shop-item-desc {
+  font-size: 0.66rem;
+  color: #cbb896;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.shop-item-owned {
+  font-size: 0.66rem;
+  color: #7fbf7f;
+}
+
+.shop-buy-btn {
+  background: #6a4f2e;
+  border: 1px solid #8a6b3e;
+  border-radius: 6px;
+  color: #f0c775;
+  font-size: 0.66rem;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.shop-buy-btn:hover:not(:disabled) { background: #8a6b3e; }
+.shop-buy-btn:disabled { opacity: 0.4; cursor: default; }
+
+.shop-confirm-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── Common Grounds (Social Hub) Modal ─────────────────────── */
+
+.social-hub-panel {
+  width: min(560px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #0c1a14, #0a140f);
+  border-color: #2e6a4f;
+}
+
+.social-invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  color: #cbe8d6;
+  margin-bottom: 0.75rem;
+}
+.social-invite-row strong { color: #a0f0c4; letter-spacing: 0.04em; }
+
+.social-copy-btn,
+.social-add-btn,
+.social-dispatch-btn,
+.social-visit-btn,
+.social-claim-btn {
+  background: #2e6a4f;
+  border: 1px solid #3e8a6b;
+  border-radius: 6px;
+  color: #d6f5e4;
+  font-size: 0.64rem;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.social-copy-btn:hover,
+.social-add-btn:hover,
+.social-dispatch-btn:hover:not(:disabled),
+.social-visit-btn:hover,
+.social-claim-btn:hover { background: #3e8a6b; }
+.social-dispatch-btn:disabled { opacity: 0.4; cursor: default; }
+
+.social-add-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.social-add-input,
+.social-dispatch-target,
+.social-dispatch-resource,
+.social-dispatch-amount,
+.social-dispatch-note {
+  background: rgba(20, 30, 25, 0.8);
+  border: 1px solid #2e6a4f;
+  border-radius: 6px;
+  color: #cbe8d6;
+  font-size: 0.66rem;
+  padding: 0.4rem 0.5rem;
+}
+.social-add-input { flex: 1; }
+
+.social-friend-list,
+.social-inbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.social-friend-row,
+.social-inbox-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(20, 30, 25, 0.6);
+  border: 1px solid #2e4a3a;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.66rem;
+  color: #cbe8d6;
+}
+
+.social-friend-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.social-friend-handle {
+  font-weight: bold;
+  color: #a0f0c4;
+}
+
+.social-friend-meta {
+  font-size: 0.6rem;
+  color: #8fb8a2;
+}
+
+.social-dispatch-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.social-dispatch-form .social-dispatch-note,
+.social-dispatch-form .social-dispatch-btn {
+  grid-column: 1 / -1;
+}
+
+.district-viewer-crisis {
+  color: #e0a04a;
+  font-size: 0.62rem;
+}
+
+/* ── Friend District Viewer ─────────────────────────────────── */
+
+.district-viewer-panel {
+  width: min(480px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #0c1a14, #0a140f);
+  border-color: #2e6a4f;
+}
+
+.district-viewer-summary {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.68rem;
+  color: #cbe8d6;
+  margin-bottom: 1rem;
+}
+
+.district-viewer-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.district-viewer-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.district-viewer-bar-label {
+  font-size: 0.62rem;
+  color: #8fb8a2;
+}
+
+.district-viewer-bar-track {
+  height: 0.5rem;
+  background: rgba(20, 30, 25, 0.8);
+  border: 1px solid #2e4a3a;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.district-viewer-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2e6a4f, #6fd8a1);
 }
 
 .skin-preview {

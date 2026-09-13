@@ -1,30 +1,32 @@
-import { switchSkin, getActiveSkinId } from '../skins/ThemeManager';
+import { getActiveSkinId } from '../skins/ThemeManager';
+import { getThemeCatalog, applyTheme, type ThemeCatalogEntry } from '../skins/ThemePluginManager';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { clearSave } from '../core/state/persistence';
 
-const SKINS = [
-  {
-    id: 'solarpunk',
-    label: 'Solarpunk',
-    desc: 'Lush, green, community-forward',
-    accent: '#66dd88',
-    bg: '#1a2c18',
-  },
-  {
-    id: 'retro_gb',
-    label: 'Retro GB',
-    desc: '4-shade Game Boy monochrome',
-    accent: '#8bac0f',
-    bg: '#0f380f',
-  },
-];
+interface SkinPreview {
+  desc: string;
+  accent: string;
+  bg: string;
+}
+
+const KNOWN_PREVIEWS: Record<string, SkinPreview> = {
+  solarpunk: { desc: 'Lush, green, community-forward', accent: '#66dd88', bg: '#1a2c18' },
+  retro_gb: { desc: '4-shade Game Boy monochrome', accent: '#8bac0f', bg: '#0f380f' },
+  labor_woodcut: { desc: '1930s protest-poster woodcut', accent: '#d8a13a', bg: '#1c1712' },
+};
+const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9a', bg: '#1a1a28' };
 
 export class SettingsModal {
   private readonly el: HTMLElement;
   private scene?: Phaser.Scene;
   private confirmNewGame = false;
+  private catalog: ThemeCatalogEntry[] = [
+    { id: 'solarpunk', title: 'Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
+    { id: 'retro_gb', title: 'Retro GB', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/retro_gb/skin.manifest.json' },
+    { id: 'labor_woodcut', title: '1930s Labor Woodcut', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/labor_woodcut/skin.manifest.json' },
+  ];
 
   constructor(root: HTMLElement, scene?: Phaser.Scene, onClose?: () => void) {
     this.scene = scene;
@@ -40,6 +42,11 @@ export class SettingsModal {
 
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close(onClose);
+    });
+
+    void getThemeCatalog().then(catalog => {
+      this.catalog = catalog;
+      this.render();
     });
   }
 
@@ -74,25 +81,28 @@ export class SettingsModal {
   private renderSkins(activeSkin: string): string {
     return `
       <div class="skin-grid">
-        ${SKINS.map(s => `
+        ${this.catalog.map(theme => {
+          const preview = KNOWN_PREVIEWS[theme.id] ?? FALLBACK_PREVIEW;
+          return `
           <button
-            class="skin-card ${s.id === activeSkin ? 'skin-card--active' : ''} interactive"
-            data-skin="${s.id}"
+            class="skin-card ${theme.id === activeSkin ? 'skin-card--active' : ''} interactive"
+            data-skin="${theme.id}"
             type="button"
-            style="--card-accent:${s.accent};--card-bg:${s.bg}"
+            style="--card-accent:${preview.accent};--card-bg:${preview.bg}"
           >
-            <div class="skin-preview" style="background:${s.bg};border-color:${s.accent}">
-              <span style="color:${s.accent};font-size:1.2rem">▓</span>
-              <span style="color:${s.accent};font-size:0.8rem;opacity:0.6">▒</span>
-              <span style="color:${s.accent};font-size:0.5rem;opacity:0.3">░</span>
+            <div class="skin-preview" style="background:${preview.bg};border-color:${preview.accent}">
+              <span style="color:${preview.accent};font-size:1.2rem">▓</span>
+              <span style="color:${preview.accent};font-size:0.8rem;opacity:0.6">▒</span>
+              <span style="color:${preview.accent};font-size:0.5rem;opacity:0.3">░</span>
             </div>
             <div class="skin-info">
-              <span class="skin-name">${s.label}</span>
-              <span class="skin-desc">${s.desc}</span>
-              ${s.id === activeSkin ? '<span class="skin-badge">Active</span>' : ''}
+              <span class="skin-name">${theme.title}</span>
+              <span class="skin-desc">${theme.builtIn ? preview.desc : `by ${theme.author}`}</span>
+              ${theme.id === activeSkin ? '<span class="skin-badge">Active</span>' : ''}
             </div>
           </button>
-        `).join('')}
+        `;
+        }).join('')}
         <div class="skin-card skin-card--locked">
           <div class="skin-preview" style="background:#1a1a28">
             <span style="color:#444;font-size:1.4rem">🔒</span>
@@ -114,7 +124,9 @@ export class SettingsModal {
       btn.addEventListener('click', () => {
         playUIClick();
         const skinId = btn.dataset['skin']!;
-        void switchSkin(skinId, this.scene).then(() => this.render());
+        const theme = this.catalog.find(entry => entry.id === skinId);
+        if (!theme) return;
+        void applyTheme(theme, this.scene).then(() => this.render());
       });
     });
 

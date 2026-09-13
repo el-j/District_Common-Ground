@@ -2,4 +2,6 @@ node_modules/
 .aider*
 apps/web/dist/
 apps/api/bin/
+apps/api/vendor/
 *.local
+*.log

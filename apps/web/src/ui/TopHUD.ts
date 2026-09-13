@@ -4,6 +4,7 @@ import { SettingsModal } from './SettingsModal';
 import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
+import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
 export class TopHUD {
   private el: HTMLElement;
@@ -17,6 +18,7 @@ export class TopHUD {
   private settingsBtn: HTMLButtonElement;
   private shareBtn: HTMLButtonElement;
   private radioBtn: HTMLButtonElement;
+  private muteBtn: HTMLButtonElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private scene?: Phaser.Scene;
@@ -92,6 +94,21 @@ export class TopHUD {
     this.radioBtn.setAttribute('aria-label', 'Open Radio Free Commons');
     this.radioBtn.addEventListener('click', () => this.radio.show());
     root.appendChild(this.radioBtn);
+
+    // Music mute toggle
+    this.muteBtn = document.createElement('button');
+    this.muteBtn.type = 'button';
+    this.muteBtn.className = 'mute-btn interactive';
+    this.muteBtn.textContent = '🔊';
+    this.muteBtn.hidden = true;
+    this.muteBtn.setAttribute('aria-label', 'Toggle music');
+    this.muteBtn.addEventListener('click', () => {
+      const muted = !isBGMMuted();
+      setBGMMuted(muted);
+      this.muteBtn.textContent = muted ? '🔇' : '🔊';
+      this.muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
+    });
+    root.appendChild(this.muteBtn);
 
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
@@ -184,6 +201,7 @@ export class TopHUD {
       this.settingsBtn.hidden = true;
       this.shareBtn.hidden = true;
       this.radioBtn.hidden = true;
+      this.muteBtn.hidden = true;
       return;
     }
 
@@ -192,6 +210,7 @@ export class TopHUD {
     this.settingsBtn.hidden = false;
     this.shareBtn.hidden = false;
     this.radioBtn.hidden = false;
+    this.muteBtn.hidden = false;
     // pulseBadgeEl visibility controlled by fetchPulseBadge response
 
     const roleLabel = player.classRole

@@ -567,6 +567,9 @@
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
+@media (max-width: 480px) {
+  .crisis-choices { grid-template-columns: 1fr; }
+}
 
 .crisis-btn {
   display: flex;
@@ -1263,6 +1266,95 @@ button:focus-visible,
 input:focus-visible {
   outline: 2px solid #66dd88;
   outline-offset: 2px;
+}
+
+/* ── Mute button ─────────────────────────────────────────── */
+
+.mute-btn {
+  position: absolute;
+  right: 4.5rem;
+  bottom: 0.85rem;
+  pointer-events: auto;
+  border: 1px solid #2d2d44;
+  background: rgba(12, 12, 22, 0.85);
+  color: #aaaacc;
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.mute-btn:hover {
+  background: rgba(24, 24, 44, 0.95);
+  border-color: #5555aa;
+}
+
+/* ── Crisis panel improvements ───────────────────────────── */
+
+.crisis-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.55rem;
+}
+
+.crisis-archetype-badge {
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(180, 30, 30, 0.18);
+  border: 1px solid rgba(180, 30, 30, 0.35);
+  color: #ff8866;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+}
+
+.crisis-btn-eyebrow {
+  display: block;
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-bottom: 0.1rem;
+}
+
+.crisis-btn-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.delta-chip {
+  font-size: 0.52rem;
+  border-radius: 999px;
+  padding: 0.08rem 0.4rem;
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+}
+.delta--pos {
+  background: rgba(60, 180, 80, 0.15);
+  border: 1px solid rgba(60, 180, 80, 0.35);
+  color: #66ee88;
+}
+.delta--neg {
+  background: rgba(180, 60, 40, 0.15);
+  border: 1px solid rgba(180, 60, 40, 0.35);
+  color: #ff8866;
+}
+
+/* Police-state overlay when scapegoating accumulates */
+.world--police-state {
+  filter: brightness(0.82) saturate(0.55) sepia(0.2) !important;
+}
+.world--police-state::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 5, 5, 0.18);
+  pointer-events: none;
+  z-index: 80;
 }
 
 /* ── Prefers reduced motion ──────────────────────────────── */

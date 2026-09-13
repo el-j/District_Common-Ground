@@ -8,21 +8,25 @@ services:
       context: ./apps/api
       target: builder
     command: go run ./cmd/server
+    ports:
+      - "8080:8080"
     volumes:
       - ./apps/api:/app
-      - /app/vendor
     environment:
       GO_ENV: development
 
   web:
     build:
-      context: ./apps/web
+      context: .
+      dockerfile: ./apps/web/Dockerfile
       target: builder
     command: npm run dev -- --host 0.0.0.0 --port 9300
     ports: !override
       - "9300:9300"
     volumes:
-      - ./apps/web:/app
+      - ./apps/web:/app/apps/web
+      - ./packages/shared-types:/app/packages/shared-types
       - /app/node_modules
+      - /app/apps/web/node_modules
     environment:
       VITE_API_URL: http://localhost:8080

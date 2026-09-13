@@ -312,49 +312,81 @@ export function playSolidarityChime(): void {
   });
 }
 
-// ── BGM loop ──────────────────────────────────────────────────────────────
+// ── BGM ambient loop ──────────────────────────────────────────────────────
+// Am → F → C → G chord progression, 84 BPM, triangle + sine pads.
+// Uses lookahead scheduling so each 4-bar loop plays gaplessly.
 
-let _bgmOsc: OscillatorNode | null = null;
-let _bgmInterval: ReturnType<typeof setInterval> | null = null;
+const BGM_BPM = 84;
+const BGM_BEAT_S = 60 / BGM_BPM;
+const BGM_BAR_S  = BGM_BEAT_S * 4;
+const BGM_LOOP_S = BGM_BAR_S  * 4;   // ~11.4 s per full cycle
+
+// [A2, C3, E3, A3], [F2, C3, F3, A3], [C3, G3, C4, E4], [G2, D3, G3, B3]
+const BGM_CHORDS: number[][] = [
+  [110.0, 130.8, 164.8, 220.0],
+  [87.3,  130.8, 174.6, 220.0],
+  [130.8, 196.0, 261.6, 329.6],
+  [98.0,  146.8, 196.0, 246.9],
+];
+
+let _bgmMaster: GainNode | null = null;
+let _bgmRunning = false;
+let _bgmMuted    = false;
+let _bgmSchedule: ReturnType<typeof setTimeout> | null = null;
+
+function _scheduleChord(audio: AudioContext, master: GainNode, freqs: number[], t: number, dur: number): void {
+  freqs.forEach((freq, i) => {
+    const osc  = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = i === 0 ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    const vol = i === 0 ? 0.055 : 0.022;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.45);
+    gain.gain.setValueAtTime(vol, t + dur - 0.35);
+    gain.gain.linearRampToValueAtTime(0, t + dur + 0.05);
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(t);
+    osc.stop(t + dur + 0.1);
+  });
+}
+
+function _bgmTick(): void {
+  const audio = getCtx();
+  if (!audio || !_bgmRunning || !_bgmMaster) return;
+  const loopStart = audio.currentTime + 0.05;
+  BGM_CHORDS.forEach((chord, bar) => {
+    _scheduleChord(audio, _bgmMaster!, chord, loopStart + bar * BGM_BAR_S, BGM_BAR_S);
+  });
+  _bgmSchedule = setTimeout(_bgmTick, (BGM_LOOP_S - 1.2) * 1000);
+}
 
 export function startBGMLoop(): void {
   const audio = getCtx();
-  if (!audio || _bgmOsc) return;
-
-  const drone = audio.createOscillator();
-  const droneGain = audio.createGain();
-  drone.type = 'triangle';
-  drone.frequency.setValueAtTime(55, audio.currentTime);
-  droneGain.gain.setValueAtTime(0.04, audio.currentTime);
-  drone.connect(droneGain);
-  droneGain.connect(audio.destination);
-  drone.start();
-  _bgmOsc = drone;
-
-  // Quiet rhythmic tick every ~500ms (4-bar feel at ~120bpm)
-  _bgmInterval = setInterval(() => {
-    const a = getCtx();
-    if (!a) return;
-    const tick = a.createOscillator();
-    const tickGain = a.createGain();
-    tick.type = 'square';
-    tick.frequency.setValueAtTime(110, a.currentTime);
-    tickGain.gain.setValueAtTime(0.02, a.currentTime);
-    tickGain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.05);
-    tick.connect(tickGain);
-    tickGain.connect(a.destination);
-    tick.start();
-    tick.stop(a.currentTime + 0.05);
-  }, 500);
+  if (!audio || _bgmRunning) return;
+  _bgmRunning = true;
+  _bgmMaster  = audio.createGain();
+  _bgmMaster.gain.setValueAtTime(_bgmMuted ? 0 : 1, audio.currentTime);
+  _bgmMaster.connect(audio.destination);
+  _bgmTick();
 }
 
 export function stopBGMLoop(): void {
-  if (_bgmOsc) {
-    try { _bgmOsc.stop(); } catch { /* already stopped */ }
-    _bgmOsc = null;
-  }
-  if (_bgmInterval !== null) {
-    clearInterval(_bgmInterval);
-    _bgmInterval = null;
+  _bgmRunning = false;
+  if (_bgmSchedule !== null) { clearTimeout(_bgmSchedule); _bgmSchedule = null; }
+  if (_bgmMaster) {
+    const audio = getCtx();
+    if (audio) _bgmMaster.gain.linearRampToValueAtTime(0, audio.currentTime + 0.5);
+    _bgmMaster = null;
   }
 }
+
+export function setBGMMuted(muted: boolean): void {
+  _bgmMuted = muted;
+  if (_bgmMaster) {
+    const audio = getCtx();
+    if (audio) _bgmMaster.gain.linearRampToValueAtTime(muted ? 0 : 1, audio.currentTime + 0.25);
+  }
+}
+export function isBGMMuted(): boolean { return _bgmMuted; }

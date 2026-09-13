@@ -8,6 +8,7 @@ import (
 
 	"github.com/district-cg/api/internal/save"
 	"github.com/district-cg/api/testutil"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUpsertAndLoad(t *testing.T) {
@@ -37,9 +38,7 @@ func TestUpsertAndLoad(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if string(got) != string(state) {
-		t.Errorf("got %s, want %s", got, state)
-	}
+	assert.JSONEq(t, string(state), string(got))
 }
 
 func TestLoad_NotFound(t *testing.T) {
@@ -79,7 +78,5 @@ func TestUpsert_Idempotent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	if string(got) != string(state2) {
-		t.Errorf("upsert did not overwrite: got %s", got)
-	}
+	assert.JSONEq(t, string(state2), string(got))
 }

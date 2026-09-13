@@ -387,6 +387,7 @@ export class WorldScene extends Phaser.Scene {
   private bgmStarted = false;
   private tintOverlay!: Phaser.GameObjects.Rectangle;
   private prevDay = 0;
+  private lastTintHash = -1;
 
   // Town Hall interaction point (door at col 5, row 35)
   private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
@@ -570,36 +571,36 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private updateDayNight(): void {
-    // 4 phases per day cycle (dawn→midday→dusk→night), 2 minutes real time
     const cycleDuration = 120_000;
-    const phase = (this.ticksSinceDay % cycleDuration) / cycleDuration; // 0–1
+    const phase = (this.ticksSinceDay % cycleDuration) / cycleDuration;
 
-    // Map phase to overlay color+alpha:
-    // 0.0 = dawn (warm peach, low alpha), 0.25 = midday (transparent),
-    // 0.5 = dusk (amber, low alpha), 0.75 = night (deep indigo, higher alpha)
-    let color = 0x220044, alpha = 0;
+    // Per-channel lerp helper to avoid raw-integer colour corruption
+    const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t);
+    const rgb = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
+
+    let color = 0x110022, alpha = 0;
     if (phase < 0.25) {
-      // dawn → midday: fade out peach overlay
       const t = phase / 0.25;
-      color = 0xffaa44;
-      alpha = (1 - t) * 0.22;
+      color = rgb(lerp(0xff, 0x44, t), lerp(0xaa, 0x22, t), lerp(0x44, 0x66, t));
+      alpha = (1 - t) * 0.16;
     } else if (phase < 0.5) {
-      // midday → dusk: fade in amber
       const t = (phase - 0.25) / 0.25;
-      color = 0xcc6622;
-      alpha = t * 0.18;
+      color = rgb(lerp(0x44, 0xcc, t), lerp(0x22, 0x66, t), lerp(0x66, 0x22, t));
+      alpha = t * 0.12;
     } else if (phase < 0.75) {
-      // dusk → night: fade to indigo
       const t = (phase - 0.5) / 0.25;
-      color = 0x220044 * (1 - t) + 0x110022 * t | 0;
-      alpha = 0.18 + t * 0.22;
+      color = rgb(lerp(0xcc, 0x11, t), lerp(0x66, 0x00, t), lerp(0x22, 0x22, t));
+      alpha = 0.12 + t * 0.14;
     } else {
-      // night → dawn: fade out indigo
       const t = (phase - 0.75) / 0.25;
       color = 0x110022;
-      alpha = 0.40 * (1 - t);
+      alpha = 0.26 * (1 - t);
     }
 
+    // Only call setFillStyle when the value meaningfully changes (prevents 60fps redraws)
+    const hash = color * 1000 + Math.round(alpha * 500);
+    if (hash === this.lastTintHash) return;
+    this.lastTintHash = hash;
     this.tintOverlay.setFillStyle(color, alpha);
   }
 

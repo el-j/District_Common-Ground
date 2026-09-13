@@ -28,16 +28,16 @@ Every mechanic, narrative branch, audio cue, and interface element must align wi
 │ 1. SOLIDARITY IS A    │ 2. GROUNDED IN REALITY, │ 3. TACTILE      │ 4. SANCTUARY  │
 │    TECHNOLOGY         │    NOT CYNICISM         │    WARMTH & JOY │    & DEFENSE  │
 │ Mutual aid is not     │ Crises are real (rents, │ Even in hard    │ Defend against│
-│ charity; it is an     │ inflation, climate),    │ times, joy is   │ fascism & hate│
-│ engineered buffer     │ but collective response │ alive: cats,    │ propaganda;   │
-│ against catastrophe.  │ creates real power.     │ soup, music.    │ welcome all.  │
+│ charity; it is an     │ inflation, climate),    │ times, joy is   │ hate & division;
+│ engineered buffer     │ but collective response │ alive: cats,    │ welcome all   │
+│ against catastrophe.  │ creates real power.     │ soup, music.    │ neighbors.    │
 └───────────────────────┴─────────────────────────┴─────────────────┴───────────────┘
 ```
 
 1. **Solidarity is a Technology**: Mutual aid is treated as an engineered defense system. Just as an engineer designs redundant circuits, a neighborhood builds redundant care networks (food, power, legal defense, child care).
 2. **Grounded in Reality, Not Cynicism**: The hardships are real—drawn from actual cost-of-living data and civic headlines—but the game rejects grimdark despair. It demonstrates that ordinary people have agency when they organize together.
 3. **Tactile Warmth & Playful Life**: The aesthetic balances systemic weight with cozy, tangible whimsy: steaming communal soup pots, cats napping on solar inverters, chalk art on sidewalks, and pirate radio broadcasts.
-4. **Sanctuary & Anti-Fascist Community Defense**: Rejecting the poison of far-right propaganda, racism, and scapegoating. When climate shocks displace people, a resilient community expands the table rather than building higher walls.
+4. **Sanctuary & Community Defense Against Division**: Rejecting the poison of scapegoating, racism, and divide-and-conquer propaganda. When climate shocks displace people, a resilient community expands the table rather than building higher walls.
 
 ---
 
@@ -170,13 +170,13 @@ Every crisis in *District: Common Ground* is authored around a specific cognitiv
 
 ---
 
-## 6. The 10-Year Horizon: Climate Migration & Anti-Fascist Community Defense
+## 6. The 10-Year Horizon: Climate Displacement & Community Defense
 
-Over the next decade (2026–2036+), real-world urban centers will face increasing climate-driven displacement, regional water and heat stress, and predatory far-right agitation attempting to scapegoat migrants and minorities for systemic failures.
+Over the next decade (2026–2036+), real-world urban centers will face increasing climate-driven displacement, regional water and heat stress, and predatory propaganda attempting to scapegoat newcomers and minorities for systemic failures.
 
 *District: Common Ground* is explicitly architected to absorb real-world climate and displacement trends through its open-data ingestion pipeline:
-- **The Welcoming Commons**: Newcomers (both legal and undocumented climate refugees) arriving at the North Transit Station bring vital skills, labor capacity, and cultural vitality. Welcoming them expands construction throughput and unlocks advanced agro-greenhouse and solar co-op tiers.
-- **Anti-Fascist Community Defense**: Countering far-right leafleting, astroturfed social media disinformation, and ICE/police sweeps through fact-checking broadsheets, street potlucks, and peaceful human sanctuary networks.
+- **The Welcoming Commons**: Newcomers (displaced families arriving from climate impact zones) arriving at the North Transit Station bring vital skills, labor capacity, and cultural vitality. Welcoming them expands construction throughput and unlocks advanced agro-greenhouse and solar co-op tiers.
+- **Community Defense Against Division**: Countering hate leafleting, astroturfed social media disinformation, and aggressive enforcement raids through fact-checking broadsheets, street potlucks, and peaceful human sanctuary networks.
 - **Future-Proof Real Data Feeds**: Integrating NOAA/NASA temperature anomalies and UNHCR displacement data so that as the real world warms and shifts over the next 10 years, the game's simulation remains a living, honest, and empowering mirror of real planetary conditions.
 
 *(See full specification in [`docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md)).*

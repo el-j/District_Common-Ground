@@ -82,10 +82,10 @@ The completed foundation (Milestones M1–M7) delivers an offline-capable PWA to
 
 ### Tasks
 - [ ] **Go API News Aggregator**:
-  - Implement `apps/api/internal/pulse/news.go` to fetch civic RSS feeds and classify articles into 7 Crisis Archetypes (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`).
+  - Implement `apps/api/internal/pulse/news.go` to fetch civic RSS feeds and classify articles into 7 Crisis Archetypes (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `COMMUNITY_DIVISION`).
   - Expose `GET /api/v1/pulse/news`.
 - [ ] **Scenario Generator & Vault**:
-  - Expand `crisis_scenarios.json` to 25+ authored templates with real-world anchor hooks, including Heat Dome Cooling Sanctuaries, Far-Right Agitator Rally defense, Bot-Farm Smear Campaigns, and Undocumented Labor Collectives.
+  - Expand `crisis_scenarios.json` to 25+ authored templates with real-world anchor hooks, including Heat Dome Cooling Sanctuaries, Divisive Agitator Rally defense, Bot-Farm Smear Campaigns, and Undocumented Labor Collectives.
   - Upgrade `CrisisEngine.ts` to match real news keywords to active scenarios.
 - [ ] **Tactile Morning Broadsheet**:
   - Create `apps/web/src/ui/BroadsheetModal.ts` displaying *"The Daily District Ground"* with unfolding page animation, headline, weather, and editorial.

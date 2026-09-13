@@ -1,5 +1,7 @@
 // Shared types between apps/web and apps/api
 
+export * from './kernel';
+
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';
 export type GamePhase = 'select' | 'playing';

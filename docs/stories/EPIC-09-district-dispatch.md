@@ -7,7 +7,7 @@
 Real civic news, climate feeds, and economic shifts are dynamically synthesized into street-level dilemmas and fresh NPC street gossip using a zero-cost, open-weight AI model pipeline (Ollama / Groq / Cloudflare / Hugging Face). The neighborhood never repeats the same canned lines, while strict programmatic guardrails protect game balance and theme.
 
 ## Crisis Archetypes (7 categories)
-`LABOR_TRANSIT` · `CLIMATE_EXTREME` · `HOUSING_SPECULATE` · `FOOD_HEALTH` · `CIVIC_DISINFO` · `MIGRATION_SANCT` · `FASCIST_AGITATION`
+`LABOR_TRANSIT` · `CLIMATE_EXTREME` · `HOUSING_SPECULATE` · `FOOD_HEALTH` · `CIVIC_DISINFO` · `MIGRATION_SANCT` · `COMMUNITY_DIVISION`
 
 ## Go Backend Tasks (Dynamic AI Engine)
 - `apps/api/internal/pulse/news.go` — RSS ingestion, keyword classification into 7 archetypes

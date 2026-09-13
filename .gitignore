@@ -5,3 +5,4 @@ apps/api/bin/
 apps/api/vendor/
 *.local
 *.log
+.DS_Store

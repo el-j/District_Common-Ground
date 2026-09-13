@@ -6,11 +6,12 @@ import (
 )
 
 type Config struct {
-	Port        string
-	DatabaseURL string
-	JWTSecret   string
-	GoEnv       string
-	ViteOrigin  string
+	Port              string
+	DatabaseURL       string
+	JWTSecret         string
+	GameSessionSecret string
+	GoEnv             string
+	ViteOrigin        string
 }
 
 func Load() (*Config, error) {
@@ -28,6 +29,11 @@ func Load() (*Config, error) {
 	cfg.JWTSecret = os.Getenv("JWT_SECRET")
 	if len(cfg.JWTSecret) < 32 {
 		return nil, errors.New("JWT_SECRET must be at least 32 characters")
+	}
+
+	cfg.GameSessionSecret = os.Getenv("GAME_SESSION_SECRET")
+	if len(cfg.GameSessionSecret) < 32 {
+		return nil, errors.New("GAME_SESSION_SECRET must be at least 32 characters")
 	}
 
 	return cfg, nil

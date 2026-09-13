@@ -12,8 +12,10 @@ import (
 	"github.com/district-cg/api/internal/config"
 	"github.com/district-cg/api/internal/db"
 	"github.com/district-cg/api/internal/gamedata"
+	"github.com/district-cg/api/internal/kernel"
 	"github.com/district-cg/api/internal/middleware"
 	"github.com/district-cg/api/internal/narrative"
+	_ "github.com/district-cg/api/internal/plugins" // self-registers minigame plugins into kernel.DefaultRegistry
 	"github.com/district-cg/api/internal/pulse"
 	"github.com/district-cg/api/internal/save"
 )
@@ -45,6 +47,8 @@ func main() {
 	gamedataHandler := gamedata.NewHandler()
 	narrativeHandler := narrative.NewHandler(pool)
 
+	kernelHandler := kernel.NewHandler(kernel.DefaultRegistry, kernel.NewSessionManager(cfg.GameSessionSecret), kernel.NewRepository(pool))
+
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Logger)
@@ -68,6 +72,9 @@ func main() {
 		r.Get("/pulse/news", pulse.HandleNews)
 		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
+		r.Get("/games", kernelHandler.ListGames)
+		r.With(requireAuth).Post("/games/{id}/session", kernelHandler.StartSession)
+		r.With(requireAuth).Post("/games/{id}/complete", kernelHandler.CompleteSession)
 	})
 
 	log.Printf("api listening on :%s", cfg.Port)

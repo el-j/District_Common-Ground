@@ -1,4 +1,4 @@
-# M11 — Shared Commons, Climate Migration & Anti-Fascist Defense
+# M11 — Shared Commons, Climate Displacement & Community Defense
 
 Stories: `docs/stories/EPIC-11-shared-commons.md`
 Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
@@ -16,8 +16,8 @@ Planning: `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 - [x] Solidarity resolution: +30% construction speed (buff multiplier), unlock Greenhouse node
 - [x] Scapegoat resolution: police militarisation visual (extra dark filter), −15 trust
 
-## Anti-Fascist Defense Actions
-- [x] Discoverable flyer objects in alley tiles (generated when `FASCIST_AGITATION` event active)
+## Community Defense Actions
+- [x] Discoverable flyer objects in alley tiles (generated when `COMMUNITY_DIVISION` event active)
 - [x] Proximity action: "Tear down flyer [E]" → +5 Trust, −2 Energy, flyer disappears
 - [x] Counter-organise public rebuttal crisis option → −20 Energy, Trust +25
 - [x] Alert community network option → Stress −10 across block

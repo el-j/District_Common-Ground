@@ -23,6 +23,7 @@
     "vitest": "^5.0.0"
   },
   "dependencies": {
+    "@district-cg/minigame-courier-rush": "*",
     "idb-keyval": "^6.3.0",
     "phaser": "^4.2.1",
     "zustand": "^5.0.15"

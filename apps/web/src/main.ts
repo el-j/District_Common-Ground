@@ -8,6 +8,14 @@ import { TopHUD } from './ui/TopHUD';
 import { AuthOverlay } from './ui/AuthOverlay';
 import { setupAudioOnInteraction } from './core/audio/SoundSynth';
 import { activateDefaultSkin } from './skins/ThemeManager';
+import { MinigameLoader } from './core/kernel/MinigameLoader';
+import { manifest as courierRushManifest } from '@district-cg/minigame-courier-rush';
+
+MinigameLoader.registerLocalMinigame(
+  'courier-rush',
+  courierRushManifest,
+  async () => import('@district-cg/minigame-courier-rush'),
+);
 
 export const VIRTUAL_WIDTH = 320;
 export const VIRTUAL_HEIGHT = 240;

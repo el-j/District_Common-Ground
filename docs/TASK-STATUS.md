@@ -29,11 +29,143 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
+| **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) |
+| **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[ ] Planned` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
+| **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[ ] Planned (PoC)` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
+| **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[ ] Planned (Off-Grid PoC)` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
+| **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[ ] Planned (Offline Architecture)` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
+| **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[ ] Planned (Decoupled Plugin)` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
 | M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] In Progress` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
 | M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[~] In Progress` | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
 | M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[~] In Progress` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
-| M11 | Shared Commons, Climate Migration & Anti-Fascist Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] In Progress` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
+| M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] In Progress` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
 | M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[~] In Progress` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
+
+---
+
+## M14 — Dynamic Microkernel, Living District Builder & Extensible Minigames (🚨 Immediate Next Priority)
+
+Story: [`docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
+Tasks: [`docs/tasks/M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-microkernel-minigames.md)  
+Planning: [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md)
+
+| Task | Status |
+|---|---|
+| `packages/shared-types` — `MinigameManifest`, `GameSessionContext`, `MinigameInstance` contracts | `[x]` |
+| `packages/shared-types` — `DistrictParcelState` builder grid definitions | `[x]` |
+| `apps/api/internal/kernel/` — Go microkernel plugin registry & manifest scanner | `[x]` |
+| `apps/api/internal/kernel/` — Session token signing & server-side anti-cheat scoring | `[x]` |
+| `GET /api/v1/games` & `POST /api/v1/games/:id/session` endpoints | `[x]` |
+| `apps/web/src/core/kernel/MinigameLoader.ts` — Sandboxed ESM dynamic module loader | `[x]` |
+| `apps/web/src/core/kernel/MinigameContainer.ts` — Canvas/DOM container lifecycle management | `[x]` |
+| `apps/web/src/core/kernel/HostPlatformAPI.ts` — Zustand wallet & state bridge | `[x]` |
+| `DistrictGrid.ts` — 12-plot interactive district builder ("Farmville for the Commons") | `[x]` |
+| `ConstructionStages.ts` — 4 visual tiers (Blight -> Scaffolding -> Operational -> Solarpunk) | `[x]` |
+| `TactileEffects.ts` — Hammering audio, wood chip particles, confetti, celebration chimes | `[x]` |
+| Camera Zoom Controller — Seamless macro builder <-> micro street questing transition | `[x]` |
+| `WorldScene.ts` — In-world physical minigame portals (Cargo bike, kitchen door) | `[x]` |
+| `apps/web/src/minigames/courier-rush/` — Reference *Pizza Taxi* style bike delivery minigame | `[x]` |
+| End-to-end integration test: Courier run completion commits rewards to DB with zero core touch | `[x]` |
+
+---
+
+## M15 — Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker
+
+Story: [`docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md)  
+Tasks: [`docs/tasks/M15-civic-networking-theme-shop.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M15-civic-networking-theme-shop.md)  
+Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md)
+
+| Task | Status |
+|---|---|
+| `packages/shared-types` — `ThemeManifest`, `ShopItem`, `FriendProfile`, `CivicAction` | `[ ]` |
+| `apps/api/migrations/` — `000003_social_and_shop.up.sql` (inventory, wallets, friends, caravans, ticker) | `[ ]` |
+| `apps/api/internal/theme/` — Dynamic theme catalog & manifest loader | `[ ]` |
+| `apps/api/internal/shop/` — In-game Commons Bazaar catalog & atomic purchase handler | `[ ]` |
+| `apps/api/internal/social/` — Friend graph, district snapshot serializer & mutual-aid caravan queue | `[ ]` |
+| `apps/api/internal/civic/` — Regional democratic protest & strike aggregator (RSS / Civic Open Feeds) | `[ ]` |
+| `ThemePluginManager.ts` — Dynamic theme loader, palette swapper, building facade overrides | `[ ]` |
+| `ShopModal.ts` — Tactile wooden storefront modal, ST wallet counter, cosmetic unlocks | `[ ]` |
+| `SocialHubModal.ts` & `FriendDistrictViewer.ts` — Friend browser, invite codes, read-only visiting | `[ ]` |
+| Caravan Dispatch Widget — Send emergency kilowatts, soup, or legal kits to friends in crisis | `[ ]` |
+| `CivicTickerWidget.ts` — Rolling democratic rally alert ticker on morning broadsheet & HUD | `[ ]` |
+| `CivicDirectoryModal.ts` — Searchable real-world mutual-aid directory & "Found a Commons" PDF toolkit | `[ ]` |
+
+---
+
+## M16 — Real-World Geo-Mode (OSM PoC) & Universal Empathy Design
+
+Story: [`docs/stories/EPIC-16-real-world-geo-mode-and-irl-actions.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-16-real-world-geo-mode-and-irl-actions.md)  
+Tasks: [`docs/tasks/M16-real-world-geo-mode.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M16-real-world-geo-mode.md)  
+Planning: [`docs/planning/16-REAL-WORLD-GEO-MODE-AND-UNIVERSAL-SOLIDARITY.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/16-REAL-WORLD-GEO-MODE-AND-UNIVERSAL-SOLIDARITY.md)
+
+| Task | Status |
+|---|---|
+| Universal Lexicon Audit — remove polarizing labels ("fascist"/"anti-fascist") across all content | `[x]` |
+| `OverpassClient.ts` — OpenStreetMap Overpass API client for roads, parks, buildings, amenities | `[ ]` |
+| `GeoJsonToTilemap.ts` — Vector polygon and highway rasterizer converting OSM to 16px Phaser tilemap | `[ ]` |
+| `AmenityClassifier.ts` — Semantic mapper connecting real libraries, bakeries, parks to game hubs | `[ ]` |
+| `GeoCache.ts` — Offline storage of generated neighborhood tilemaps in IndexedDB | `[ ]` |
+| `CivicJournal.ts` — Real-world mutual-aid action logger (Food Sharing, Eldercare, Greening, Repair) | `[ ]` |
+| `PeerVerification.ts` — Local peer-to-peer QR code verification handshake | `[ ]` |
+| `BadgeRegistry.ts` — Award ST & CAB points to player wallet for real-world civic deeds | `[ ]` |
+
+---
+
+## M17 — Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit
+
+Story: [`docs/stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md)  
+Tasks: [`docs/tasks/M17-offgrid-mesh-weather-currency.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M17-offgrid-mesh-weather-currency.md)  
+Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md)
+
+| Task | Status |
+|---|---|
+| `SolarCycleEngine.ts` — Astronomical solar calculation (SunCalc) & dynamic game ambient tinting | `[ ]` |
+| `LiveWeatherClient.ts` — Open-Meteo live hyper-local weather fetching with IndexedDB caching | `[ ]` |
+| `WeatherFXPlugin.ts` — Procedural rain, storm, snow, heat haze canvas particle shaders | `[ ]` |
+| `MeshtasticClient.ts` — Web Serial & Web Bluetooth LoRa hardware transceiver driver | `[ ]` |
+| `BitChatClient.ts` — Ephemeral peer-to-peer WebRTC mesh client with QR signaling | `[ ]` |
+| `OfflineChatModal.ts` — Decentralized off-grid community bulletin & emergency dispatch UI | `[ ]` |
+| `MutualCreditLedger.ts` — Zero-fiat cryptographic time-bank transaction ledger & double-spend validation | `[ ]` |
+| `CreditTransferModal.ts` — Offline mutual credit QR payment terminal & balance inspection | `[ ]` |
+
+---
+
+## M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync
+
+Story: [`docs/stories/EPIC-18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-18-offline-first-device-storage-and-sync.md)  
+Tasks: [`docs/tasks/M18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M18-offline-first-device-storage-and-sync.md)  
+Planning: [`docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md)
+
+| Task | Status |
+|---|---|
+| `DeviceStorageEngine.ts` — IndexedDB/OPFS manager with permanent storage lease (`navigator.storage.persist()`) | `[ ]` |
+| `SignedEventLog.ts` — Append-only action delta ledger with on-device Ed25519 signing & hash-chaining | `[ ]` |
+| `VectorClockManager.ts` — Monotonic logical clock & multi-node causality tracker | `[ ]` |
+| `CRDTSyncEngine.ts` — PN-Counter, LWW, and OR-Set conflict-free reconciliation engine | `[ ]` |
+| `SyncQueueService.ts` — Background delta sync worker with network listener & exponential backoff | `[ ]` |
+| `DistrictGatewayClient.ts` — Lightweight HTTP/CBOR vector clock delta synchronizer | `[ ]` |
+| `ServiceWorkerRegistry.ts` — Cache-first static asset pre-caching with instant offline boot (< 400ms) | `[ ]` |
+| `PaperMeshQR.ts` — Animated QR code sequence generator for high-density air-gapped sneakernet sync | `[ ]` |
+| Standalone Packaging — Tauri v2 desktop & Capacitor Android offline packaging recipes | `[ ]` |
+
+---
+
+## M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture
+
+Story: [`docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md)  
+Tasks: [`docs/tasks/M19-bitchat-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M19-bitchat-mesh-transports.md)  
+Planning: [`docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md)
+
+| Task | Status |
+|---|---|
+| `packages/shared-types/src/mesh.ts` — `MeshPacket`, `PeerDescriptor`, `MeshTransportPlugin` contracts | `[ ]` |
+| `apps/web/src/core/mesh/TransportRegistry.ts` — Dynamic multi-transport multiplexer & discovery registry | `[ ]` |
+| `apps/web/src/core/mesh/MeshNetworkService.ts` — Packet deduplication, TTL gossip relaying, signature verification | `[ ]` |
+| `apps/web/src/plugins/bitchat/SubnetBeacon.ts` — Local subnet mDNS / broadcast discovery without internet | `[ ]` |
+| `apps/web/src/plugins/bitchat/BleBeacon.ts` — Web Bluetooth LE discovery for close-range mobile handshakes | `[ ]` |
+| `apps/web/src/plugins/bitchat/BitChatProtocol.ts` — Local WebRTC DataChannel connection pool & X25519 key agreement | `[ ]` |
+| `apps/web/src/plugins/bitchat/ProofOfWork.ts` — Client-side Hashcash anti-spam proof solver (12 zero bits) | `[ ]` |
+| `OfflineChatModal.ts` — Tactile retro walkie-talkie modal with rotary 4-channel frequency knob & squelch audio | `[ ]` |
 
 ---
 
@@ -103,7 +235,7 @@ Tasks: `docs/tasks/M10-district-expansion.md`
 
 ---
 
-## M11 — Shared Commons, Climate Migration & Anti-Fascist Defense
+## M11 — Shared Commons, Climate Displacement & Community Defense
 
 Story: `docs/stories/EPIC-11-shared-commons.md`
 Tasks: `docs/tasks/M11-shared-commons.md`
@@ -116,7 +248,7 @@ Tasks: `docs/tasks/M11-shared-commons.md`
 | `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[x]` |
 | Tool Library 20% upkeep buff wired in EconomyMath | `[ ]` |
 | Climate migration crisis archetype (3 scenarios) | `[ ]` |
-| Anti-fascist flyer objects + tear-down action | `[ ]` |
+| Community unity flyer objects + tear-down action | `[ ]` |
 | `TownHallAssembly.ts` — monthly vote modal | `[ ]` |
 | `TopHUD.ts` — District Pulse badge (global solidarity dot) | `[ ]` |
 | Tests | `[ ]` |

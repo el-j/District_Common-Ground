@@ -5,7 +5,7 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 
 ## Go Backend Tasks
 - [x] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds (+ 7-archetype keyword classifier)
-- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`)
+- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `COMMUNITY_DIVISION`)
 - [x] `apps/api/internal/narrative/client.go` — Multi-provider AI client:
   - Ollama local endpoint support (`/api/chat` with `llama3.2:3b`)
   - OpenAI-compatible cloud support (Groq / Cloudflare / HuggingFace free tiers)

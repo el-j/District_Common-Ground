@@ -16,6 +16,7 @@ import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
 import { addTrust, spendEnergy, reduceStress } from '../core/state/actions';
 import { startBGMLoop } from '../core/audio/SoundSynth';
 import { fetchDailyGossip } from '../api/narrativeGossip';
+import { MinigameLoader } from '../core/kernel/MinigameLoader';
 
 const TS = 16;
 const COLS = 64;
@@ -518,12 +519,17 @@ export class WorldScene extends Phaser.Scene {
   private scraps!: ScrapsEntity;
   private pigeons: PigeonEntity[] = [];
   private flyers: FlyerObject[] = [];
-  private fascistCrisisActive = false;
+  private divisionCrisisActive = false;
   private ticksSinceDay = 0;
   private bgmStarted = false;
   private tintOverlay!: Phaser.GameObjects.Rectangle;
   private prevDay = 0;
   private lastTintHash = -1;
+
+  // Courier Rush Cargo Bike portal (near Sal's Kitchen / Grocer)
+  private bikePortal = { x: 18 * TS + TS / 2, y: 55 * TS + TS / 2 };
+  private bikeMarker!: Phaser.GameObjects.Graphics;
+  private minigameOpen = false;
 
   // Town Hall interaction point (door at col 5, row 35)
   private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
@@ -609,18 +615,32 @@ export class WorldScene extends Phaser.Scene {
     this.add.text(55*TS, 20*TS,       '— EAST CANAL —',          lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
     this.add.text(COLS/2*TS, 66*TS+4, '— SOUTH SOLAR QUARTER —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
 
-    // Subscribe to crisis state to spawn/remove fascist flyers
+    // Courier Rush Cargo Bike Portal (Glowing cyan circle)
+    this.bikeMarker = this.add.graphics();
+    this.bikeMarker.fillStyle(0x38bdf8, 0.35);
+    this.bikeMarker.fillCircle(this.bikePortal.x, this.bikePortal.y, 14);
+    this.bikeMarker.lineStyle(2, 0x38bdf8, 0.85);
+    this.bikeMarker.strokeCircle(this.bikePortal.x, this.bikePortal.y, 14);
+    this.bikeMarker.setDepth(4);
+    this.add.text(this.bikePortal.x, this.bikePortal.y - 18, '🚲 Courier Rush', {
+      fontSize: '8px',
+      color: '#38bdf8',
+      backgroundColor: 'rgba(15,23,42,0.7)',
+      padding: { x: 3, y: 1 },
+    }).setOrigin(0.5, 1).setDepth(4);
+
+    // Subscribe to crisis state to spawn/remove division flyers
     useGameStore.subscribe((state) => {
       const crisis = state.crisisState;
       const id = crisis.activeCrisisId;
-      const isFascist = id != null && (
-        id.startsWith('neo-fascist') || id.startsWith('fascist') || id === 'fascist-youth-recruitment'
+      const isDivision = id != null && (
+        id.includes('division') || id.includes('agitation') || id.startsWith('neo-fascist') || id.startsWith('fascist')
       );
-      if (isFascist && !this.fascistCrisisActive) {
-        this.fascistCrisisActive = true;
+      if (isDivision && !this.divisionCrisisActive) {
+        this.divisionCrisisActive = true;
         this.spawnFlyers();
-      } else if (!isFascist && this.fascistCrisisActive) {
-        this.fascistCrisisActive = false;
+      } else if (!isDivision && this.divisionCrisisActive) {
+        this.divisionCrisisActive = false;
         this.removeAllFlyers();
       }
     });
@@ -816,11 +836,16 @@ export class WorldScene extends Phaser.Scene {
       Math.hypot(this.player.x - f.x, this.player.y - f.y) <= 32,
     );
 
-    if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen && !this.assemblyOpen) {
+    // Courier Rush bike portal interaction
+    const nearBike = Math.hypot(this.player.x - this.bikePortal.x, this.player.y - this.bikePortal.y) <= 38;
+
+    if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen && !this.assemblyOpen && !this.minigameOpen) {
       const pressed = Phaser.Input.Keyboard.JustDown(this.actionKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
       if (pressed) {
         if (nearbyFlyer) {
           this.tearDownFlyer(nearbyFlyer);
+        } else if (nearBike) {
+          this.launchCourierRush();
         } else if (scrapsInRange && hasCash) {
           this.feedScraps();
         } else if (nearTownHall) {
@@ -833,10 +858,12 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    if (this.dialogueOpen || this.buildOpen || this.historyOpen || this.assemblyOpen) {
+    if (this.dialogueOpen || this.buildOpen || this.historyOpen || this.assemblyOpen || this.minigameOpen) {
       WorldScene.hud?.hideAction();
     } else if (nearbyFlyer) {
       WorldScene.hud?.setAction('Tear down flyer [E] ✊', () => this.tearDownFlyer(nearbyFlyer));
+    } else if (nearBike) {
+      WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲 [E]', () => this.launchCourierRush());
     } else if (scrapsInRange && hasCash) {
       WorldScene.hud?.setAction('[E] Feed Scraps 🐟', () => this.feedScraps());
     } else if (nearTownHall) {
@@ -848,6 +875,18 @@ export class WorldScene extends Phaser.Scene {
     } else {
       WorldScene.hud?.hideAction();
     }
+  }
+
+  private launchCourierRush(): void {
+    if (this.minigameOpen) return;
+    this.minigameOpen = true;
+    WorldScene.hud?.hideAction();
+
+    void MinigameLoader.launchMinigame('courier-rush', {
+      onClose: () => {
+        this.minigameOpen = false;
+      },
+    });
   }
 
   private feedScraps(): void {

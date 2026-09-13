@@ -1,10 +1,10 @@
-# EPIC-11 — The Shared Commons, Climate Migration & Anti-Fascist Defense
+# EPIC-11 — The Shared Commons, Climate Displacement & Community Defense
 
 **Agent roles:** game-designer, narrative-designer, engineering-backend-architect  
 **Planning docs:** `docs/planning/06-TECHNICAL-ROADMAP-M8-M12.md`, `docs/planning/07-CLIMATE-MIGRATION-AND-ANTI-FASCISM.md`
 
 ## Vision
-Players' collective solidarity choices pool into a global district health index. Climate migrants arrive at the North Station; welcoming them unlocks new construction capacity. Far-right propaganda appears in alleys; players can tear it down.
+Players' collective solidarity choices pool into a global district health index. Climate-displaced families arrive at the North Station; welcoming them unlocks new construction capacity. Divisive hate propaganda appears in alleys; players can tear it down to defend community unity.
 
 ## New Construction Nodes
 - **Node D: Community Tool Library** (East Canal) — reduces appliance repair & vehicle upkeep
@@ -15,8 +15,8 @@ Players' collective solidarity choices pool into a global district health index.
 - Scapegoat path: Police militarisation, population decline, vulnerability to next shock, world desaturates
 - Solidarity path: +30% labour capacity, unlocks Rooftop Agro-Greenhouse + Bilingual Care Network, world blooms
 
-## Anti-Fascist Defense Engine
-- Disinformation events: slipped leaflets, AI-generated viral hoaxes, far-right "town halls" in nearby venues
+## Community Defense Against Division
+- Disinformation events: slipped leaflets, AI-generated viral hoaxes, divisive agitators in nearby venues
 - Player counter-actions:
   - Tear down hate flyers in alleys: +5 Trust, −2 Energy
   - Counter-organise public rebuttal: −20 Energy, Trust +25

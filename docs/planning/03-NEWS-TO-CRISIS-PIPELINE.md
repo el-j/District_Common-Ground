@@ -86,11 +86,11 @@ Incoming real-world civic news items are classified into five systemic categorie
 │ 6. MIGRATION_SANCT   │ Climate refugee influx, │ New arrivals at station;│
 │                      │ municipal sanctuary rows│ shelter capacity crisis;│
 │                      │ or documentation raids  │ ICE/police sweep threat │
-├──────────────────────┼─────────────────────────┼─────────────────────────┤
-│ 7. FASCIST_AGITATION │ Far-right street march, │ Street confrontation;   │
-│                      │ hate group leafleting,  │ leafleting in alleys;   │
-│                      │ vigilante patrols       │ defense festival call   │
-└──────────────────────┴─────────────────────────┴─────────────────────────┘
+├────────────────────────┼─────────────────────────┼─────────────────────────┤
+│ 7. COMMUNITY_DIVISION  │ Divisive street march,  │ Neighborhood tension;   │
+│                        │ hate group leafleting,  │ leafleting in alleys;   │
+│                        │ vigilante intimidation  │ unity festival call     │
+└────────────────────────┴─────────────────────────┴─────────────────────────┘
 ```
 
 ---
@@ -102,7 +102,7 @@ The schema in `crisis_scenarios.json` and `packages/shared-types` is expanded to
 ```typescript
 export interface CrisisScenarioV2 {
   id: string;
-  archetype: 'LABOR_TRANSIT' | 'CLIMATE_EXTREME' | 'HOUSING_SPECULATE' | 'FOOD_HEALTH' | 'CIVIC_DISINFO' | 'MIGRATION_SANCT' | 'FASCIST_AGITATION';
+  archetype: 'LABOR_TRANSIT' | 'CLIMATE_EXTREME' | 'HOUSING_SPECULATE' | 'FOOD_HEALTH' | 'CIVIC_DISINFO' | 'MIGRATION_SANCT' | 'COMMUNITY_DIVISION';
   title: string;
   realWorldAnchor: {
     headline: string;

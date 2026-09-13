@@ -5,6 +5,7 @@ import { QuestModal } from './QuestModal';
 import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
+import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
 export class TopHUD {
@@ -21,6 +22,7 @@ export class TopHUD {
   private radioBtn: HTMLButtonElement;
   private muteBtn: HTMLButtonElement;
   private questBtn: HTMLButtonElement;
+  private builderBtn: HTMLButtonElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private scene?: Phaser.Scene;
@@ -122,6 +124,16 @@ export class TopHUD {
     this.questBtn.addEventListener('click', () => new QuestModal(root));
     root.appendChild(this.questBtn);
 
+    // Living District Builder button
+    this.builderBtn = document.createElement('button');
+    this.builderBtn.type = 'button';
+    this.builderBtn.className = 'builder-open-btn interactive';
+    this.builderBtn.textContent = '🏗️';
+    this.builderBtn.hidden = true;
+    this.builderBtn.setAttribute('aria-label', 'Open Living District Builder');
+    this.builderBtn.addEventListener('click', () => new DistrictBuilderModal(root));
+    root.appendChild(this.builderBtn);
+
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
 
@@ -215,6 +227,7 @@ export class TopHUD {
       this.radioBtn.hidden = true;
       this.muteBtn.hidden = true;
       this.questBtn.hidden = true;
+      this.builderBtn.hidden = true;
       return;
     }
 
@@ -225,6 +238,7 @@ export class TopHUD {
     this.radioBtn.hidden = false;
     this.muteBtn.hidden = false;
     this.questBtn.hidden = false;
+    this.builderBtn.hidden = false;
     // pulseBadgeEl visibility controlled by fetchPulseBadge response
 
     const roleLabel = player.classRole

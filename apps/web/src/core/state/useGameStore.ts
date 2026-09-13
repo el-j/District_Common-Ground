@@ -40,6 +40,8 @@ export interface GameState {
     solarGridProgress: number;
     kitchenProgress: number;
     legalFundProgress: number;
+    toolLibraryProgress: number;
+    landTrustProgress: number;
   };
   crisisState: {
     activeCrisisId: string | null;
@@ -67,6 +69,8 @@ const INITIAL_STATE: GameState = {
     solarGridProgress: 0,
     kitchenProgress: 0,
     legalFundProgress: 0,
+    toolLibraryProgress: 0,
+    landTrustProgress: 0,
   },
   crisisState: {
     activeCrisisId: null,

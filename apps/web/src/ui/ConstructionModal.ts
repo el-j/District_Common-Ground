@@ -2,7 +2,7 @@ import { spendCash, spendEnergy, updateCommonsProgress } from '../core/state/act
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 
-export type BuildProgressKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress';
+export type BuildProgressKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress' | 'toolLibraryProgress' | 'landTrustProgress';
 
 export interface ConstructionNodeData {
   id: string;
@@ -26,9 +26,9 @@ export class ConstructionModal {
     this.el = document.createElement('div');
     this.el.className = 'construction-modal';
     this.el.innerHTML = `
-      <div class="construction-panel interactive">
+      <div class="construction-panel interactive" role="dialog" aria-modal="true" aria-labelledby="build-title-label">
         <div class="construction-header">
-          <span class="construction-title">${this.getLabel()}</span>
+          <span id="build-title-label" class="construction-title">${this.getLabel()}</span>
           <button class="construction-close" type="button" aria-label="Close build panel">×</button>
         </div>
         <div class="construction-progress-wrap">
@@ -60,6 +60,9 @@ export class ConstructionModal {
     const closeButton = this.el.querySelector<HTMLButtonElement>('.construction-close');
     closeButton?.addEventListener('click', () => this.close());
 
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { this.close(); document.removeEventListener('keydown', onKey); } };
+    document.addEventListener('keydown', onKey);
+
     const form = this.el.querySelector<HTMLFormElement>('.construction-form');
     form?.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -90,9 +93,11 @@ export class ConstructionModal {
 
   private getLabel(): string {
     const labels: Record<BuildProgressKey, string> = {
-      kitchenProgress: 'Community Kitchen & Fridge',
-      solarGridProgress: 'Rooftop Solar Cooperative',
-      legalFundProgress: 'Legal Defense Fund',
+      kitchenProgress:    'Community Kitchen & Fridge',
+      solarGridProgress:  'Rooftop Solar Cooperative',
+      legalFundProgress:  'Legal Defense Fund',
+      toolLibraryProgress: 'Community Tool Library',
+      landTrustProgress:  'Community Land Trust',
     };
     return labels[this.progressKey];
   }

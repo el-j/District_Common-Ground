@@ -153,6 +153,9 @@ export function playCatPurr(): void {
   const audio = getCtx();
   if (!audio) return;
 
+  // Haptic rhythm for cat purr
+  if ('vibrate' in navigator) navigator.vibrate([10, 5, 10, 5, 10]);
+
   const mainOsc = audio.createOscillator();
   const lfoOsc = audio.createOscillator();
   const lfoGain = audio.createGain();
@@ -182,6 +185,9 @@ export function playCatPurr(): void {
 export function playBikeBell(): void {
   const audio = getCtx();
   if (!audio) return;
+
+  // Haptic feedback on mobile for bike bell
+  if ('vibrate' in navigator) navigator.vibrate(50);
 
   [659, 880].forEach(freq => {
     const osc = audio.createOscillator();
@@ -268,6 +274,9 @@ export function playLoFiChord(rootHz: number): void {
 export function playCrisisStab(): void {
   const audio = getCtx();
   if (!audio) return;
+
+  // Crisis alert haptic
+  if ('vibrate' in navigator) navigator.vibrate([30, 20, 30]);
 
   [220, 221.5].forEach(freq => {
     const osc = audio.createOscillator();

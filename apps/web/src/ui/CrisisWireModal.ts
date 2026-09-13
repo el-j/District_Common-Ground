@@ -30,16 +30,18 @@ export class CrisisWireModal {
 
   private buildHTML(s: CrisisScenario): string {
     return `
-      <div class="crisis-panel">
+      <div class="crisis-panel" role="dialog" aria-modal="true" aria-labelledby="crisis-title-label">
         <div class="crisis-ticker">⚡ BREAKING — DISTRICT UPDATE ⚡</div>
-        <h2 class="crisis-title">${s.title}</h2>
+        <h2 id="crisis-title-label" class="crisis-title">${s.title}</h2>
         <p class="crisis-context">${s.context}</p>
         <div class="crisis-choices">
-          <button class="crisis-btn crisis-btn--scapegoat interactive" data-choice="A" type="button">
+          <button class="crisis-btn crisis-btn--scapegoat interactive" data-choice="A" type="button"
+            aria-label="${s.choiceA.label}: ${s.choiceA.description.slice(0, 80)}">
             <span class="crisis-btn-label">${s.choiceA.label}</span>
             <span class="crisis-btn-desc">${s.choiceA.description.slice(0, 80)}…</span>
           </button>
-          <button class="crisis-btn crisis-btn--solidarity interactive" data-choice="B" type="button">
+          <button class="crisis-btn crisis-btn--solidarity interactive" data-choice="B" type="button"
+            aria-label="${s.choiceB.label}: ${s.choiceB.description.slice(0, 80)}">
             <span class="crisis-btn-label">${s.choiceB.label}</span>
             <span class="crisis-btn-desc">${s.choiceB.description.slice(0, 80)}…</span>
           </button>

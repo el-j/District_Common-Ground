@@ -1255,3 +1255,29 @@
 
 .radio-controls button:hover { background: #3a2c10; }
 .radio-controls button:focus-visible { outline: 2px solid #66dd88; }
+
+/* ── Global focus-visible (WCAG AA) ──────────────────────── */
+
+.interactive:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #66dd88;
+  outline-offset: 2px;
+}
+
+/* ── Prefers reduced motion ──────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  #game-container {
+    transition: none;
+    filter: none !important;
+  }
+}

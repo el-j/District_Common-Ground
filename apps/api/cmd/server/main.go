@@ -39,6 +39,7 @@ func main() {
 
 	saveRepo := save.NewRepository(pool)
 	saveHandler := save.NewHandler(saveRepo)
+	solidarityHandler := save.NewSolidarityHandler(pool)
 
 	gamedataHandler := gamedata.NewHandler()
 
@@ -62,6 +63,7 @@ func main() {
 		r.Get("/data/crises", gamedataHandler.Crises)
 		r.Get("/pulse/economy", pulse.HandleEconomy)
 		r.Get("/pulse/climate", pulse.HandleClimate)
+		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
 	})
 
 	log.Printf("api listening on :%s", cfg.Port)

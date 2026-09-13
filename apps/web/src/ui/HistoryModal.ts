@@ -21,6 +21,9 @@ export class HistoryModal {
 
     this.el.querySelector<HTMLButtonElement>('.history-close')
       ?.addEventListener('click', () => this.close());
+
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { this.close(); document.removeEventListener('keydown', onKey); } };
+    document.addEventListener('keydown', onKey);
   }
 
   private buildHTML(log: CrisisLogEntry[]): string {
@@ -29,10 +32,10 @@ export class HistoryModal {
       : log.map(e => this.buildRow(e)).reverse().join('');
 
     return `
-      <div class="history-panel interactive">
+      <div class="history-panel interactive" role="dialog" aria-modal="true" aria-labelledby="history-title-label">
         <div class="history-header">
-          <span class="history-title">Town Hall — Crisis History</span>
-          <button class="history-close" type="button" aria-label="Close">×</button>
+          <span id="history-title-label" class="history-title">Town Hall — Crisis History</span>
+          <button class="history-close" type="button" aria-label="Close crisis history">×</button>
         </div>
         <div class="history-subtitle">A record of every decision made in this district.</div>
         <div class="history-list">${rows}</div>

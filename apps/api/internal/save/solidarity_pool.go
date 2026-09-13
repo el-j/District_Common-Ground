@@ -1,0 +1,77 @@
+package save
+
+import (
+	"context"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type SolidarityHandler struct {
+	pool *pgxpool.Pool
+}
+
+func NewSolidarityHandler(pool *pgxpool.Pool) *SolidarityHandler {
+	return &SolidarityHandler{pool: pool}
+}
+
+type districtResilienceResp struct {
+	GlobalIndex      float64 `json:"globalIndex"`
+	SolidarityCount  int     `json:"solidarityCount"`
+	ScapegoatCount   int     `json:"scapegoatCount"`
+	TotalDecisions   int     `json:"totalDecisions"`
+	Message          string  `json:"message"`
+}
+
+// HandleDistrictResilience serves GET /api/v1/district/resilience
+// Returns aggregate solidarity statistics across all players.
+func (h *SolidarityHandler) HandleDistrictResilience(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5000000000) // 5s
+	defer cancel()
+
+	var solidarityCount, scapegoatCount int
+	row := h.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE choice = 'solidarity') AS solidarity,
+			COUNT(*) FILTER (WHERE choice = 'scapegoat')  AS scapegoat
+		FROM crisis_log
+	`)
+	if err := row.Scan(&solidarityCount, &scapegoatCount); err != nil {
+		slog.Warn("solidarity_pool query failed, returning defaults", "err", err)
+		solidarityCount, scapegoatCount = 0, 0
+	}
+
+	total := solidarityCount + scapegoatCount
+	var globalIndex float64
+	if total > 0 {
+		globalIndex = float64(solidarityCount) / float64(total) * 100
+	} else {
+		globalIndex = 50.0 // neutral default when no data
+	}
+
+	var message string
+	switch {
+	case globalIndex >= 70:
+		message = "The district holds together. Solidarity is winning."
+	case globalIndex >= 50:
+		message = "Communities are divided but neighbours persist."
+	default:
+		message = "Scapegoating is rising. Build the commons now."
+	}
+
+	resp := districtResilienceResp{
+		GlobalIndex:     globalIndex,
+		SolidarityCount: solidarityCount,
+		ScapegoatCount:  scapegoatCount,
+		TotalDecisions:  total,
+		Message:         message,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		slog.Error("solidarity_pool encode", "err", err)
+	}
+}

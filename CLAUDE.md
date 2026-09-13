@@ -74,7 +74,7 @@ district-common-ground/             ← workspace root
 | State | Zustand 4.x | Outside-React, vanilla store |
 | Persistence | idb-keyval 6.x (offline) + Go API (cloud) | Hybrid: IndexedDB always, server sync when authed |
 | Audio | Web Audio API (native) | Procedural synth — no MP3 downloads |
-| Backend | Go 1.23 | `CGO_ENABLED=0`, static binary, Wails-compatible |
+| Backend | Go 1.26+ | `CGO_ENABLED=0`, static binary, Wails-compatible |
 | Router | chi v5 | Lightweight HTTP router, no code generation |
 | Database | PostgreSQL 17 via pgx/v5 | Raw SQL, no ORM; migrations via golang-migrate |
 | Auth | HS256 JWT (golang-jwt/v5) | 30-day expiry, `sub` = userId |

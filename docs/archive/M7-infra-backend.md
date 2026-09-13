@@ -100,7 +100,7 @@ district-common-ground/             ← repo root (workspace root)
 ```
 module github.com/district-cg/api
 
-go 1.23
+go 1.26
 
 require (
   github.com/go-chi/chi/v5             v5.x
@@ -266,7 +266,7 @@ server {
 
 ```dockerfile
 # Stage 1: build
-FROM golang:1.23-alpine AS builder
+FROM golang:1.26-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -513,7 +513,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
-        with: { go-version: "1.23" }
+        with: { go-version: "1.26" }
       - run: go test -race -cover ./...
 
   docker:

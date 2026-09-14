@@ -130,14 +130,14 @@ Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.m
 
 | Task | Status |
 |---|---|
-| `SolarCycleEngine.ts` — Astronomical solar calculation (SunCalc) & dynamic game ambient tinting | `[x]` (implemented as `apps/web/src/plugins/geo-weather/SunCalcEngine.ts`; not wired into `WorldScene`'s ambient tint — see M17 task doc scoping note) |
-| `LiveWeatherClient.ts` — Open-Meteo live hyper-local weather fetching with IndexedDB caching | `[x]` (`apps/web/src/plugins/geo-weather/OpenMeteoAdapter.ts`) |
+| `SolarCycleEngine.ts` — Astronomical solar calculation (SunCalc) & dynamic game ambient tinting | `[x]` (implemented as `packages/plugin-geo-weather/src/SunCalcEngine.ts`; not wired into `WorldScene`'s ambient tint — see M17 task doc scoping note) |
+| `LiveWeatherClient.ts` — Open-Meteo live hyper-local weather fetching with IndexedDB caching | `[x]` (`packages/plugin-geo-weather/src/OpenMeteoAdapter.ts`) |
 | `WeatherFXPlugin.ts` — Procedural rain, storm, snow, heat haze canvas particle shaders | `[x]` (as `WeatherModifierBridge.ts`'s gameplay modifiers — no Phaser particle shaders were added, since nothing renders these into `WorldScene` yet; see M17 task doc scoping note) |
 | `MeshtasticClient.ts` — Web Serial & Web Bluetooth LoRa hardware transceiver driver | `[x]` (`WebSerialDriver.ts` + `WebBluetoothDriver.ts`, unverified against real hardware — see M17 task doc scoping note) |
 | `BitChatClient.ts` — Ephemeral peer-to-peer WebRTC mesh client with QR signaling | `[x]` (`WebRtcP2pDriver.ts`; pasteable text handshake, not a camera QR scan — see M17 task doc scoping note) |
-| `OfflineChatModal.ts` — Decentralized off-grid community bulletin & emergency dispatch UI | `[x]` (`apps/web/src/plugins/mesh-comms/MeshChatModal.ts`) |
-| `MutualCreditLedger.ts` — Zero-fiat cryptographic time-bank transaction ledger & double-spend validation | `[x]` (`apps/web/src/plugins/mutual-credit/CryptoLedger.ts`, Ed25519 + hash-chained) |
-| `CreditTransferModal.ts` — Offline mutual credit QR payment terminal & balance inspection | `[x]` (`apps/web/src/plugins/mutual-credit/CreditTransferModal.ts`) |
+| `OfflineChatModal.ts` — Decentralized off-grid community bulletin & emergency dispatch UI | `[x]` (`packages/plugin-mesh-comms/src/MeshChatModal.ts`, registered with the frontend `Kernel` — see M14 task doc's Kernel addendum) |
+| `MutualCreditLedger.ts` — Zero-fiat cryptographic time-bank transaction ledger & double-spend validation | `[x]` (`packages/plugin-mutual-credit/src/CryptoLedger.ts`, Ed25519 + hash-chained) |
+| `CreditTransferModal.ts` — Offline mutual credit QR payment terminal & balance inspection | `[x]` (`packages/plugin-mutual-credit/src/CreditTransferModal.ts`, registered with the frontend `Kernel`) |
 
 ---
 

@@ -1,5 +1,4 @@
-import { inputManager } from '../../world/InputManager';
-import { playUIClick } from '../../core/audio/SoundSynth';
+import type { KernelContext } from '@district-cg/shared-types';
 import { WebSerialDriver, isWebSerialSupported } from './WebSerialDriver';
 import { WebBluetoothDriver, isWebBluetoothSupported } from './WebBluetoothDriver';
 import { WebRtcP2pDriver, isWebRtcSupported } from './WebRtcP2pDriver';
@@ -41,15 +40,15 @@ export class MeshChatModal {
 	private webrtcAnswerText = '';
 	private webrtcPasteValue = '';
 
-	constructor(root: HTMLElement, private readonly onClose?: () => void) {
+	constructor(private readonly ctx: KernelContext, private readonly onClose?: () => void) {
 		this.el = document.createElement('div');
 		this.el.className = 'settings-overlay';
 		this.el.setAttribute('role', 'dialog');
 		this.el.setAttribute('aria-modal', 'true');
 		this.el.setAttribute('aria-labelledby', 'mesh-chat-title');
-		root.appendChild(this.el);
+		ctx.uiRoot.appendChild(this.el);
 
-		inputManager.setLocked(true);
+		ctx.input.setLocked(true);
 		requestAnimationFrame(() => this.el.classList.add('settings-overlay--visible'));
 
 		this.render();
@@ -149,7 +148,7 @@ export class MeshChatModal {
 
 		this.el.querySelectorAll<HTMLButtonElement>('.mesh-chat-transport').forEach(btn => {
 			btn.addEventListener('click', () => {
-				playUIClick();
+				this.ctx.audio.playUIClick();
 				void this.selectTransport(btn.dataset['transport'] as Transport);
 			});
 		});
@@ -248,7 +247,7 @@ export class MeshChatModal {
 		this.bluetoothDriver.disconnect();
 		this.webrtcDriver?.close();
 		this.el.classList.remove('settings-overlay--visible');
-		inputManager.setLocked(false);
+		this.ctx.input.setLocked(false);
 		setTimeout(() => {
 			this.el.remove();
 			this.onClose?.();

@@ -6,11 +6,18 @@ import { useGameStore } from './core/state/useGameStore';
 import { CharacterSelect } from './ui/CharacterSelect';
 import { TopHUD } from './ui/TopHUD';
 import { AuthOverlay } from './ui/AuthOverlay';
-import { setupAudioOnInteraction } from './core/audio/SoundSynth';
-import { activateDefaultSkin } from './skins/ThemeManager';
+import { setupAudioOnInteraction, playUIClick, playSolidarityChime } from './core/audio/SoundSynth';
 import { MinigameLoader } from './core/kernel/MinigameLoader';
 import { bootstrapInstalledPlugins } from './core/kernel/PluginRegistry';
+import { Kernel } from './core/kernel/Kernel';
+import { switchSkin, getActiveSkinId } from './skins/ThemeManager';
+import { inputManager } from './world/InputManager';
+import { skinsPlugin } from './skins/plugin';
+import { worldPlugin } from './world/plugin';
 import { manifest as courierRushManifest } from '@district-cg/minigame-courier-rush';
+import { geoWeatherPlugin } from '@district-cg/plugin-geo-weather';
+import { meshCommsPlugin } from '@district-cg/plugin-mesh-comms';
+import { mutualCreditPlugin } from '@district-cg/plugin-mutual-credit';
 
 MinigameLoader.registerLocalMinigame(
   'courier-rush',
@@ -38,6 +45,20 @@ async function boot(): Promise<void> {
 
   await loadSave();
   await bootstrapInstalledPlugins().catch(() => undefined);
+
+  const kernel = new Kernel(uiRoot, {
+    switchSkin,
+    getActiveSkinId,
+    playUIClick,
+    playSolidarityChime,
+    setInputLocked: (locked) => inputManager.setLocked(locked),
+  });
+  kernel
+    .use(skinsPlugin)
+    .use(worldPlugin)
+    .use(geoWeatherPlugin)
+    .use(meshCommsPlugin)
+    .use(mutualCreditPlugin);
 
   const viewport = getViewportSize();
 
@@ -72,10 +93,11 @@ async function boot(): Promise<void> {
   });
 
   setupAudioOnInteraction();
-  void activateDefaultSkin();
 
-  const hud = new TopHUD(uiRoot);
+  const hud = new TopHUD(uiRoot, kernel);
   WorldScene.setHud(hud);
+
+  await kernel.boot();
 
   if (useGameStore.getState().meta.phase === 'select') {
     new CharacterSelect(uiRoot, () => { /* WorldScene already running beneath */ });

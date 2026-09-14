@@ -1,5 +1,4 @@
-import { inputManager } from '../../world/InputManager';
-import { playUIClick, playSolidarityChime } from '../../core/audio/SoundSynth';
+import type { KernelContext } from '@district-cg/shared-types';
 import {
 	loadOrCreateKeypair, createTransaction, verifyTransactionSignature,
 	exportPublicKeyBase64, MutualCreditLedger,
@@ -32,15 +31,15 @@ export class CreditTransferModal {
 	private myPeerId = 'you';
 	private publicKeyBase64 = '';
 
-	constructor(root: HTMLElement, private readonly onClose?: () => void) {
+	constructor(private readonly ctx: KernelContext, private readonly onClose?: () => void) {
 		this.el = document.createElement('div');
 		this.el.className = 'settings-overlay';
 		this.el.setAttribute('role', 'dialog');
 		this.el.setAttribute('aria-modal', 'true');
 		this.el.setAttribute('aria-labelledby', 'credit-transfer-title');
-		root.appendChild(this.el);
+		ctx.uiRoot.appendChild(this.el);
 
-		inputManager.setLocked(true);
+		ctx.input.setLocked(true);
 		requestAnimationFrame(() => this.el.classList.add('settings-overlay--visible'));
 
 		this.render();
@@ -152,7 +151,7 @@ export class CreditTransferModal {
 		});
 
 		this.el.querySelector<HTMLButtonElement>('.credit-transfer-create-offer')?.addEventListener('click', () => {
-			playUIClick();
+			this.ctx.audio.playUIClick();
 			this.createOffer();
 		});
 		this.el.querySelector<HTMLButtonElement>('.credit-transfer-open-redeem')?.addEventListener('click', () => {
@@ -194,7 +193,7 @@ export class CreditTransferModal {
 			}
 			this.ledger.append(tx);
 			this.resultMessage = `Trade recorded: ${offer.fromPeerId} → ${offer.toPeerId} for ${offer.amount}.`;
-			playSolidarityChime();
+			this.ctx.audio.playSolidarityChime();
 		} catch (err) {
 			this.resultMessage = err instanceof Error ? err.message : 'Could not confirm this trade code.';
 		}
@@ -205,7 +204,7 @@ export class CreditTransferModal {
 
 	private close(): void {
 		this.el.classList.remove('settings-overlay--visible');
-		inputManager.setLocked(false);
+		this.ctx.input.setLocked(false);
 		setTimeout(() => {
 			this.el.remove();
 			this.onClose?.();

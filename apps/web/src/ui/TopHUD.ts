@@ -12,12 +12,17 @@ import { SocialHubModal } from './SocialHubModal';
 import { CivicTickerWidget } from './CivicTickerWidget';
 import { CivicDirectoryModal } from './CivicDirectoryModal';
 import { CivicJournal } from '../irl/CivicJournal';
-import { MeshChatModal } from '../plugins/mesh-comms/MeshChatModal';
-import { CreditTransferModal } from '../plugins/mutual-credit/CreditTransferModal';
 import { getWallet } from '../api/endpoints/shop';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
+import type { Kernel, HudSink } from '../core/kernel/Kernel';
+import type { KernelHudButtonDescriptor } from '@district-cg/shared-types';
 
-export class TopHUD {
+interface HudButtonEntry {
+  descriptor: KernelHudButtonDescriptor;
+  el: HTMLButtonElement;
+}
+
+export class TopHUD implements HudSink {
   private el: HTMLElement;
   private statsEl: HTMLElement;
   private zoneEl: HTMLElement;
@@ -26,26 +31,18 @@ export class TopHUD {
   private actionButton: HTMLButtonElement | null = null;
   private actionHandler: (() => void) | null = null;
   private endDayBtn: HTMLButtonElement;
-  private settingsBtn: HTMLButtonElement;
-  private shareBtn: HTMLButtonElement;
-  private radioBtn: HTMLButtonElement;
-  private muteBtn: HTMLButtonElement;
-  private questBtn: HTMLButtonElement;
-  private builderBtn: HTMLButtonElement;
-  private pluginsBtn: HTMLButtonElement;
-  private shopBtn: HTMLButtonElement;
-  private socialBtn: HTMLButtonElement;
-  private civicBtn: HTMLButtonElement;
-  private journalBtn: HTMLButtonElement;
-  private meshBtn: HTMLButtonElement;
-  private creditBtn: HTMLButtonElement;
   private walletChipEl: HTMLElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private civicTicker: CivicTickerWidget;
   private scene?: Phaser.Scene;
+  private readonly root: HTMLElement;
 
-  constructor(root: HTMLElement, scene?: Phaser.Scene) {
+  /** Icon buttons registered via `registerButton()` — TopHUD's own built-ins plus anything a kernel plugin adds later. */
+  private buttons: HudButtonEntry[] = [];
+
+  constructor(root: HTMLElement, kernel: Kernel, scene?: Phaser.Scene) {
+    this.root = root;
     this.scene = scene;
     // Main HUD strip (top)
     this.el = document.createElement('div');
@@ -86,138 +83,57 @@ export class TopHUD {
     this.endDayBtn.addEventListener('click', () => this.onEndDay(root));
     root.appendChild(this.endDayBtn);
 
-    // Settings / gear button (bottom-right corner)
-    this.settingsBtn = document.createElement('button');
-    this.settingsBtn.type = 'button';
-    this.settingsBtn.className = 'settings-gear-btn interactive';
-    this.settingsBtn.textContent = '⚙';
-    this.settingsBtn.hidden = true;
-    this.settingsBtn.setAttribute('aria-label', 'Settings');
-    this.settingsBtn.addEventListener('click', () => {
-      new SettingsModal(root, this.scene);
+    // Built-in icon-button toolbar — same icons/labels/behavior as before,
+    // now going through the same registerButton() path a kernel plugin uses.
+    this.registerButton({
+      id: 'settings', icon: '⚙', label: 'Settings',
+      onClick: () => { new SettingsModal(root, this.scene); },
     });
-    root.appendChild(this.settingsBtn);
-
-    // Share button (bottom-right, next to settings)
-    this.shareBtn = document.createElement('button');
-    this.shareBtn.type = 'button';
-    this.shareBtn.className = 'share-btn interactive';
-    this.shareBtn.textContent = '📣';
-    this.shareBtn.hidden = true;
-    this.shareBtn.setAttribute('aria-label', 'Share progress');
-    this.shareBtn.addEventListener('click', () => openShareSheet(root));
-    root.appendChild(this.shareBtn);
-
-    // Radio button
-    this.radioBtn = document.createElement('button');
-    this.radioBtn.type = 'button';
-    this.radioBtn.className = 'radio-open-btn interactive';
-    this.radioBtn.textContent = '📻';
-    this.radioBtn.hidden = true;
-    this.radioBtn.setAttribute('aria-label', 'Open Radio Free Commons');
-    this.radioBtn.addEventListener('click', () => this.radio.show());
-    root.appendChild(this.radioBtn);
-
-    // Music mute toggle
-    this.muteBtn = document.createElement('button');
-    this.muteBtn.type = 'button';
-    this.muteBtn.className = 'mute-btn interactive';
-    this.muteBtn.textContent = '🔊';
-    this.muteBtn.hidden = true;
-    this.muteBtn.setAttribute('aria-label', 'Toggle music');
-    this.muteBtn.addEventListener('click', () => {
-      const muted = !isBGMMuted();
-      setBGMMuted(muted);
-      this.muteBtn.textContent = muted ? '🔇' : '🔊';
-      this.muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
+    this.registerButton({
+      id: 'share', icon: '📣', label: 'Share progress',
+      onClick: () => openShareSheet(root),
     });
-    root.appendChild(this.muteBtn);
-
-    // Daily quests button
-    this.questBtn = document.createElement('button');
-    this.questBtn.type = 'button';
-    this.questBtn.className = 'quest-open-btn interactive';
-    this.questBtn.textContent = '📋';
-    this.questBtn.hidden = true;
-    this.questBtn.setAttribute('aria-label', 'Daily Quests');
-    this.questBtn.addEventListener('click', () => new QuestModal(root));
-    root.appendChild(this.questBtn);
-
-    // Living District Builder button
-    this.builderBtn = document.createElement('button');
-    this.builderBtn.type = 'button';
-    this.builderBtn.className = 'builder-open-btn interactive';
-    this.builderBtn.textContent = '🏗️';
-    this.builderBtn.hidden = true;
-    this.builderBtn.setAttribute('aria-label', 'Open Living District Builder');
-    this.builderBtn.addEventListener('click', () => new DistrictBuilderModal(root));
-    root.appendChild(this.builderBtn);
-
-    this.pluginsBtn = document.createElement('button');
-    this.pluginsBtn.type = 'button';
-    this.pluginsBtn.className = 'plugin-open-btn interactive';
-    this.pluginsBtn.textContent = '🧩';
-    this.pluginsBtn.hidden = true;
-    this.pluginsBtn.setAttribute('aria-label', 'Open Plugin Library');
-    this.pluginsBtn.addEventListener('click', () => new PluginManagerModal(root));
-    root.appendChild(this.pluginsBtn);
-
-    // Commons Bazaar (shop) button
-    this.shopBtn = document.createElement('button');
-    this.shopBtn.type = 'button';
-    this.shopBtn.className = 'shop-open-btn interactive';
-    this.shopBtn.textContent = '🏪';
-    this.shopBtn.hidden = true;
-    this.shopBtn.setAttribute('aria-label', 'Open the Commons Bazaar');
-    this.shopBtn.addEventListener('click', () => new ShopModal(root, () => this.fetchWalletBalance()));
-    root.appendChild(this.shopBtn);
-
-    // Common Grounds (social hub) button
-    this.socialBtn = document.createElement('button');
-    this.socialBtn.type = 'button';
-    this.socialBtn.className = 'social-open-btn interactive';
-    this.socialBtn.textContent = '🤝';
-    this.socialBtn.hidden = true;
-    this.socialBtn.setAttribute('aria-label', 'Open Common Grounds');
-    this.socialBtn.addEventListener('click', () => new SocialHubModal(root));
-    root.appendChild(this.socialBtn);
-
-    // Found a Commons (civic directory) button
-    this.civicBtn = document.createElement('button');
-    this.civicBtn.type = 'button';
-    this.civicBtn.className = 'civic-open-btn interactive';
-    this.civicBtn.textContent = '📖';
-    this.civicBtn.hidden = true;
-    this.civicBtn.setAttribute('aria-label', 'Open Found a Commons directory');
-    this.civicBtn.addEventListener('click', () => new CivicDirectoryModal(root));
-    root.appendChild(this.civicBtn);
-
-    this.journalBtn = document.createElement('button');
-    this.journalBtn.type = 'button';
-    this.journalBtn.className = 'journal-open-btn interactive';
-    this.journalBtn.textContent = '📓';
-    this.journalBtn.hidden = true;
-    this.journalBtn.setAttribute('aria-label', 'Open Civic Journal — log a real-world deed');
-    this.journalBtn.addEventListener('click', () => new CivicJournal(root));
-    root.appendChild(this.journalBtn);
-
-    this.meshBtn = document.createElement('button');
-    this.meshBtn.type = 'button';
-    this.meshBtn.className = 'mesh-open-btn interactive';
-    this.meshBtn.textContent = '📻';
-    this.meshBtn.hidden = true;
-    this.meshBtn.setAttribute('aria-label', 'Open off-grid mesh terminal');
-    this.meshBtn.addEventListener('click', () => new MeshChatModal(root));
-    root.appendChild(this.meshBtn);
-
-    this.creditBtn = document.createElement('button');
-    this.creditBtn.type = 'button';
-    this.creditBtn.className = 'credit-open-btn interactive';
-    this.creditBtn.textContent = '🪙';
-    this.creditBtn.hidden = true;
-    this.creditBtn.setAttribute('aria-label', 'Open mutual credit trade terminal');
-    this.creditBtn.addEventListener('click', () => new CreditTransferModal(root));
-    root.appendChild(this.creditBtn);
+    this.registerButton({
+      id: 'radio', icon: '📻', label: 'Open Radio Free Commons',
+      onClick: () => this.radio.show(),
+    });
+    const muteBtn = this.registerButton({
+      id: 'mute', icon: '🔊', label: 'Toggle music',
+      onClick: () => {
+        const muted = !isBGMMuted();
+        setBGMMuted(muted);
+        muteBtn.textContent = muted ? '🔇' : '🔊';
+        muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
+      },
+    });
+    this.registerButton({
+      id: 'quest', icon: '📋', label: 'Daily Quests',
+      onClick: () => new QuestModal(root),
+    });
+    this.registerButton({
+      id: 'builder', icon: '🏗️', label: 'Open Living District Builder',
+      onClick: () => new DistrictBuilderModal(root),
+    });
+    this.registerButton({
+      id: 'plugins', icon: '🧩', label: 'Open Plugin Library',
+      onClick: () => new PluginManagerModal(root),
+    });
+    this.registerButton({
+      id: 'shop', icon: '🏪', label: 'Open the Commons Bazaar',
+      onClick: () => new ShopModal(root, () => this.fetchWalletBalance()),
+    });
+    this.registerButton({
+      id: 'social', icon: '🤝', label: 'Open Common Grounds',
+      onClick: () => new SocialHubModal(root),
+    });
+    this.registerButton({
+      id: 'civic', icon: '📖', label: 'Open Found a Commons directory',
+      onClick: () => new CivicDirectoryModal(root),
+    });
+    this.registerButton({
+      id: 'journal', icon: '📓', label: 'Open Civic Journal — log a real-world deed',
+      onClick: () => new CivicJournal(root),
+    });
 
     // Solidarity Token wallet balance chip (only shown once fetched for a signed-in user)
     this.walletChipEl = document.createElement('div');
@@ -225,12 +141,30 @@ export class TopHUD {
     this.walletChipEl.hidden = true;
     root.appendChild(this.walletChipEl);
 
+    // Kernel plugins (geo-weather/mesh-comms/mutual-credit, etc.) register
+    // their own HUD buttons through this sink during kernel.boot().
+    kernel.attachHudSink(this);
+
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
 
     // Fetch district resilience badge (non-blocking)
     this.fetchPulseBadge();
     this.fetchWalletBalance();
+  }
+
+  /** HudSink implementation — used both for TopHUD's own built-ins above and for kernel plugins registering later. */
+  registerButton(descriptor: KernelHudButtonDescriptor): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `${descriptor.className ?? `${descriptor.id}-open-btn`} interactive`;
+    btn.textContent = descriptor.icon;
+    btn.setAttribute('aria-label', descriptor.label);
+    btn.hidden = useGameStore.getState().meta.phase === 'select';
+    btn.addEventListener('click', () => descriptor.onClick());
+    this.root.appendChild(btn);
+    this.buttons.push({ descriptor, el: btn });
+    return btn;
   }
 
   private fetchWalletBalance(): void {
@@ -323,44 +257,17 @@ export class TopHUD {
 
   private render(state: GameState): void {
     const { meta, player, commons, pulseState } = state;
+    const isSelect = meta.phase === 'select';
 
-    if (meta.phase === 'select') {
-      this.el.hidden = true;
-      this.endDayBtn.hidden = true;
-      this.settingsBtn.hidden = true;
-      this.shareBtn.hidden = true;
-      this.radioBtn.hidden = true;
-      this.muteBtn.hidden = true;
-      this.questBtn.hidden = true;
-      this.builderBtn.hidden = true;
-      this.pluginsBtn.hidden = true;
-      this.shopBtn.hidden = true;
-      this.socialBtn.hidden = true;
-      this.civicBtn.hidden = true;
-      this.journalBtn.hidden = true;
-      this.meshBtn.hidden = true;
-      this.creditBtn.hidden = true;
-      this.civicTicker.setVisible(false);
-      return;
+    this.el.hidden = isSelect;
+    this.endDayBtn.hidden = isSelect;
+    this.civicTicker.setVisible(!isSelect);
+    for (const { el } of this.buttons) {
+      el.hidden = isSelect;
     }
-
-    this.el.hidden = false;
-    this.endDayBtn.hidden = false;
-    this.settingsBtn.hidden = false;
-    this.shareBtn.hidden = false;
-    this.radioBtn.hidden = false;
-    this.muteBtn.hidden = false;
-    this.questBtn.hidden = false;
-    this.builderBtn.hidden = false;
-    this.pluginsBtn.hidden = false;
-    this.shopBtn.hidden = false;
-    this.socialBtn.hidden = false;
-    this.civicBtn.hidden = false;
-    this.journalBtn.hidden = false;
-    this.meshBtn.hidden = false;
-    this.creditBtn.hidden = false;
-    this.civicTicker.setVisible(true);
     // pulseBadgeEl / walletChipEl visibility controlled by their own fetch responses
+
+    if (isSelect) return;
 
     const roleLabel = player.classRole
       ? { pip: 'Pip', morgan: 'Morgan', arthur: 'Arthur' }[player.classRole] ?? '?'

@@ -8,6 +8,7 @@ import { buildGeoWeatherState, type GeoWeatherState } from './WeatherModifierBri
 export * from './SunCalcEngine';
 export * from './OpenMeteoAdapter';
 export * from './WeatherModifierBridge';
+export * from './plugin';
 
 export async function getGeoWeatherState(
   lat: number,

@@ -76,6 +76,42 @@ export interface MinigameInstance {
   onResume?(): void;
 }
 
+// ── Frontend Kernel — standalone plugin registration ───────────────────────
+// Generalizes the M14 microkernel principle beyond minigames: any first-party
+// feature package (geo-weather, mesh-comms, mutual-credit, skins, world) self-
+// registers with apps/web/src/core/kernel/Kernel.ts through this contract
+// instead of being statically imported by TopHUD.ts/main.ts.
+
+export interface KernelPluginManifest {
+  id: string;
+  version: string;
+  title: string;
+  description: string;
+  permissions?: string[];
+  requiresHardware?: boolean;
+}
+
+export interface KernelHudButtonDescriptor {
+  id: string;
+  icon: string;
+  label: string;
+  className?: string;
+  onClick: () => void;
+}
+
+export interface KernelContext {
+  uiRoot: HTMLElement;
+  hud: { registerButton(button: KernelHudButtonDescriptor): void };
+  theme: { switchSkin(skinId: string, scene?: unknown): Promise<void>; getActiveSkinId(): string };
+  audio: { playUIClick(): void; playSolidarityChime(): void };
+  input: { setLocked(locked: boolean): void };
+}
+
+export interface KernelPluginModule {
+  manifest: KernelPluginManifest;
+  register(ctx: KernelContext): void | Promise<void>;
+}
+
 // ── Living District Builder ────────────────────────────────────────────────
 
 export type DistrictBuildingType =

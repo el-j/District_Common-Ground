@@ -24,6 +24,9 @@
   },
   "dependencies": {
     "@district-cg/minigame-courier-rush": "*",
+    "@district-cg/plugin-geo-weather": "*",
+    "@district-cg/plugin-mesh-comms": "*",
+    "@district-cg/plugin-mutual-credit": "*",
     "idb-keyval": "^6.3.0",
     "phaser": "^4.2.1",
     "zustand": "^5.0.15"

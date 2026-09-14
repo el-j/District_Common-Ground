@@ -1,7 +1,7 @@
 # Task Status — District: Common Ground
 
-Last updated: 2026-09-13
-Status: **Phase 1 code-complete. Phase 2 (M8–M12) in active development.**
+Last updated: 2026-09-14
+Status: **Phase 1 code-complete. Phase 2 (M8–M17) code-complete — remaining items are manual/browser-only smoke tests and audits. M18/M19 planned, not started.**
 
 Phase 1 task files and story epics are archived under `docs/archive/`.
 
@@ -35,11 +35,11 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[x] PoC Complete` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
 | **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[ ] Planned (Offline Architecture)` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
 | **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[ ] Planned (Decoupled Plugin)` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
-| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] In Progress` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
-| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[~] In Progress` | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
-| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[~] In Progress` | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
-| M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] In Progress` | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
-| M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[~] In Progress` | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
+| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[x] Complete` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
+| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[x] Complete` (1 manual smoke test outstanding) | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
+| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[x] Complete` (3 manual smoke tests outstanding) | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
+| M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[x] Complete` (2 manual smoke tests outstanding) | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) |
+| M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[x] Complete` (WCAG contrast audit + Lighthouse report outstanding — need a real browser) | [EPIC-12](stories/EPIC-12-audio-v2-polish.md) | [M12 tasks](tasks/M12-audio-v2-polish.md) |
 
 ---
 
@@ -51,7 +51,7 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 
 ---
 
-## M14 — Dynamic Microkernel, Living District Builder & Extensible Minigames (🚨 Immediate Next Priority)
+## M14 — Dynamic Microkernel, Living District Builder & Extensible Minigames
 
 Story: [`docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
 Tasks: [`docs/tasks/M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-microkernel-minigames.md)  
@@ -141,7 +141,7 @@ Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.m
 
 ---
 
-## M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync
+## M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync (🚨 Immediate Next Priority)
 
 Story: [`docs/stories/EPIC-18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-18-offline-first-device-storage-and-sync.md)  
 Tasks: [`docs/tasks/M18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M18-offline-first-device-storage-and-sync.md)  
@@ -220,8 +220,8 @@ Tasks: `docs/tasks/M9-district-dispatch.md`
 | `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[x]` |
 | `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[x]` |
 | `crisis_scenarios.json` expanded to 25+ curated fallback scenarios | `[x]` |
-| Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[ ]` |
-| Tests (Vitest + Go httptest + validator clamping tests) | `[~]` |
+| Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[x]` (was stale — `apps/web/src/api/narrativeGossip.ts` + `WorldScene.ts`'s `openTalk()` "Heard anything lately?" branch were already wired end-to-end) |
+| Tests (Vitest + Go httptest + validator clamping tests) | `[x]` (added `narrativeGossip.test.ts` for the previously-untested pure gossip logic; only the manual broadsheet→rumor smoke test below remains unautomated) |
 
 ---
 
@@ -237,12 +237,12 @@ Tasks: `docs/tasks/M10-district-expansion.md`
 | Day/night lighting — tint overlay rect, 4 phases, 2-min cycle | `[x]` |
 | `ScrapsEntity.ts` — cat NPC, patrol, purr, hearts, Stress −5 | `[x]` |
 | `WorldScene.ts` — instantiate ScrapsEntity | `[x]` |
-| Map expansion to 64×80 (4 named zones) | `[ ]` |
-| `PigeonEntity.ts` — scatter AI | `[ ]` |
-| Zone detection → HUD zone label | `[ ]` |
-| Streetlamp night overlay sprite | `[ ]` |
-| Feed interaction for Scraps (cash > 0, Stress −10) | `[ ]` |
-| Tests (manual) | `[ ]` |
+| Map expansion to 64×80 (4 named zones) | `[x]` (was stale — `WorldScene.ts`'s `buildMap()` is already `COLS=64`/`ROWS=80` with 5 named zones: North Transit Hub, Central Plaza, South Quarter, East Canal, South Solar Quarter) |
+| `PigeonEntity.ts` — scatter AI | `[x]` (was stale — already implemented and spawned in `WorldScene.ts`'s Central Plaza) |
+| Zone detection → HUD zone label | `[x]` (was stale — `WorldScene.ts`'s `updateZone()` → `TopHUD.setZone()` already wired) |
+| Streetlamp night overlay sprite | `[x]` (`WorldScene.ts`'s `spawnStreetlamps()`/`updateStreetlamps()` — additive-blend glow circles along each road strip, fading in/out with the day/night tint) |
+| Feed interaction for Scraps (cash > 0, Stress −10) | `[x]` (`ScrapsEntity.ts`'s `onFeed()` — spends a small treat cost and reduces stress by 10 when the player has cash, otherwise a free pet still reduces stress by 5) |
+| Tests (manual) | `[ ]` manual — unchanged, requires a browser |
 
 ---
 
@@ -257,12 +257,12 @@ Tasks: `docs/tasks/M11-shared-commons.md`
 | Node D: Community Tool Library — WorldScene node + ConstructionModal | `[x]` |
 | Node E: Community Land Trust — WorldScene node + ConstructionModal | `[x]` |
 | `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[x]` |
-| Tool Library 20% upkeep buff wired in EconomyMath | `[ ]` |
-| Climate migration crisis archetype (3 scenarios) | `[ ]` |
-| Community unity flyer objects + tear-down action | `[ ]` |
-| `TownHallAssembly.ts` — monthly vote modal | `[ ]` |
-| `TopHUD.ts` — District Pulse badge (global solidarity dot) | `[ ]` |
-| Tests | `[ ]` |
+| Tool Library 20% upkeep buff wired in EconomyMath | `[x]` (was stale — `EconomyMath.ts` already reduces energy upkeep 10→8 (20%) once `toolLibraryProgress` clears the build threshold) |
+| Climate migration crisis archetype (3 scenarios) | `[x]` (was stale — `MIGRATION_SANCT` archetype, 3 authored scenarios already in `crisis_scenarios.json`) |
+| Community unity flyer objects + tear-down action | `[x]` (was stale — `WorldScene.ts`'s `spawnFlyers()`/`tearDownFlyer()` already implemented) |
+| `TownHallAssembly.ts` — monthly vote modal | `[x]` (was stale — already implemented, gated by `shouldOpen()`'s 30-day interval) |
+| `TopHUD.ts` — District Pulse badge (global solidarity dot) | `[x]` (was stale — `pulseBadgeEl` already implemented) |
+| Tests | `[~]` (Go httptest for `/api/v1/district/resilience` exists; two Land-Trust/flyer manual smoke tests remain — see `M11-shared-commons.md`) |
 
 ---
 
@@ -280,14 +280,14 @@ Tasks: `docs/tasks/M12-audio-v2-polish.md`
 | `Escape` closes ConstructionModal + HistoryModal | `[x]` |
 | `:focus-visible` 2px #66dd88 outline on `.interactive` / `button` / `input` | `[x]` |
 | `@media (prefers-reduced-motion)` CSS | `[x]` |
-| Arrow keys navigate dialogue choices | `[ ]` |
-| WCAG AA contrast check: all text 4.5:1 | `[ ]` |
-| Vitest: EconomyMath multiplier combos (applyDailyTick) | `[ ]` |
-| Vitest: CrisisEngine — enqueue, resolve, history | `[ ]` |
-| Vitest: IrlQuestSystem — day lock, buff application | `[ ]` |
-| Vitest: SeasonalWave — seasonal peaks | `[ ]` |
-| Go: pulse economy + solidarity pool httptest | `[ ]` |
-| Lighthouse audit — `docs/lighthouse-report.md` | `[ ]` |
+| Arrow keys navigate dialogue choices | `[x]` (was stale — `DialogueOverlay.ts` already handles `ArrowUp`/`ArrowDown`/`ArrowLeft`/`ArrowRight`) |
+| WCAG AA contrast check: all text 4.5:1 | `[ ]` manual — genuine gap, needs a real browser contrast audit |
+| Vitest: EconomyMath multiplier combos (applyDailyTick) | `[x]` (was stale — `EconomyMath.test.ts`, 24 tests) |
+| Vitest: CrisisEngine — enqueue, resolve, history | `[x]` (was stale — `CrisisEngine.test.ts`, 10 tests) |
+| Vitest: IrlQuestSystem — day lock, buff application | `[x]` (was stale — `IrlQuestSystem.test.ts`, 9 tests) |
+| Vitest: SeasonalWave — seasonal peaks | `[x]` (genuine gap, now closed — added `SeasonalWave.test.ts`, 5 tests: food/heat seasonal peaks, wage flatness, month-wraparound normalization) |
+| Go: pulse economy + solidarity pool httptest | `[x]` (was stale — `economy_test.go` (6 tests) + `solidarity_pool_test.go` (4 tests) already existed) |
+| Lighthouse audit — `docs/lighthouse-report.md` | `[ ]` manual — genuine gap, needs a real Lighthouse run against a served build |
 
 ---
 

@@ -525,6 +525,8 @@ export class WorldScene extends Phaser.Scene {
   private tintOverlay!: Phaser.GameObjects.Rectangle;
   private prevDay = 0;
   private lastTintHash = -1;
+  private streetlamps: Phaser.GameObjects.Arc[] = [];
+  private lastLampAlpha = -1;
 
   // Courier Rush Cargo Bike portal (near Sal's Kitchen / Grocer)
   private bikePortal = { x: 18 * TS + TS / 2, y: 55 * TS + TS / 2 };
@@ -679,6 +681,8 @@ export class WorldScene extends Phaser.Scene {
       this.pigeons.push(new PigeonEntity(this, px, py, pigeonBounds));
     }
 
+    this.spawnStreetlamps();
+
     // Tint overlay for day/night lighting (depth 90, scrollFactor 0 = fixed to screen)
     const screenW = this.scale.width, screenH = this.scale.height;
     this.tintOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0x220044, 0)
@@ -726,6 +730,33 @@ export class WorldScene extends Phaser.Scene {
     this.drawThumbstick();
   }
 
+  private spawnStreetlamps(): void {
+    // Evenly spaced glowing lamp posts along each road strip; only visible at night.
+    const roadRows = [21, 42, 64]; // North / South cross-streets + Solar Quarter border road
+    for (const row of roadRows) {
+      for (let col = 4; col < COLS - 2; col += 8) {
+        this.streetlamps.push(this.createLampGlow(col * TS + TS / 2, row * TS + TS / 2));
+      }
+    }
+    const canalCol = 50; // East Canal access road
+    for (let row = 4; row < ROWS - 2; row += 8) {
+      this.streetlamps.push(this.createLampGlow(canalCol * TS + TS / 2, row * TS + TS / 2));
+    }
+  }
+
+  private createLampGlow(x: number, y: number): Phaser.GameObjects.Arc {
+    return this.add.circle(x, y, TS * 1.5, 0xffdd88, 0.35)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(4)
+      .setAlpha(0);
+  }
+
+  private updateStreetlamps(nightStrength: number): void {
+    if (nightStrength === this.lastLampAlpha) return;
+    this.lastLampAlpha = nightStrength;
+    for (const lamp of this.streetlamps) lamp.setAlpha(nightStrength * 0.35);
+  }
+
   private updateDayNight(): void {
     const cycleDuration = 120_000;
     const phase = (this.ticksSinceDay % cycleDuration) / cycleDuration;
@@ -752,6 +783,8 @@ export class WorldScene extends Phaser.Scene {
       color = 0x110022;
       alpha = 0.26 * (1 - t);
     }
+
+    this.updateStreetlamps(Math.min(1, alpha / 0.26));
 
     // Only call setFillStyle when the value meaningfully changes (prevents 60fps redraws)
     const hash = color * 1000 + Math.round(alpha * 500);

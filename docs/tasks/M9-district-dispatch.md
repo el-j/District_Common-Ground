@@ -40,4 +40,5 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 - [x] Go test: `validator_test.go` verifies malformed or out-of-bounds LLM responses are rejected (16 tests)
 - [x] Go httptest: `/api/v1/narrative/daily-scenarios` returns valid scenario matching schema
 - [x] Go httptest: fallback returns 200 valid JSON when AI provider returns 500
+- [x] Vitest: `narrativeGossip.test.ts` — `pickGossipLine`/`scenariosToGossip` archetype matching + DEFAULT fallback, `fetchDailyGossip`'s network-failure/non-OK fallback and session-cache reuse
 - [ ] Manual: advance day → broadsheet unfolds with dynamic story → close → talk to Sal → hear dynamic rumor

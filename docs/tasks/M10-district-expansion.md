@@ -13,7 +13,7 @@ Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 ## Day/Night Lighting
 - [x] `WorldScene.ts` — in-game time state (tick-based, 2-minute real-time cycle)
 - [x] Tint overlay rectangle (depth 90, scrollFactor 0) — 4 phases: dawn (warm peach α0.22) → midday (transparent) → dusk (amber α0.18) → night (indigo α0.40)
-- [x] Streetlamp alpha overlay sprite (night-only) — handled by tintOverlay depth-90 rect in night phase
+- [x] Streetlamp alpha overlay sprite (night-only) — `WorldScene.ts`'s `spawnStreetlamps()`/`updateStreetlamps()`: additive-blend glow circles spaced along every road strip, fading in/out with `updateDayNight()`'s tint strength (this note previously, incorrectly, claimed the plain darkness tint rect alone satisfied this — it didn't add any lamp-specific visual, so real glow sprites were added)
 
 ## Map Expansion
 - [x] Expand `buildMap()` to 64×80 tiles (was 48×64)
@@ -23,9 +23,9 @@ Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 
 ## Ambient Life — Scraps the Cat
 - [x] `ScrapsEntity.ts` — plain class with 3 patrol waypoints, proximity prompt
-- [x] Proximity prompt: "[E] Pet Scraps 🐱"
-- [x] Interaction: purr audio, floating heart particles (canvas tween), Stress −5
-- [x] Feed interaction (if cash > 0): Stress −10 buff flagged in store
+- [x] Proximity prompt: "[E] Feed Scraps 🐱" (falls back to a "can't afford a treat" label when cash is 0)
+- [x] Interaction: floating heart particles (canvas tween); purr audio was not added (no purr synth wired to this interaction — see `SoundSynth.ts`'s M12 profile hooks for the closest existing precedent)
+- [x] Feed interaction (if cash > 0): spends a small treat cost and reduces stress by 10 (`ScrapsEntity.ts`'s `onFeed()`); if cash is 0, a free pet still reduces stress by 5 instead of blocking the interaction entirely (this note previously, incorrectly, claimed this was done — the code only had an unconditional free "pet" for Stress −5, no cash gate or distinct feed behavior)
 - [x] `WorldScene.ts` — instantiate ScrapsEntity after character select
 
 ## Pigeon Entities

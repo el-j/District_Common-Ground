@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
 import { useGameStore } from '../../core/state/useGameStore';
+import { spendCash, reduceStress } from '../../core/state/actions';
 
 const WAYPOINTS = [
   { x: 80, y: 220 },   // near grocer
   { x: 160, y: 140 },  // central plaza
   { x: 200, y: 280 },  // south courtyard
 ];
+
+const FEED_COST = 2;
 
 export class ScrapsEntity {
   private sprite: Phaser.GameObjects.Rectangle;
@@ -17,7 +20,7 @@ export class ScrapsEntity {
   constructor(private readonly scene: Phaser.Scene, x: number, y: number) {
     this.sprite = scene.add.rectangle(x, y, 12, 10, 0xe8a844).setDepth(5);
 
-    this.promptText = scene.add.text(x, y - 16, '[E] Pet Scraps 🐱', {
+    this.promptText = scene.add.text(x, y - 16, '[E] Feed Scraps 🐱', {
       fontSize: '10px',
       color: '#ffeecc',
       backgroundColor: '#2a1a0a',
@@ -31,9 +34,10 @@ export class ScrapsEntity {
 
     this.promptText.setVisible(inRange);
     this.promptText.setPosition(this.sprite.x, this.sprite.y - 16);
+    this.promptText.setText(useGameStore.getState().player.cash > 0 ? '[E] Feed Scraps 🐱' : "[E] Pet Scraps 🐱 (can't afford a treat)");
 
     if (inRange && playerInteract) {
-      this.onPet();
+      this.onFeed();
     }
 
     this.patrol(delta);
@@ -55,10 +59,14 @@ export class ScrapsEntity {
     this.sprite.y += (dy / dist) * move;
   }
 
-  private onPet(): void {
-    useGameStore.setState(s => ({
-      player: { ...s.player, stressLevel: Math.max(0, s.player.stressLevel - 5) },
-    }));
+  private onFeed(): void {
+    const canAffordTreat = useGameStore.getState().player.cash > 0;
+    if (canAffordTreat) {
+      spendCash(FEED_COST);
+      reduceStress(10);
+    } else {
+      reduceStress(5); // a free pet still helps, just less than a fed treat
+    }
     this.spawnHearts();
   }
 

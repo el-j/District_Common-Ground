@@ -50,6 +50,21 @@
   gap: 0.75rem;
 }
 
+.cs-geo-preview-link {
+  display: block;
+  margin: 1.25rem auto 0;
+  background: none;
+  border: 1px solid #35354a;
+  border-radius: 3px;
+  color: #8888aa;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cs-geo-preview-link:hover { color: #c4b0f0; border-color: #6b4f9a; }
+
 .archetype-card {
   background: #1a1a2e;
   border: 1px solid #35354a;
@@ -1455,6 +1470,466 @@
 .district-viewer-bar-fill {
   height: 100%;
   background: linear-gradient(90deg, #2e6a4f, #6fd8a1);
+}
+
+/* ── Found a Commons (Civic Directory) Button ───────────────── */
+
+.civic-open-btn {
+  position: absolute;
+  right: 12.85rem;
+  bottom: 0.85rem;
+  background: rgba(20, 16, 26, 0.9);
+  border: 1px solid #6b4f9a;
+  border-radius: 50%;
+  color: #b89ae0;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.civic-open-btn:hover { color: #d8c4f5; border-color: #8a6bc4; }
+
+/* ── Civic Action Ticker (bottom marquee) ───────────────────── */
+
+.civic-ticker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.6rem;
+  background: rgba(10, 8, 16, 0.85);
+  border-top: 1px solid #6b4f9a;
+  overflow: hidden;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.civic-ticker-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  align-items: center;
+  animation: civic-ticker-scroll 45s linear infinite;
+}
+
+.civic-ticker-content {
+  display: inline-block;
+  padding: 0 2rem;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  color: #d8c4f5;
+  letter-spacing: 0.02em;
+}
+
+@keyframes civic-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .civic-ticker-track { animation: none; }
+  .civic-ticker { overflow-x: auto; }
+}
+
+/* ── Civic Directory Modal ───────────────────────────────────── */
+
+.civic-directory-panel {
+  width: min(560px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #140f1c, #100c16);
+  border-color: #6b4f9a;
+}
+
+.civic-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(20, 16, 26, 0.9);
+  border: 1px solid #4a3a6a;
+  border-radius: 4px;
+  color: #e6ddf5;
+  font-size: 0.72rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.civic-search-input:focus { outline: 2px solid #8a6bc4; }
+
+.civic-directory-status {
+  font-size: 0.68rem;
+  color: #a894c4;
+  margin: 0.4rem 0;
+}
+
+.civic-chapter-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 40vh;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.civic-chapter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(30, 22, 42, 0.6);
+  border: 1px solid #3a2c54;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+.civic-chapter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.civic-chapter-name {
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: #e6ddf5;
+}
+
+.civic-chapter-meta {
+  font-size: 0.62rem;
+  color: #a894c4;
+}
+
+.civic-visit-btn {
+  flex-shrink: 0;
+  background: #4a3a6a;
+  color: #e6ddf5;
+  border: none;
+  border-radius: 4px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.66rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.civic-visit-btn:hover { background: #6b4f9a; }
+
+.civic-starter-kit-btn {
+  width: 100%;
+}
+
+/* ── Civic Journal (M16 IRL deed logger) ──────────────────────── */
+
+.journal-open-btn {
+  position: absolute;
+  right: 14.6rem;
+  bottom: 0.85rem;
+  background: rgba(20, 16, 26, 0.9);
+  border: 1px solid #5a8a4f;
+  border-radius: 50%;
+  color: #a8d089;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.journal-open-btn:hover { color: #c8f0b0; border-color: #7ac46b; }
+
+.civic-journal-panel {
+  width: min(520px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #131c10, #0f150d);
+  border-color: #5a8a4f;
+}
+
+.civic-journal-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.civic-journal-category {
+  background: rgba(30, 42, 24, 0.6);
+  border: 1px solid #3a5430;
+  border-radius: 6px;
+  color: #cfe8bd;
+  font-size: 0.68rem;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.civic-journal-category:hover { border-color: #7ac46b; }
+.civic-journal-category--active {
+  background: #3a5430;
+  border-color: #a8d089;
+  color: #ffffff;
+}
+
+.civic-journal-note {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(20, 26, 16, 0.9);
+  border: 1px solid #3a5430;
+  border-radius: 4px;
+  color: #e6f0dd;
+  font-size: 0.72rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.7rem;
+  resize: vertical;
+}
+.civic-journal-note:focus { outline: 2px solid #7ac46b; }
+
+.civic-journal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.civic-journal-actions button {
+  flex: 1 1 auto;
+  background: #3a5430;
+  color: #e6f0dd;
+  border: none;
+  border-radius: 4px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.civic-journal-actions button:hover { background: #5a8a4f; }
+
+.civic-journal-code {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  color: #a8d089;
+  background: rgba(30, 42, 24, 0.6);
+  border: 1px dashed #5a8a4f;
+  border-radius: 6px;
+  padding: 0.7rem;
+  margin: 0.6rem 0;
+}
+
+.civic-journal-code-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(20, 26, 16, 0.9);
+  border: 1px solid #3a5430;
+  border-radius: 4px;
+  color: #e6f0dd;
+  font-size: 0.72rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.civic-journal-history {
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0 0;
+  border-top: 1px solid #3a5430;
+  font-size: 0.64rem;
+  color: #a0c090;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.civic-journal-sync-btn {
+  background: none;
+  border: none;
+  color: #a8d089;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.66rem;
+  padding: 0;
+}
+
+/* ── Real-World Geo-Mode Preview (M16 PoC) ────────────────────── */
+
+.geo-preview-panel {
+  width: min(400px, calc(100% - 2rem));
+}
+
+.geo-preview-canvas {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0.6rem auto;
+  border: 1px solid #35354a;
+  border-radius: 4px;
+  image-rendering: pixelated;
+}
+
+.geo-preview-tag {
+  color: #8888aa;
+  font-size: 0.6rem;
+}
+
+/* ── Civic block embedded in the morning broadsheet ─────────── */
+
+.broadsheet-civic {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #8a6bc4;
+}
+
+.broadsheet-civic-row {
+  font-size: 0.68rem;
+  margin: 0.25rem 0;
+}
+
+/* ── Settings: Civic Region selector ────────────────────────── */
+
+.settings-region {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 1rem 0;
+}
+
+/* ── Off-Grid Mesh Terminal (M17) ──────────────────────────────── */
+
+.mesh-open-btn {
+  position: absolute;
+  right: 17rem;
+  bottom: 0.85rem;
+  background: rgba(20, 16, 26, 0.9);
+  border: 1px solid #6b8ac4;
+  border-radius: 50%;
+  color: #a8c0e8;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.mesh-open-btn:hover { color: #c8dcf0; border-color: #6bacf0; }
+
+.mesh-chat-panel {
+  width: min(560px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #10141c, #0d1018);
+  border-color: #6b8ac4;
+}
+
+.mesh-chat-transports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.mesh-chat-transport {
+  flex: 1 1 auto;
+  background: rgba(24, 32, 46, 0.6);
+  border: 1px solid #304868;
+  border-radius: 6px;
+  color: #bcd0ea;
+  font-size: 0.66rem;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mesh-chat-transport:hover:not(:disabled) { border-color: #6bacf0; }
+.mesh-chat-transport--active {
+  background: #304868;
+  border-color: #a8c0e8;
+  color: #ffffff;
+}
+.mesh-chat-transport:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mesh-chat-webrtc-out,
+.mesh-chat-webrtc-in,
+.mesh-chat-compose {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(16, 20, 28, 0.9);
+  border: 1px solid #304868;
+  border-radius: 4px;
+  color: #e2ecfa;
+  font-size: 0.68rem;
+  padding: 0.5rem 0.6rem;
+  margin: 0.4rem 0;
+  resize: vertical;
+}
+
+/* ── Mutual Credit Trade Terminal (M17) ───────────────────────── */
+
+.credit-open-btn {
+  position: absolute;
+  right: 19.4rem;
+  bottom: 0.85rem;
+  background: rgba(20, 16, 26, 0.9);
+  border: 1px solid #c4a86b;
+  border-radius: 50%;
+  color: #e8d0a8;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.credit-open-btn:hover { color: #f0dcb0; border-color: #f0c46b; }
+
+.credit-transfer-panel {
+  width: min(480px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #1c1610, #18130d);
+  border-color: #c4a86b;
+}
+
+.credit-transfer-to,
+.credit-transfer-amount,
+.credit-transfer-memo,
+.credit-transfer-out,
+.credit-transfer-redeem-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(28, 22, 16, 0.9);
+  border: 1px solid #6b5a3a;
+  border-radius: 4px;
+  color: #f0e6d6;
+  font-size: 0.72rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.6rem;
+  resize: vertical;
+}
+.credit-transfer-to:focus,
+.credit-transfer-amount:focus,
+.credit-transfer-memo:focus {
+  outline: 2px solid #c4a86b;
+}
+
+.settings-region-label {
+  font-size: 0.66rem;
+  color: #9aa0b4;
+}
+
+.settings-region-select {
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #e0e0f0;
+  font-size: 0.72rem;
+  padding: 0.4rem 0.5rem;
 }
 
 .skin-preview {

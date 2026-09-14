@@ -25,6 +25,9 @@ export interface GameState {
     activeSkin: string;
     phase: GamePhase;
     lastAssemblyDay: number;
+    /** Coarse, user-chosen region bucket (e.g. "GENERIC", "US-WEST") used to
+     *  filter the civic ticker/directory. Never derived from GPS or IP. */
+    regionCode: string;
   };
   player: {
     classRole: ClassRole | null;
@@ -56,7 +59,7 @@ export interface GameState {
 }
 
 export const INITIAL_STATE: GameState = {
-  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select', lastAssemblyDay: 0 },
+  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
   player: {
     classRole: null,
     cash: 0,

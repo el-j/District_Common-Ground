@@ -9,9 +9,11 @@ import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 
 	"github.com/district-cg/api/internal/auth"
+	"github.com/district-cg/api/internal/civic"
 	"github.com/district-cg/api/internal/config"
 	"github.com/district-cg/api/internal/db"
 	"github.com/district-cg/api/internal/gamedata"
+	"github.com/district-cg/api/internal/irl"
 	"github.com/district-cg/api/internal/kernel"
 	"github.com/district-cg/api/internal/middleware"
 	"github.com/district-cg/api/internal/narrative"
@@ -59,6 +61,8 @@ func main() {
 	themeHandler := theme.NewHandler(kernelRepo)
 	shopHandler := shop.NewHandler(shop.NewRepository(pool))
 	socialHandler := social.NewHandler(social.NewRepository(pool))
+	civicHandler := civic.NewHandler(civic.NewRepository(pool))
+	irlHandler := irl.NewHandler(irl.NewRepository(pool))
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
@@ -96,6 +100,10 @@ func main() {
 		r.With(requireAuth).Post("/social/caravan/dispatch", socialHandler.DispatchCaravan)
 		r.With(requireAuth).Get("/social/caravan/inbox", socialHandler.Inbox)
 		r.With(requireAuth).Post("/social/caravan/{id}/claim", socialHandler.ClaimCaravan)
+		r.Get("/civic/ticker", civicHandler.Ticker)
+		r.Get("/civic/chapters", civicHandler.Chapters)
+		r.With(requireAuth).Post("/irl/deeds", irlHandler.LogDeed)
+		r.With(requireAuth).Get("/irl/deeds", irlHandler.ListDeeds)
 		r.With(requireAuth).Post("/plugins/verification-requests", kernelHandler.SubmitVerificationRequest)
 		r.With(requireAuth).Get("/plugins/verification-requests", kernelHandler.ListVerificationRequests)
 		r.With(requireAuth).Post("/plugins/verification-requests/{id}/review", kernelHandler.ReviewVerificationRequest)

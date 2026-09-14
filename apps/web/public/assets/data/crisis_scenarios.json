@@ -306,10 +306,10 @@
     }
   },
   {
-    "id": "neo-fascist-flyers",
-    "archetype": "FASCIST_AGITATION",
+    "id": "division-flyers",
+    "archetype": "DIVISION_AGITATION",
     "title": "The Overnight Papering",
-    "context": "You wake to find the block covered in neo-fascist flyers targeting migrant neighbors by name of nationality. Forty flyers on lampposts, doorways, and the community bulletin board. A QR code links to an anonymous organizing channel. Some neighbors are photographing them — but not to report.",
+    "context": "You wake to find the block covered in hateful division flyers targeting migrant neighbors by name of nationality. Forty flyers on lampposts, doorways, and the community bulletin board. A QR code links to an anonymous organizing channel. Some neighbors are photographing them — but not to report.",
     "choiceA": {
       "label": "Leave it for the city to clean up",
       "type": "authoritarian",
@@ -324,28 +324,28 @@
     }
   },
   {
-    "id": "fascist-march",
-    "archetype": "FASCIST_AGITATION",
+    "id": "division-march",
+    "archetype": "DIVISION_AGITATION",
     "title": "The Permitted March",
-    "context": "A far-right group has obtained a permit to march through the district's immigrant neighborhood this Saturday. They have 200 confirmed attendees and a social media following of 40,000. The city has assigned minimal police presence and told residents to \"stay indoors.\"",
+    "context": "An outside agitator group has obtained a permit to march through the district's immigrant neighborhood this Saturday. They have 200 confirmed attendees and a social media following of 40,000. The city has assigned minimal police presence and told residents to \"stay indoors.\"",
     "choiceA": {
       "label": "Stay indoors as advised",
       "type": "authoritarian",
-      "description": "You comply. The march goes through unopposed. Footage of an \"uncontested march\" is shared nationally as a propaganda victory. Local far-right membership triples. Three more marches are planned.",
+      "description": "You comply. The march goes through unopposed. Footage of an \"uncontested march\" is shared nationally as a propaganda victory. The division network triples in size. Three more marches are planned.",
       "consequences": { "cashDelta": 0, "energyDelta": 5, "trustDelta": -20, "resilienceDelta": -20, "stressDelta": -5, "worldEffect": "desaturate" }
     },
     "choiceB": {
       "label": "Build a counter-presence with legal observers and community shields",
       "type": "solidarity",
-      "description": "You help coordinate a community presence ten times larger than the march, with legal observers and a human shield at the most vulnerable streets. The march is contained, filmed, and humiliated. Far-right membership in the district collapses.",
+      "description": "You help coordinate a community presence ten times larger than the march, with legal observers and a human shield at the most vulnerable streets. The march is contained, filmed, and humiliated. The division network in the district collapses.",
       "consequences": { "cashDelta": 0, "energyDelta": -20, "trustDelta": 30, "resilienceDelta": 25, "stressDelta": 10, "worldEffect": "bloom" }
     }
   },
   {
-    "id": "fascist-youth-recruitment",
-    "archetype": "FASCIST_AGITATION",
+    "id": "division-youth-recruitment",
+    "archetype": "DIVISION_AGITATION",
     "title": "The Transit Stop Recruiters",
-    "context": "Far-right organizers have been approaching youth at the North Transit Hub for three weeks, handing out materials and offering rides to \"community events.\" Two teenagers from the block have been seen attending these events. Parents are worried and divided on how to respond.",
+    "context": "Outside recruiters have been approaching youth at the North Transit Hub for three weeks, handing out materials and offering rides to \"community events.\" Two teenagers from the block have been seen attending these events. Parents are worried and divided on how to respond.",
     "choiceA": {
       "label": "Warn the kids individually and hope for the best",
       "type": "authoritarian",
@@ -355,7 +355,7 @@
     "choiceB": {
       "label": "Build a community youth program at the Transit Hub",
       "type": "solidarity",
-      "description": "You work with local organisers to create an after-school mutual aid program at the transit hub. Twelve youth participate. The far-right recruiters leave after finding no foothold. The program continues past the crisis.",
+      "description": "You work with local organisers to create an after-school mutual aid program at the transit hub. Twelve youth participate. The outside recruiters leave after finding no foothold. The program continues past the crisis.",
       "consequences": { "cashDelta": -10, "energyDelta": -20, "trustDelta": 25, "resilienceDelta": 25, "stressDelta": 0, "worldEffect": "bloom" }
     }
   },

@@ -52,7 +52,7 @@ export class CrisisWireModal {
       FOOD_HEALTH:       '🧺 Food',
       CIVIC_DISINFO:     '📡 Disinfo',
       MIGRATION_SANCT:   '🕊 Migration',
-      FASCIST_AGITATION: '⚠ Fascism',
+      DIVISION_AGITATION: '⚠ Division',
     };
     const label = (archetype && map[archetype]) ?? '⚡ Crisis';
     return `<span class="crisis-archetype-badge">${label}</span>`;

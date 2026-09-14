@@ -3,7 +3,18 @@ import { getThemeCatalog, applyTheme, type ThemeCatalogEntry } from '../skins/Th
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
-import { clearSave } from '../core/state/persistence';
+import { clearSave, saveToDB } from '../core/state/persistence';
+import { setRegionCode } from '../core/state/actions';
+
+const REGION_OPTIONS: { code: string; label: string }[] = [
+  { code: 'GENERIC', label: 'Generic / Unspecified' },
+  { code: 'US-NORTHEAST', label: 'US — Northeast' },
+  { code: 'US-MIDWEST', label: 'US — Midwest' },
+  { code: 'US-SOUTH', label: 'US — South' },
+  { code: 'US-WEST', label: 'US — West' },
+  { code: 'EU', label: 'Europe' },
+  { code: 'OTHER', label: 'Other' },
+];
 
 interface SkinPreview {
   desc: string;
@@ -61,6 +72,7 @@ export class SettingsModal {
         </div>
         <div class="settings-body">
           ${this.renderSkins(activeSkin)}
+          ${this.renderRegion()}
           <div class="settings-new-game">
             ${this.confirmNewGame
               ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
@@ -116,6 +128,20 @@ export class SettingsModal {
     `;
   }
 
+  private renderRegion(): string {
+    const current = useGameStore.getState().meta.regionCode ?? 'GENERIC';
+    return `
+      <div class="settings-region">
+        <label class="settings-region-label" for="settings-region-select">Civic Region (coarse — no GPS/location used)</label>
+        <select class="settings-region-select" id="settings-region-select">
+          ${REGION_OPTIONS.map(opt =>
+            `<option value="${opt.code}"${opt.code === current ? ' selected' : ''}>${opt.label}</option>`
+          ).join('')}
+        </select>
+      </div>
+    `;
+  }
+
   private bindEvents(): void {
     this.el.querySelector<HTMLButtonElement>('.settings-close')
       ?.addEventListener('click', () => this.close());
@@ -129,6 +155,13 @@ export class SettingsModal {
         void applyTheme(theme, this.scene).then(() => this.render());
       });
     });
+
+    this.el.querySelector<HTMLSelectElement>('.settings-region-select')
+      ?.addEventListener('change', e => {
+        const code = (e.target as HTMLSelectElement).value;
+        setRegionCode(code);
+        void saveToDB(useGameStore.getState());
+      });
 
     this.el.querySelector<HTMLButtonElement>('.new-game-btn')
       ?.addEventListener('click', () => {

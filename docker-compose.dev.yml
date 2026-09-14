@@ -28,6 +28,7 @@ services:
     volumes:
       - ./apps/web:/app/apps/web
       - ./packages/shared-types:/app/packages/shared-types
+      - ./packages/minigame-courier-rush:/app/packages/minigame-courier-rush
       - /app/node_modules
       - /app/apps/web/node_modules
     environment:

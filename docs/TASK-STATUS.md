@@ -30,9 +30,9 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
 | **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), trust-gated plugin store, Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) |
-| **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[~] In Progress` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
-| **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[ ] Planned (PoC)` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
-| **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[ ] Planned (Off-Grid PoC)` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
+| **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[x] Complete` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
+| **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[x] PoC Complete` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
+| **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[x] PoC Complete` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
 | **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[ ] Planned (Offline Architecture)` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
 | **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[ ] Planned (Decoupled Plugin)` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
 | M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] In Progress` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
@@ -88,18 +88,18 @@ Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md
 
 | Task | Status |
 |---|---|
-| `packages/shared-types` — `ThemeManifest`, `ShopItem`, `FriendProfile`, `CivicAction` | `[~]` (Theme + Shop + Social done; Civic pending) |
-| `apps/api/migrations/` — wallets, inventory (`007`); friends, caravans (`008`); ticker still pending | `[~]` |
+| `packages/shared-types` — `ThemeManifest`, `ShopItem`, `FriendProfile`, `CivicAction` | `[x]` |
+| `apps/api/migrations/` — wallets, inventory (`007`); friends, caravans (`008`); civic actions & chapters (`009`) | `[x]` |
 | `apps/api/internal/theme/` — Dynamic theme catalog & manifest loader | `[x]` |
 | `apps/api/internal/shop/` — In-game Commons Bazaar catalog & atomic purchase handler | `[x]` |
 | `apps/api/internal/social/` — Friend graph, district snapshot serializer & mutual-aid caravan queue | `[x]` |
-| `apps/api/internal/civic/` — Regional democratic protest & strike aggregator (RSS / Civic Open Feeds) | `[ ]` |
+| `apps/api/internal/civic/` — Regional civic action ticker & mutual-aid chapter directory (curated seed data, coarse region filter, no GPS/IP) | `[x]` |
 | `ThemePluginManager.ts` — Dynamic theme loader, palette swapper, building facade overrides | `[x]` |
 | `ShopModal.ts` — Tactile wooden storefront modal, ST wallet counter, cosmetic unlocks | `[x]` |
 | `SocialHubModal.ts` & `FriendDistrictViewer.ts` — Friend browser, invite codes, read-only visiting | `[x]` |
 | Caravan Dispatch Widget — Send emergency kilowatts, soup, or legal kits to friends in crisis | `[x]` |
-| `CivicTickerWidget.ts` — Rolling democratic rally alert ticker on morning broadsheet & HUD | `[ ]` |
-| `CivicDirectoryModal.ts` — Searchable real-world mutual-aid directory & "Found a Commons" PDF toolkit | `[ ]` |
+| `CivicTickerWidget.ts` — Rolling civic action alert ticker on morning broadsheet & HUD | `[x]` |
+| `CivicDirectoryModal.ts` — Searchable real-world mutual-aid directory & "Found a Commons" PDF toolkit | `[x]` |
 
 ---
 
@@ -111,14 +111,14 @@ Planning: [`docs/planning/16-REAL-WORLD-GEO-MODE-AND-UNIVERSAL-SOLIDARITY.md`](f
 
 | Task | Status |
 |---|---|
-| Universal Lexicon Audit — remove polarizing labels ("fascist"/"anti-fascist") across all content | `[x]` |
-| `OverpassClient.ts` — OpenStreetMap Overpass API client for roads, parks, buildings, amenities | `[ ]` |
-| `GeoJsonToTilemap.ts` — Vector polygon and highway rasterizer converting OSM to 16px Phaser tilemap | `[ ]` |
-| `AmenityClassifier.ts` — Semantic mapper connecting real libraries, bakeries, parks to game hubs | `[ ]` |
-| `GeoCache.ts` — Offline storage of generated neighborhood tilemaps in IndexedDB | `[ ]` |
-| `CivicJournal.ts` — Real-world mutual-aid action logger (Food Sharing, Eldercare, Greening, Repair) | `[ ]` |
-| `PeerVerification.ts` — Local peer-to-peer QR code verification handshake | `[ ]` |
-| `BadgeRegistry.ts` — Award ST & CAB points to player wallet for real-world civic deeds | `[ ]` |
+| Universal Lexicon Audit — remove polarizing labels ("fascist"/"anti-fascist") across all content | `[x]` (was falsely marked done previously; the actual audit — 3 crisis scenarios, an archetype key, and 4 other files — is now done, with regression coverage) |
+| `OverpassClient.ts` — OpenStreetMap Overpass API client for roads, parks, buildings, amenities | `[x]` |
+| `GeoJsonToTilemap.ts` — Vector polygon and highway rasterizer converting OSM to a 50×50 tile grid | `[x]` (renders via a standalone canvas preview modal, not the live Phaser `WorldScene` — see M16 task doc scoping note) |
+| `AmenityClassifier.ts` — Semantic mapper connecting real libraries, bakeries, parks to game hubs | `[x]` |
+| `GeoCache.ts` — Offline storage of generated neighborhood tilemaps in IndexedDB | `[x]` |
+| `CivicJournal.ts` — Real-world mutual-aid action logger (Food Sharing, Eldercare, Greening, Repair) | `[x]` |
+| `PeerVerification.ts` — Local peer verification handshake | `[x]` (4-word code, not a QR scan — see M16 task doc scoping note) |
+| `BadgeRegistry.ts` — Award ST & CAB points to player wallet for real-world civic deeds | `[x]` (plus an offline outbox so deeds logged without connectivity aren't lost) |
 
 ---
 
@@ -130,14 +130,14 @@ Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.m
 
 | Task | Status |
 |---|---|
-| `SolarCycleEngine.ts` — Astronomical solar calculation (SunCalc) & dynamic game ambient tinting | `[ ]` |
-| `LiveWeatherClient.ts` — Open-Meteo live hyper-local weather fetching with IndexedDB caching | `[ ]` |
-| `WeatherFXPlugin.ts` — Procedural rain, storm, snow, heat haze canvas particle shaders | `[ ]` |
-| `MeshtasticClient.ts` — Web Serial & Web Bluetooth LoRa hardware transceiver driver | `[ ]` |
-| `BitChatClient.ts` — Ephemeral peer-to-peer WebRTC mesh client with QR signaling | `[ ]` |
-| `OfflineChatModal.ts` — Decentralized off-grid community bulletin & emergency dispatch UI | `[ ]` |
-| `MutualCreditLedger.ts` — Zero-fiat cryptographic time-bank transaction ledger & double-spend validation | `[ ]` |
-| `CreditTransferModal.ts` — Offline mutual credit QR payment terminal & balance inspection | `[ ]` |
+| `SolarCycleEngine.ts` — Astronomical solar calculation (SunCalc) & dynamic game ambient tinting | `[x]` (implemented as `apps/web/src/plugins/geo-weather/SunCalcEngine.ts`; not wired into `WorldScene`'s ambient tint — see M17 task doc scoping note) |
+| `LiveWeatherClient.ts` — Open-Meteo live hyper-local weather fetching with IndexedDB caching | `[x]` (`apps/web/src/plugins/geo-weather/OpenMeteoAdapter.ts`) |
+| `WeatherFXPlugin.ts` — Procedural rain, storm, snow, heat haze canvas particle shaders | `[x]` (as `WeatherModifierBridge.ts`'s gameplay modifiers — no Phaser particle shaders were added, since nothing renders these into `WorldScene` yet; see M17 task doc scoping note) |
+| `MeshtasticClient.ts` — Web Serial & Web Bluetooth LoRa hardware transceiver driver | `[x]` (`WebSerialDriver.ts` + `WebBluetoothDriver.ts`, unverified against real hardware — see M17 task doc scoping note) |
+| `BitChatClient.ts` — Ephemeral peer-to-peer WebRTC mesh client with QR signaling | `[x]` (`WebRtcP2pDriver.ts`; pasteable text handshake, not a camera QR scan — see M17 task doc scoping note) |
+| `OfflineChatModal.ts` — Decentralized off-grid community bulletin & emergency dispatch UI | `[x]` (`apps/web/src/plugins/mesh-comms/MeshChatModal.ts`) |
+| `MutualCreditLedger.ts` — Zero-fiat cryptographic time-bank transaction ledger & double-spend validation | `[x]` (`apps/web/src/plugins/mutual-credit/CryptoLedger.ts`, Ed25519 + hash-chained) |
+| `CreditTransferModal.ts` — Offline mutual credit QR payment terminal & balance inspection | `[x]` (`apps/web/src/plugins/mutual-credit/CreditTransferModal.ts`) |
 
 ---
 

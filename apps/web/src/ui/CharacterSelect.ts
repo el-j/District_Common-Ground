@@ -1,6 +1,7 @@
 import { setArchetype } from '../core/state/actions';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { type ClassRole } from '../core/state/useGameStore';
+import { GeoPreviewModal } from './GeoPreviewModal';
 
 interface ArchetypeCard {
   role: ClassRole;
@@ -70,6 +71,7 @@ export class CharacterSelect {
         <h1 class="cs-title">District: Common Ground</h1>
         <p class="cs-subtitle">Choose your starting position</p>
         <div class="cs-cards">${cards}</div>
+        <button class="cs-geo-preview-link" type="button">🗺️ Preview Real-World Neighborhood Mode (PoC)</button>
       </div>
     `;
   }
@@ -83,6 +85,11 @@ export class CharacterSelect {
         this.dismiss();
         this.onComplete();
       });
+    });
+
+    this.el.querySelector<HTMLButtonElement>('.cs-geo-preview-link')?.addEventListener('click', () => {
+      playUIClick();
+      new GeoPreviewModal(this.el.parentElement ?? document.body);
     });
   }
 

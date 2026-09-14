@@ -634,7 +634,7 @@ export class WorldScene extends Phaser.Scene {
       const crisis = state.crisisState;
       const id = crisis.activeCrisisId;
       const isDivision = id != null && (
-        id.includes('division') || id.includes('agitation') || id.startsWith('neo-fascist') || id.startsWith('fascist')
+        id.includes('division') || id.includes('agitation')
       );
       if (isDivision && !this.divisionCrisisActive) {
         this.divisionCrisisActive = true;

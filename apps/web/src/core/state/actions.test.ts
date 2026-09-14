@@ -4,7 +4,7 @@ import { setArchetype, spendCash, gainCash, spendEnergy, advanceDay } from './ac
 
 function resetStore() {
   useGameStore.setState({
-    meta: { day: 1, tick: 0, activeSkin: 'default', phase: 'select', lastAssemblyDay: 0 },
+    meta: { day: 1, tick: 0, activeSkin: 'default', phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: { classRole: null, cash: 0, energy: 0, maxEnergy: 100, socialTrust: 0, stressLevel: 0, position: { x: 0, y: 0 }, facing: 'down' },
     commons: { resilienceScore: 0, solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0, landTrustProgress: 0, constructionSpeedBuff: 0, greenhouseUnlocked: false },
     crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },

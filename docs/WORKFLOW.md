@@ -44,13 +44,29 @@ Sprint flow:
 2. Create a feature branch
 3. Implement with tests
 4. Verify automated acceptance criteria
-5. Check the task `[x]` in the task file
-6. Update `docs/TASK-STATUS.md`
-7. Open PR to `dev`
+5. Run `make dev-d` + `make ps` to confirm the full stack still builds and boots healthy (see Definition of Done below) — required before step 5, not optional
+6. Check the task `[x]` in the task file
+7. Update `docs/TASK-STATUS.md`
+8. Open PR to `dev`
 
 ## Test-Driven Approach
 
 Every milestone has automated acceptance tests listed in `docs/tasks/Mx-*.md`. Tests must pass before a milestone is closed. Write tests first when possible.
+
+## Definition of Done
+
+A task or epic is **not** done — even with lint, typecheck, and tests green — until the full Docker dev stack actually builds and comes up healthy:
+
+```bash
+make dev-d      # builds all images and starts web + api + db detached
+make ps         # confirm every service is Up/healthy
+make dev-logs   # (optional) tail logs to spot startup errors — Ctrl+C to stop
+make dev-down   # tear back down once confirmed
+```
+
+This is required, not optional, because it is the only check that also proves the Go migrations run cleanly against a fresh Postgres, the API container's `CGO_ENABLED=0`/scratch build hasn't broken, and the web container's Vite build + nginx config still serve the SPA — none of which `go test`, `vitest`, or `tsc --noEmit` alone can catch. Run it as the last verification step before checking a task's box in `docs/tasks/Mx-*.md` or updating `docs/TASK-STATUS.md`.
+
+(`make dev`, without `-d`, runs the same build but attaches to logs in the foreground — fine for interactive debugging, but use `make dev-d` for this check since it needs to return control to run `make ps`.)
 
 ## Task Status Updates
 

@@ -16,7 +16,7 @@ RUN cd apps/api && go mod download
 
 # Copy the full API source and build.
 COPY apps/api/ ./apps/api/
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -C apps/api -o /app/server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -C apps/api -ldflags="-s -w" -o /app/server ./cmd/server
 
 # Stage 2: wget for health check (separate layer — no Go toolchain in final image)
 FROM alpine:3.21 AS health

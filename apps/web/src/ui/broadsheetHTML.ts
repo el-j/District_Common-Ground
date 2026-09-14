@@ -6,6 +6,7 @@ export interface BroadsheetData {
   foodIndex: number;
   energyIndex: number;
   dayNumber: number;
+  civicHeadlines?: string[];
 }
 
 export function buildBroadsheetHTML(data: BroadsheetData): string {
@@ -49,6 +50,11 @@ export function buildBroadsheetHTML(data: BroadsheetData): string {
             aria-label="Crossword answer" autocomplete="off" spellcheck="false" />
           <div class="crossword-feedback" aria-live="polite"></div>
         </div>
+        ${data.civicHeadlines && data.civicHeadlines.length > 0 ? `
+        <div class="broadsheet-civic">
+          <h3>Civic Actions Nearby</h3>
+          ${data.civicHeadlines.map(h => `<p class="broadsheet-civic-row">📣 ${h}</p>`).join('')}
+        </div>` : ''}
       </div>
     </div>
     <button class="broadsheet-close" type="button">Begin the Day →</button>

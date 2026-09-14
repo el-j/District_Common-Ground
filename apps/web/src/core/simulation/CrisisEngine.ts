@@ -189,9 +189,9 @@ export function getScapegoatStreak(): number {
   return scapegoatStreak;
 }
 
-export type AntiFascistActionType = 'counter-organise' | 'alert-network';
+export type CommunityDefenseActionType = 'counter-organise' | 'alert-network';
 
-export function triggerAntiFascistAction(type: AntiFascistActionType): void {
+export function triggerCommunityDefenseAction(type: CommunityDefenseActionType): void {
   if (type === 'counter-organise') {
     spendEnergy(20);
     addTrust(25);

@@ -23,6 +23,12 @@ export function setArchetype(role: ClassRole): void {
   initCrisisQueue();
 }
 
+export function setRegionCode(regionCode: string): void {
+  useGameStore.setState(state => ({
+    meta: { ...state.meta, regionCode },
+  }));
+}
+
 export function spendCash(amount: number): void {
   useGameStore.setState(state => ({
     player: { ...state.player, cash: Math.max(0, state.player.cash - amount) },

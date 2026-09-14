@@ -9,6 +9,11 @@ import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { PluginManagerModal } from './PluginManagerModal';
 import { ShopModal } from './ShopModal';
 import { SocialHubModal } from './SocialHubModal';
+import { CivicTickerWidget } from './CivicTickerWidget';
+import { CivicDirectoryModal } from './CivicDirectoryModal';
+import { CivicJournal } from '../irl/CivicJournal';
+import { MeshChatModal } from '../plugins/mesh-comms/MeshChatModal';
+import { CreditTransferModal } from '../plugins/mutual-credit/CreditTransferModal';
 import { getWallet } from '../api/endpoints/shop';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
@@ -30,9 +35,14 @@ export class TopHUD {
   private pluginsBtn: HTMLButtonElement;
   private shopBtn: HTMLButtonElement;
   private socialBtn: HTMLButtonElement;
+  private civicBtn: HTMLButtonElement;
+  private journalBtn: HTMLButtonElement;
+  private meshBtn: HTMLButtonElement;
+  private creditBtn: HTMLButtonElement;
   private walletChipEl: HTMLElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
+  private civicTicker: CivicTickerWidget;
   private scene?: Phaser.Scene;
 
   constructor(root: HTMLElement, scene?: Phaser.Scene) {
@@ -64,6 +74,7 @@ export class TopHUD {
     // Broadsheet + radio instances (persistent, opened on demand)
     this.broadsheet = new BroadsheetModal(root);
     this.radio = new RadioWidget(root);
+    this.civicTicker = new CivicTickerWidget(root);
 
     // End Day button — shows broadsheet first, then advances day on close
     this.endDayBtn = document.createElement('button');
@@ -171,6 +182,43 @@ export class TopHUD {
     this.socialBtn.addEventListener('click', () => new SocialHubModal(root));
     root.appendChild(this.socialBtn);
 
+    // Found a Commons (civic directory) button
+    this.civicBtn = document.createElement('button');
+    this.civicBtn.type = 'button';
+    this.civicBtn.className = 'civic-open-btn interactive';
+    this.civicBtn.textContent = '📖';
+    this.civicBtn.hidden = true;
+    this.civicBtn.setAttribute('aria-label', 'Open Found a Commons directory');
+    this.civicBtn.addEventListener('click', () => new CivicDirectoryModal(root));
+    root.appendChild(this.civicBtn);
+
+    this.journalBtn = document.createElement('button');
+    this.journalBtn.type = 'button';
+    this.journalBtn.className = 'journal-open-btn interactive';
+    this.journalBtn.textContent = '📓';
+    this.journalBtn.hidden = true;
+    this.journalBtn.setAttribute('aria-label', 'Open Civic Journal — log a real-world deed');
+    this.journalBtn.addEventListener('click', () => new CivicJournal(root));
+    root.appendChild(this.journalBtn);
+
+    this.meshBtn = document.createElement('button');
+    this.meshBtn.type = 'button';
+    this.meshBtn.className = 'mesh-open-btn interactive';
+    this.meshBtn.textContent = '📻';
+    this.meshBtn.hidden = true;
+    this.meshBtn.setAttribute('aria-label', 'Open off-grid mesh terminal');
+    this.meshBtn.addEventListener('click', () => new MeshChatModal(root));
+    root.appendChild(this.meshBtn);
+
+    this.creditBtn = document.createElement('button');
+    this.creditBtn.type = 'button';
+    this.creditBtn.className = 'credit-open-btn interactive';
+    this.creditBtn.textContent = '🪙';
+    this.creditBtn.hidden = true;
+    this.creditBtn.setAttribute('aria-label', 'Open mutual credit trade terminal');
+    this.creditBtn.addEventListener('click', () => new CreditTransferModal(root));
+    root.appendChild(this.creditBtn);
+
     // Solidarity Token wallet balance chip (only shown once fetched for a signed-in user)
     this.walletChipEl = document.createElement('div');
     this.walletChipEl.className = 'hud-wallet-chip';
@@ -246,6 +294,7 @@ export class TopHUD {
       foodIndex: foodIdx,
       energyIndex: energyIdx,
       dayNumber: day,
+      civicHeadlines: this.civicTicker.getHeadlines(),
     }, () => advanceDay());
   }
 
@@ -287,6 +336,11 @@ export class TopHUD {
       this.pluginsBtn.hidden = true;
       this.shopBtn.hidden = true;
       this.socialBtn.hidden = true;
+      this.civicBtn.hidden = true;
+      this.journalBtn.hidden = true;
+      this.meshBtn.hidden = true;
+      this.creditBtn.hidden = true;
+      this.civicTicker.setVisible(false);
       return;
     }
 
@@ -301,6 +355,11 @@ export class TopHUD {
     this.pluginsBtn.hidden = false;
     this.shopBtn.hidden = false;
     this.socialBtn.hidden = false;
+    this.civicBtn.hidden = false;
+    this.journalBtn.hidden = false;
+    this.meshBtn.hidden = false;
+    this.creditBtn.hidden = false;
+    this.civicTicker.setVisible(true);
     // pulseBadgeEl / walletChipEl visibility controlled by their own fetch responses
 
     const roleLabel = player.classRole

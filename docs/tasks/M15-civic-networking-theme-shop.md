@@ -2,7 +2,7 @@
 
 Story: [`docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md)  
 Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md)  
-Status: `[~] In Progress`
+Status: `[x] Complete`
 
 > System guardrail: all future theme/shop/social integrations remain standalone modules, but they must follow the M14 trust gate: install -> quarantine -> manifest + hash validation -> owner review -> sandboxed runtime approval. No theme or plugin is allowed to execute directly in the host app without passing this flow.
 
@@ -19,17 +19,17 @@ Status: `[~] In Progress`
   - [x] `FriendProfile` (userId, handle, districtName, day, resilienceScore, activeCrisis)
   - [x] `SolidarityCaravan` (id, senderHandle, resourceType, amount, note, claimed)
   - [x] `DistrictSnapshot`, `MyProfile` — added beyond the literal spec; needed by the district viewer and the invite-code copy button respectively
-- [ ] `civic.ts`:
-  - [ ] `CivicAction` (id, title, organizer, startTime, locationSummary, sourceUrl, regionCode)
-  - [ ] `LocalChapter` (id, name, type, distanceKm, address, websiteUrl)
+- [x] `civic.ts`:
+  - [x] `CivicAction` (id, title, organizer, startTime, locationSummary, sourceUrl, regionCode)
+  - [x] `LocalChapter` (id, name, type, distanceKm, address, websiteUrl)
 
 ---
 
 ## 2. Go Backend Tasks (`apps/api/`)
-- [~] Database Migrations:
+- [x] Database Migrations:
   - [x] `007_create_shop_wallets.up.sql` (`user_wallets`, `user_inventory`)
   - [x] `008_create_social_graph.up.sql` (`handle`/`invite_code` columns on `users`, `user_friends`, `mutual_aid_caravans`)
-  - [ ] `civic_actions` (civic ticker migration — pending)
+  - [x] `009_create_civic_actions.up.sql` (`civic_actions`, `local_chapters`, seeded with illustrative in-fiction "GENERIC" region data)
 - [x] Theming Engine (`internal/theme/`):
   - [x] `GET /api/v1/themes` — List verified installed theme bundles
 - [x] Commons Bazaar (`internal/shop/`):
@@ -43,9 +43,9 @@ Status: `[~] In Progress`
   - [x] `POST /api/v1/social/caravan/dispatch` — Send mutual aid caravan to friend (friendship-gated)
   - [x] `POST /api/v1/social/caravan/:id/claim` — Claim incoming caravan shipment (row-locked; idempotent — a second claim is rejected)
   - [x] `GET /api/v1/social/me` & `GET /api/v1/social/caravan/inbox` — added beyond the literal spec; needed for the invite-code display and the Caravan Dispatch Widget's inbox
-- [ ] Civic Action & Protest Ticker (`internal/civic/`):
-  - [ ] `GET /api/v1/civic/ticker` — Fetch upcoming verified pro-democracy rallies filtered by regional code
-  - [ ] `GET /api/v1/civic/chapters` — Query nearest mutual aid tool libraries, fridges, and community land trusts
+- [x] Civic Action & Protest Ticker (`internal/civic/`):
+  - [x] `GET /api/v1/civic/ticker` — Fetch upcoming verified pro-democracy rallies filtered by regional code (reads only `?region=`, defaults to `GENERIC`; public, no auth)
+  - [x] `GET /api/v1/civic/chapters` — Query nearest mutual aid tool libraries, fridges, and community land trusts (sorted by curated `distance_km`, filtered by the same coarse `?region=`)
 
 ---
 
@@ -62,15 +62,15 @@ Status: `[~] In Progress`
   - [x] `SocialHubModal.ts` — Friends list, invite code copy button, friend request form
   - [x] `FriendDistrictViewer.ts` — Read-only overlay rendering friend's district parcels and status
   - [x] Caravan Dispatch Widget: Send energy/food/cash to friends during crises (built as the modal's "Caravans" tab rather than a separate widget file — same consolidation `ShopModal.ts` already used for its tabs)
-- [ ] Civic Action Ticker & Real-World Bridge:
-  - [ ] `CivicTickerWidget.ts` — Rolling alert ticker at bottom of morning broadsheet and HUD
-  - [ ] `CivicDirectoryModal.ts` — Searchable local chapter directory with map links
-  - [ ] In-browser PDF generator for "Found a Commons" organizing starter kit
+- [x] Civic Action Ticker & Real-World Bridge:
+  - [x] `CivicTickerWidget.ts` — Rolling alert ticker at bottom of HUD (fixed marquee bar) and condensed into the morning broadsheet sidebar
+  - [x] `CivicDirectoryModal.ts` — Searchable local chapter directory with map/website links, opened via a new HUD button
+  - [x] In-browser PDF generator for "Found a Commons" organizing starter kit (`core/util/PdfGenerator.ts` — dependency-free, hand-written PDF 1.4 byte stream, no new npm package)
 
 ---
 
 ## 4. Tests & Quality Verification
 - [x] Unit Test: Purchasing a 50 ST building facade correctly debits wallet and rejects on insufficient funds (`apps/api/internal/shop/repository_test.go`, verified against real Postgres via testcontainers)
-- [ ] Unit Test: Dynamic theme loading overrides building stage textures without full page reload
+- [x] Unit Test: Dynamic theme loading overrides building stage textures without full page reload (`apps/web/src/skins/ThemeManager.test.ts` — a `switchSkin()` call against a live scene mock removes and reloads a `BUILD_KITCHEN_BUILT` texture via `scene.textures.remove`/`scene.load.image`, never touches `location.reload`, and cleanly skips a token whose texture 404s)
 - [x] Integration Test: Dispatched caravan correctly decrements sender resources and credits recipient upon claim (`apps/api/internal/social/repository_test.go`, verified against real Postgres — dispatch is friendship-gated, a stranger cannot claim, and a second claim is rejected as already-claimed; the actual client-side resource debit/credit reuses the already-tested `spendCash`/`spendEnergy`/`gainCash` actions in `apps/web/src/core/state/actions.test.ts`, per the same reward-settlement pattern used for minigame rewards)
-- [ ] Security & Privacy: Verify `/api/v1/civic/ticker` requires only coarse region code (no GPS/IP storage)
+- [x] Security & Privacy: Verify `/api/v1/civic/ticker` requires only coarse region code (no GPS/IP storage) (`apps/api/internal/civic/handler_test.go` — asserts the handler serves correctly from a request with no `RemoteAddr` and no geolocation headers, using only `?region=`; region is a Settings-modal dropdown value, never derived from GPS/IP anywhere in the client)

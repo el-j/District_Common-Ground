@@ -1,0 +1,8 @@
+{
+  "id": "geo-weather",
+  "version": "0.1.0",
+  "title": "Real-Time Geo-Weather",
+  "description": "Astronomical solar cycle sync (SunCalc) plus live Open-Meteo weather, mapped to district ambient lighting and resource modifiers.",
+  "permissions": ["geo:read", "weather:sync"],
+  "requiresHardware": false
+}

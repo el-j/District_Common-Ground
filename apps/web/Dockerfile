@@ -4,7 +4,10 @@ WORKDIR /app
 
 # Copy monorepo manifests and lockfile
 COPY package.json package-lock.json ./
-COPY packages/shared-types ./packages/shared-types
+# All npm workspace packages web depends on — not just shared-types — must be
+# present before `npm ci` so its workspace-package references (e.g.
+# @district-cg/minigame-courier-rush) resolve instead of hitting the registry.
+COPY packages/ ./packages/
 COPY apps/web/package.json ./apps/web/
 
 # Install dependencies using lockfile

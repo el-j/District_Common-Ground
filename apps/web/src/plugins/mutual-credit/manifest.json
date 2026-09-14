@@ -1,8 +1,0 @@
-{
-  "id": "mutual-credit",
-  "version": "0.1.0",
-  "title": "Decentralized Mutual Credit",
-  "description": "Ed25519-signed, hash-chained mutual credit ledger for zero-fee neighbor-to-neighbor trade, relayed via a pasteable scan-to-pay code.",
-  "permissions": ["crypto:sign", "wallet:ledger"],
-  "requiresHardware": false
-}

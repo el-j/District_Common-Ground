@@ -1,6 +1,6 @@
 # M17 — Off-Grid Mesh Networks, Real-Time Geo-Weather & Decentralized Mutual Credit
 
-Story: [`docs/stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md)  
+Story: [`docs/archive/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md)  
 Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md)  
 Status: `[x] PoC Complete` — see scoping notes below for four deliberate PoC-level simplifications (plugin trust gate, WorldScene wiring, hardware verification, key storage).
 

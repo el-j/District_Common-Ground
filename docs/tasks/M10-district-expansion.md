@@ -12,7 +12,7 @@ Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 
 ## Day/Night Lighting
 - [x] `WorldScene.ts` — in-game time state (tick-based, 2-minute real-time cycle)
-- [x] Tint overlay rectangle (depth 90, scrollFactor 0) — 4 phases: dawn (warm peach α0.22) → midday (transparent) → dusk (amber α0.18) → night (indigo α0.40)
+- [x] Tint overlay rectangle (depth 90, scrollFactor 0) — 4 phases: dawn (warm peach, α0→0.16) → midday (transparent) → dusk (amber, α0.12→0.26) → night (indigo, α0.26→0) (audit note 2026-09-15: corrected from this doc's original α0.22/0.18/0.40 figures, which didn't match `updateDayNight()`'s actual values — same 4-phase concept, different numbers, no functional gap)
 - [x] Streetlamp alpha overlay sprite (night-only) — `WorldScene.ts`'s `spawnStreetlamps()`/`updateStreetlamps()`: additive-blend glow circles spaced along every road strip, fading in/out with `updateDayNight()`'s tint strength (this note previously, incorrectly, claimed the plain darkness tint rect alone satisfied this — it didn't add any lamp-specific visual, so real glow sprites were added)
 
 ## Map Expansion
@@ -40,3 +40,7 @@ Planning: `docs/planning/04-DISTRICT-EXPANSION-AND-WORLD.md`
 - [ ] Manual: walk all 4 zones, confirm zone label updates
 - [ ] Manual: 3× scapegoat → resilience drops → crisis class applies → grayscale visible
 - [ ] Manual: pet Scraps → stress drops → hearts float
+
+---
+
+> **Audit note (2026-09-15):** EPIC-10's "Weather System" vision (rain particles, cold-snap frost overlay driven by the heat/climate indices) was never implemented — no rain/frost code or CSS exists anywhere in `apps/web`. This task doc never actually listed weather as a checklist item, so nothing here was falsely marked done, but the EPIC over-promises relative to what was built. Tracked as new work in [`M10-FOLLOWUP-weather-system.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M10-FOLLOWUP-weather-system.md).

@@ -3,11 +3,13 @@
 Stories: `docs/stories/EPIC-08-living-economy.md`
 Planning: `docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md`
 
+> **Audit note (2026-09-15):** `GetPulseState()` has no live-fetch code path at all — it *unconditionally* calls `seasonalFallback(time.Now())`. There is no BLS/EIA/Eurostat/GTFS/NOAA/UNHCR fetch anywhere in the codebase, so the "live data vs. fail-safe fallback" distinction this doc and EPIC-08 describe does not exist in code; the game runs 100% on synthetic seasonal multipliers year-round. This was scoped-down silently rather than documented as a scoping note at the time. See [`M8-FOLLOWUP-live-data-feeds.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M8-FOLLOWUP-live-data-feeds.md) for the tracked follow-up (real fetch, or a formal decision to keep it synthetic-only by design).
+
 ## Go Backend Tasks
 - [x] Create `apps/api/internal/pulse/` package (`economy.go` + `types.go`)
 - [x] `economy.go` — `DistrictPulseState` struct; sinusoidal seasonal multipliers; 24h in-memory cache with `sync.RWMutex`
-- [x] `economy.go` — fail-safe defaults (all multipliers = 1.0) via `seasonalFallback()` when fetch fails
-- [x] `news.go` stub — placeholder returning empty news array (full impl in M9)
+- [x] `economy.go` — fail-safe defaults via `seasonalFallback()`, always active (not just on fetch failure — see audit note above; only `Wage`/`Transit` are pinned at 1.0, `Food`/`Energy`/`Heat`/`Migrant` are sinusoidal even in this "default" path)
+- [x] `news.go` stub — placeholder returning empty news array (full impl planned for M9; **still a stub after M9** — see [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md))
 - [x] `GET /api/v1/pulse/economy` handler wired into chi router
 - [x] `GET /api/v1/pulse/climate` handler (heat + displacement)
 - [x] `packages/shared-types/src/index.ts` — `DistrictPulseState`, `EconomicMultipliers`

@@ -48,7 +48,7 @@ func (v VerificationMethod) Valid() bool {
 }
 
 // rewardFor returns the ST/CAB grant for a verification method. Peer-verified
-// deeds (confirmed by a second device via QR handshake) earn more than the
+// deeds (confirmed by a second device via the peer word-code handshake) earn more than the
 // honour-system baseline, matching the 25-50 ST range from the planning doc.
 func rewardFor(method VerificationMethod) (stAwarded, cabAwarded int64) {
 	if method == VerificationPeerVerified {

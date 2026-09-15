@@ -1,6 +1,6 @@
 # M15 — Pluggable Theming Engine, Commons Bazaar, Social Graph & Democratic Action Ticker
 
-Story: [`docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md)  
+Story: [`docs/archive/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md)  
 Planning: [`docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/15-COMMUNITY-NETWORKING-CIVIC-TICKER-AND-THEME-SHOP.md)  
 Status: `[x] Complete`
 

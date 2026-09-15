@@ -1,6 +1,6 @@
 # M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync
 
-Story: [`docs/stories/EPIC-18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-18-offline-first-device-storage-and-sync.md)  
+Story: [`docs/archive/EPIC-18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-18-offline-first-device-storage-and-sync.md)  
 Planning: [`docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md)  
 Status: `[x] PoC Complete`
 

@@ -1,6 +1,6 @@
 # M16 — Real-World Geo-Mode (OSM Proof of Concept) & Universal Empathy Design
 
-Story: [`docs/stories/EPIC-16-real-world-geo-mode-and-irl-actions.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-16-real-world-geo-mode-and-irl-actions.md)  
+Story: [`docs/archive/EPIC-16-real-world-geo-mode-and-irl-actions.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-16-real-world-geo-mode-and-irl-actions.md)  
 Planning: [`docs/planning/16-REAL-WORLD-GEO-MODE-AND-UNIVERSAL-SOLIDARITY.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/16-REAL-WORLD-GEO-MODE-AND-UNIVERSAL-SOLIDARITY.md)  
 Status: `[x] PoC Complete` — see scoping notes below for two deliberate PoC-level simplifications (Phaser world integration and QR transport).
 

@@ -1,6 +1,6 @@
 # M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture
 
-Story: [`docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md)
+Story: [`docs/archive/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md)
 Planning: [`docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md)
 Status: `[x] PoC Complete`
 

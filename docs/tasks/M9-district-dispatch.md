@@ -3,9 +3,11 @@
 Stories: `docs/stories/EPIC-09-district-dispatch.md`
 Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAMIC-AI-NARRATIVE-PIPELINE.md`
 
+> **Audit note (2026-09-15):** several items below were checked off without matching code. See [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md) for the real remaining work; corrections inline below.
+
 ## Go Backend Tasks
-- [x] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds (+ 7-archetype keyword classifier)
-- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `COMMUNITY_DIVISION`)
+- [ ] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds — **not built.** `HandleNews` still unconditionally returns `Items: []` with `Source: "stub"`, identical to the M8 placeholder. No RSS/feed-parsing code exists anywhere in the repo.
+- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`) — classifier itself is real and tested, but the 7th archetype's string constant is inconsistent across the codebase: this doc says `COMMUNITY_DIVISION`, the Go backend (`news.go`/`validator.go`/`prompts.go`) uses `FASCIST_AGITATION`, and the frontend (`crisis_scenarios.json`/`CrisisWireModal.ts`/`narrativeGossip.ts`) uses `DIVISION_AGITATION`. Three different strings for one concept — worth noting given M16's lexicon audit specifically eliminated "fascist"-family terms from user-facing/frontend code but never touched this Go backend constant. Tracked in the follow-up doc.
 - [x] `apps/api/internal/narrative/client.go` — Multi-provider AI client:
   - Ollama local endpoint support (`/api/chat` with `llama3.2:3b`)
   - OpenAI-compatible cloud support (Groq / Cloudflare / HuggingFace free tiers)
@@ -14,19 +16,19 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 - [x] `apps/api/internal/narrative/validator.go` — JSON schema verification + hard mathematical clamping of stat deltas
 - [x] `apps/api/internal/narrative/cache.go` — Database persistence in `dynamic_scenarios` table
 - [x] `GET /api/v1/pulse/news` and `GET /api/v1/narrative/daily-scenarios` endpoints
-- [x] Curated vault: 25+ evergreen fallback scenarios in `crisis_scenarios.json` for 100% offline play
+- [x] Curated vault: evergreen fallback scenarios in `crisis_scenarios.json` for 100% offline play (23 entries, not "25+" as originally written)
 
 ## Frontend Tasks
 - [x] `BroadsheetModal.ts` — "The Daily District Ground" UI
-  - CSS 3D unfold animation (rotateX 90° → 0°, 400ms)
-  - Newsprint texture (CSS background: repeating halftone SVG)
-  - Real-world headline citation badge with source pill
-  - Sections: dynamic headline story, barometer row, NPC street quote, 4×4 mini-crossword (+5 energy on solve)
+  - CSS 3D unfold animation (rotateX 90° → 0°, 400ms) — confirmed real
+  - Newsprint texture (CSS background: repeating halftone SVG) — confirmed real
+  - Real-world headline citation badge with source pill — **not built.** `BroadsheetData` has no source field and `broadsheetHTML.ts` renders no citation/source pill anywhere.
+  - Sections: barometer row, NPC street quote — confirmed real. "Dynamic headline story" — **not built as described**: `TopHUD.ts`'s `onEndDay()` picks the headline from 4 hardcoded string templates keyed off food/energy index thresholds; it never calls `/api/v1/narrative/daily-scenarios` (that endpoint is consumed only by the NPC gossip mill below). "4×4 mini-crossword" — **not what's built**: it's a single free-text `<input>` checked against the literal string `"solidarity"` (`broadsheetHTML.ts`/`BroadsheetModal.ts`), not a grid puzzle. Functional and tested as written, just not a crossword.
 - [x] `RadioWidget.ts` — "Radio Free Commons" pirate FM tuner
-  - SVG analog dial + needle indicator
-  - 3 frequencies with label + audio profile switch
-  - White noise static during tuning (bandpass audio node)
-  - Amber LED display showing frequency + scrolling breaking news ticker
+  - Analog dial + needle indicator — real, but plain CSS `<div>`s (`.radio-dial-track`/`.radio-needle`), not SVG as originally written
+  - 3 frequencies with label + audio profile switch — confirmed real
+  - White noise static during tuning (bandpass audio node) — confirmed real
+  - Amber LED display showing frequency — confirmed real. "Scrolling breaking news ticker" — **not built**; no ticker exists in `RadioWidget.ts`. (A same-named-sounding but unrelated `CivicTickerWidget` exists from M15 — a real-world civic-action ticker, not radio news — don't conflate the two.)
 - [x] `advanceDay()` → trigger BroadsheetModal before new day begins (not blocking)
 - [x] Dynamic NPC Rumor Mill (`NPCEntity.ts`, `WorldScene.ts`, `narrativeGossip.ts`):
   - Fetches daily NPC gossip from `/api/v1/narrative/daily-scenarios`

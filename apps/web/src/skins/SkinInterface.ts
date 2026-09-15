@@ -63,6 +63,25 @@ export interface SkinAudioProfile {
   bgmType: string;
 }
 
+// M22 — UI chrome tokens, parallel to SkinPalette but for fonts/shape/depth
+// rather than color. Optional so every pre-M22 manifest (solarpunk, retro_gb,
+// labor_woodcut, any community theme) stays valid; ThemeManager.resolveUiKit()
+// fills in the exact pre-M22 hardcoded look when a field/the whole section
+// is absent.
+export interface SkinUIKit {
+  fontFamily?: string;
+  fontFamilyDisplay?: string;
+  radiusSm?: string;
+  radiusMd?: string;
+  radiusLg?: string;
+  shadowPanel?: string;
+  shadowGlow?: string;
+  gradientPanel?: string;
+  gradientAccent?: string;
+  blur?: string;
+  pixelArt?: boolean;
+}
+
 export interface SkinManifest {
   skinId: string;
   version: string;
@@ -70,6 +89,7 @@ export interface SkinManifest {
   palette: SkinPalette;
   assetMap: Record<EntityToken, SkinAssetEntry>;
   audioProfile: SkinAudioProfile;
+  uiKit?: SkinUIKit;
 }
 
 /** Verify a manifest covers all required EntityTokens (throws on violation). */

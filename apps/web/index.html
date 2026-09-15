@@ -34,8 +34,8 @@
         height: 100%;
         margin: 0;
         overflow: hidden;
-        background: #1a1a2e;
-        font-family: monospace;
+        background: var(--ui-bg, #1a1a2e);
+        font-family: var(--ui-font, monospace);
       }
 
       body {
@@ -49,11 +49,18 @@
         overflow: hidden;
       }
 
-      /* Phaser canvas will be appended here */
+      /* Phaser canvas will be appended here — crisp pixel-art rendering is
+         the default (matches every M22 uiKit fallback); a skin whose uiKit
+         sets pixelArt:false flips html[data-pixel-art="false"] (see
+         ThemeManager.applyUiKit) to smooth it out instead. */
       #game-container canvas {
         display: block;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
+      }
+
+      html[data-pixel-art="false"] #game-container canvas {
+        image-rendering: auto;
       }
 
       /* HTML overlay root — HUD, dialogue, modals sit here */

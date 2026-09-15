@@ -7,6 +7,30 @@
   --font-game: ui-monospace, monospace;
 }
 
+/* ── M22 — UI Skin Kit shared surfaces ─────────────────────── */
+/* `--ui-*` custom properties are written by ThemeManager.applyUiKit() only
+   when a skin's manifest actually supplies a `uiKit` field — an unset var
+   falls through to each rule's own local fallback below, which is always
+   today's pre-M22 hardcoded value. That's what makes every one of these
+   rules a no-op for solarpunk/retro_gb/labor_woodcut (no uiKit yet) while
+   still giving a skin like Aurora Glass one shared lever over the whole
+   UI's font/radius/shadow/glow/gradient/blur language. See
+   ThemeManager.ts's `applyUiKit()` doc comment for the full rationale. */
+.ui-panel {
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #1a1a2e, #12121f));
+  border-radius: var(--ui-radius-md, 6px);
+  box-shadow: var(--ui-shadow-panel, 0 4px 12px rgba(0, 0, 0, 0.4));
+  backdrop-filter: var(--ui-blur, none);
+}
+
+.ui-panel--accent {
+  background: var(--ui-gradient-accent, linear-gradient(180deg, #2a3a50, #1a2434));
+}
+
+.ui-btn--glow {
+  box-shadow: var(--ui-shadow-glow, 0 0 0 rgba(0, 0, 0, 0));
+}
+
 /* ── Character Select ───────────────────────────────────── */
 
 .character-select {
@@ -28,7 +52,7 @@
 }
 
 .cs-title {
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font-display, ui-monospace, monospace);
   font-size: 1.25rem;
   font-weight: bold;
   color: #e0e0ff;
@@ -39,7 +63,7 @@
 
 .cs-subtitle {
   color: #666688;
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font, ui-monospace, monospace);
   font-size: 0.7rem;
   margin-bottom: 1.5rem;
 }
@@ -55,9 +79,9 @@
   margin: 1.25rem auto 0;
   background: none;
   border: 1px solid #35354a;
-  border-radius: 3px;
+  border-radius: var(--ui-radius-sm, 3px);
   color: #8888aa;
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font, ui-monospace, monospace);
   font-size: 0.68rem;
   padding: 0.5rem 0.9rem;
   cursor: pointer;
@@ -66,14 +90,16 @@
 .cs-geo-preview-link:hover { color: #c4b0f0; border-color: #6b4f9a; }
 
 .archetype-card {
-  background: #1a1a2e;
+  background: var(--ui-gradient-panel, #1a1a2e);
   border: 1px solid #35354a;
-  border-radius: 3px;
+  border-radius: var(--ui-radius-sm, 3px);
+  box-shadow: var(--ui-shadow-panel, none);
   padding: 1rem;
   cursor: pointer;
   text-align: left;
   color: #e0e0ff;
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  backdrop-filter: var(--ui-blur, none);
   transition: border-color 0.12s, background 0.12s;
 }
 
@@ -123,7 +149,7 @@
   padding: 0.35rem 0.6rem 0.5rem;
   background: linear-gradient(to bottom, rgba(10, 10, 20, 0.92) 70%, transparent);
   pointer-events: none;
-  font-family: ui-monospace, monospace;
+  font-family: var(--ui-font, ui-monospace, monospace);
   font-size: 0.6rem;
   color: #d8d8f0;
 }
@@ -195,7 +221,7 @@
   bottom: 4.5rem;
   pointer-events: auto;
   border: 1px solid #4c5d9d;
-  background: rgba(18, 22, 44, 0.92);
+  background: var(--ui-gradient-accent, rgba(18, 22, 44, 0.92));
   color: #edf0ff;
   border-radius: 999px;
   padding: 0.65rem 1rem;
@@ -203,8 +229,9 @@
   display: flex;
   align-items: center;
   font-size: 0.72rem;
-  font-family: ui-monospace, monospace;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  font-family: var(--ui-font, ui-monospace, monospace);
+  box-shadow: var(--ui-shadow-panel, 0 6px 20px rgba(0, 0, 0, 0.4)), var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  backdrop-filter: var(--ui-blur, none);
   transition: background 0.12s, border-color 0.12s;
 }
 .context-action-button:hover {
@@ -220,7 +247,7 @@
   bottom: 4.5rem;
   pointer-events: auto;
   border: 1px solid #3a5a3a;
-  background: rgba(14, 26, 14, 0.92);
+  background: var(--ui-gradient-panel, rgba(14, 26, 14, 0.92));
   color: #66dd88;
   border-radius: 999px;
   padding: 0.65rem 1rem;
@@ -228,8 +255,9 @@
   display: flex;
   align-items: center;
   font-size: 0.72rem;
-  font-family: ui-monospace, monospace;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  font-family: var(--ui-font, ui-monospace, monospace);
+  box-shadow: var(--ui-shadow-panel, 0 6px 20px rgba(0, 0, 0, 0.4));
+  backdrop-filter: var(--ui-blur, none);
   transition: background 0.12s, border-color 0.12s;
   cursor: pointer;
 }
@@ -252,11 +280,13 @@
 
 .dialogue-panel {
   width: min(420px, calc(100% - 1.25rem));
-  background: rgba(15, 17, 28, 0.96);
+  background: var(--ui-gradient-panel, rgba(15, 17, 28, 0.96));
   border: 1px solid #434d79;
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--ui-radius-lg, 12px) var(--ui-radius-lg, 12px) 0 0;
   padding: 0.85rem;
-  box-shadow: 0 -8px 26px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--ui-shadow-panel, 0 -8px 26px rgba(0, 0, 0, 0.25));
+  backdrop-filter: var(--ui-blur, none);
+  font-family: var(--ui-font, ui-monospace, monospace);
 }
 
 .dialogue-header {
@@ -2223,12 +2253,13 @@
   width: 240px;
   background: var(--skin-hud-bg, #1a1208);
   border: 2px solid var(--skin-hud-border, #3a2c10);
-  border-radius: 10px;
+  border-radius: var(--ui-radius-lg, 10px);
   padding: 12px;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: var(--ui-shadow-panel, 0 4px 20px rgba(0,0,0,0.6)), inset 0 0 0 1px rgba(255,255,255,0.04);
   color: var(--skin-hud-text, #e8cc88);
-  font-family: monospace;
+  font-family: var(--ui-font, monospace);
+  backdrop-filter: var(--ui-blur, none);
 }
 
 .radio-header {
@@ -2348,9 +2379,9 @@
   color: #e8cc88;
   padding: 6px;
   min-height: 2.75rem; /* M21 §10 — 44px WCAG-adjacent touch target */
-  border-radius: 3px;
+  border-radius: var(--ui-radius-sm, 3px);
   cursor: pointer;
-  font-family: monospace;
+  font-family: var(--ui-font, monospace);
   font-size: 0.9rem;
 }
 
@@ -2384,10 +2415,17 @@
 /* Every HUD icon button (registered via TopHUD.registerButton() with the
    `${id}-open-btn` convention) was 2.2rem (35.2px) — below WCAG-adjacent
    44x44px touch-target guidance on mobile. Bumped here in one rule instead
-   of touching every individual `.x-open-btn` block. */
-[class$="-open-btn"] {
+   of touching every individual `.x-open-btn` block.
+   Bug fix (2026-09-15): this was originally `[class$="-open-btn"]`
+   (ends-with) — but registerButton() always appends " interactive" after
+   the id, so the real class attribute is "settings-open-btn interactive",
+   which never *ends with* "-open-btn". The selector matched nothing and
+   every icon button silently stayed at 2.2rem. `*=` (contains) actually
+   matches. */
+[class*="-open-btn"] {
   width: 2.75rem;
   height: 2.75rem;
+  box-shadow: var(--ui-shadow-glow, none); /* M22 — no-op unless a skin's uiKit sets a glow */
 }
 
 /* ── Global focus-visible (WCAG AA) ──────────────────────── */

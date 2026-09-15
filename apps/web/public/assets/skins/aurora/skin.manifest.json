@@ -1,0 +1,53 @@
+{
+  "skinId": "aurora",
+  "version": "1.0.0",
+  "displayName": "Aurora Glass",
+  "palette": {
+    "background": "#0b1220",
+    "surface": "rgba(30,40,70,0.55)",
+    "accent": "#7dd3fc",
+    "text": "#eef4ff",
+    "hudBg": "rgba(14,20,38,0.72)",
+    "hudBorder": "rgba(125,211,252,0.35)",
+    "hudText": "#dce8ff",
+    "worldFloor": "#1b2440",
+    "worldWall": "#0e1526",
+    "worldWallShadow": "#2a3a68",
+    "worldGrass": "#22345c",
+    "worldRoad": "#141b30",
+    "worldRoadBorder": "#0a0f1c",
+    "worldPlaza": "#2c3a66",
+    "worldDoor": "#f9c74f",
+    "worldHighlight": "#a78bfa"
+  },
+  "assetMap": {
+    "TILES_ATLAS":        { "textureUrl": "assets/skins/aurora/tiles.webp",         "tileSize": [16, 16] },
+    "HERO_ATLAS":         { "textureUrl": "assets/skins/aurora/hero.webp",           "frameRate": 6 },
+    "NPC_MIRA_ATLAS":     { "textureUrl": "assets/skins/aurora/npc_mira.webp",       "frameRate": 4 },
+    "NPC_LEO_ATLAS":      { "textureUrl": "assets/skins/aurora/npc_leo.webp",        "frameRate": 4 },
+    "NPC_ELENA_ATLAS":    { "textureUrl": "assets/skins/aurora/npc_elena.webp",      "frameRate": 4 },
+    "BUILD_KITCHEN_IDLE": { "textureUrl": "assets/skins/aurora/kitchen_idle.webp",   "footprint": [32, 32] },
+    "BUILD_KITCHEN_BUILT":{ "textureUrl": "assets/skins/aurora/kitchen_built.webp",  "footprint": [32, 32] },
+    "BUILD_SOLAR_IDLE":   { "textureUrl": "assets/skins/aurora/solar_idle.webp",     "footprint": [32, 32] },
+    "BUILD_SOLAR_BUILT":  { "textureUrl": "assets/skins/aurora/solar_built.webp",    "footprint": [32, 32] },
+    "BUILD_LEGAL_IDLE":   { "textureUrl": "assets/skins/aurora/legal_idle.webp",     "footprint": [16, 16] },
+    "BUILD_LEGAL_BUILT":  { "textureUrl": "assets/skins/aurora/legal_built.webp",    "footprint": [16, 16] }
+  },
+  "audioProfile": {
+    "sfxType": "soft_synth_pads",
+    "bgmType": "ambient_shimmer"
+  },
+  "uiKit": {
+    "fontFamily": "'Inter', system-ui, sans-serif",
+    "fontFamilyDisplay": "'Inter', system-ui, sans-serif",
+    "radiusSm": "10px",
+    "radiusMd": "18px",
+    "radiusLg": "28px",
+    "shadowPanel": "0 8px 32px rgba(0,0,0,0.35)",
+    "shadowGlow": "0 0 24px rgba(120,180,255,0.5)",
+    "gradientPanel": "linear-gradient(160deg, rgba(30,40,70,0.75), rgba(15,20,40,0.75))",
+    "gradientAccent": "linear-gradient(135deg, #6ee7f5, #a78bfa)",
+    "blur": "16px",
+    "pixelArt": false
+  }
+}

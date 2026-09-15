@@ -12,7 +12,7 @@ export interface ThemeCatalogEntry {
   entrypoint: string;
 }
 
-const BUILT_IN_IDS = new Set(['solarpunk', 'retro_gb', 'labor_woodcut']);
+const BUILT_IN_IDS = new Set(['solarpunk', 'retro_gb', 'labor_woodcut', 'aurora']);
 
 function toCatalogEntry(theme: ServerThemeManifest): ThemeCatalogEntry {
   return {
@@ -35,6 +35,7 @@ export async function getThemeCatalog(): Promise<ThemeCatalogEntry[]> {
       { id: 'solarpunk', title: 'Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
       { id: 'retro_gb', title: 'Retro GB', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/retro_gb/skin.manifest.json' },
       { id: 'labor_woodcut', title: '1930s Labor Woodcut', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/labor_woodcut/skin.manifest.json' },
+      { id: 'aurora', title: 'Aurora Glass', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/aurora/skin.manifest.json' },
     ];
   }
 }

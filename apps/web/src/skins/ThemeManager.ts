@@ -1,5 +1,5 @@
 import { useGameStore } from '../core/state/useGameStore';
-import { validateManifest, type SkinManifest, type SkinPalette } from './SkinInterface';
+import { validateManifest, type SkinManifest, type SkinPalette, type SkinUIKit } from './SkinInterface';
 import { setSfxProfile, setBgmProfile } from '../core/audio/SoundSynth';
 
 const MANIFEST_CACHE = new Map<string, SkinManifest>();
@@ -80,6 +80,80 @@ export async function registerRemoteThemeManifest(skinId: string, manifestUrl: s
   return manifest;
 }
 
+/** M22 — the pre-M22 hardcoded UI chrome (monospace font, sharp/blocky radii,
+ * the existing subtle shadows, crisp pixel-art rendering, no blur/glow), kept
+ * as the fallback for skins (or the no-skin-loaded boot moment) that don't
+ * populate the new `uiKit` manifest section yet. Values match the literals
+ * that were hardcoded in index.html/style.css before M22. */
+export const DEFAULT_UI_KIT: Required<SkinUIKit> = {
+  fontFamily: 'ui-monospace, monospace',
+  fontFamilyDisplay: 'ui-monospace, monospace',
+  radiusSm: '4px',
+  radiusMd: '6px',
+  radiusLg: '10px',
+  shadowPanel: '0 4px 12px rgba(0,0,0,0.4)',
+  shadowGlow: '0 0 0 rgba(0,0,0,0)',
+  gradientPanel: 'linear-gradient(180deg, #1a1a2e, #12121f)',
+  gradientAccent: 'linear-gradient(180deg, #2a3a50, #1a2434)',
+  blur: 'none',
+  pixelArt: true,
+};
+
+export type ResolvedUiKit = Required<SkinUIKit>;
+
+/** Fills in any missing `uiKit` field with the pre-M22 default so
+ * `applyUiKit()` always has a complete token set to write to CSS. */
+export function resolveUiKit(uiKit?: SkinUIKit): ResolvedUiKit {
+  return {
+    fontFamily: uiKit?.fontFamily ?? DEFAULT_UI_KIT.fontFamily,
+    fontFamilyDisplay: uiKit?.fontFamilyDisplay ?? uiKit?.fontFamily ?? DEFAULT_UI_KIT.fontFamilyDisplay,
+    radiusSm: uiKit?.radiusSm ?? DEFAULT_UI_KIT.radiusSm,
+    radiusMd: uiKit?.radiusMd ?? DEFAULT_UI_KIT.radiusMd,
+    radiusLg: uiKit?.radiusLg ?? DEFAULT_UI_KIT.radiusLg,
+    shadowPanel: uiKit?.shadowPanel ?? DEFAULT_UI_KIT.shadowPanel,
+    shadowGlow: uiKit?.shadowGlow ?? DEFAULT_UI_KIT.shadowGlow,
+    gradientPanel: uiKit?.gradientPanel ?? DEFAULT_UI_KIT.gradientPanel,
+    gradientAccent: uiKit?.gradientAccent ?? DEFAULT_UI_KIT.gradientAccent,
+    blur: uiKit?.blur ?? DEFAULT_UI_KIT.blur,
+    pixelArt: uiKit?.pixelArt ?? DEFAULT_UI_KIT.pixelArt,
+  };
+}
+
+/**
+ * Writes `uiKit` fields to CSS custom properties on <html> — but only the
+ * fields a manifest actually supplies. This is the crucial difference from
+ * `resolveWorldPalette`'s single-consumer pattern (the tileset canvas): many
+ * *different* components each already have their own bespoke hardcoded
+ * background/shadow/radius (a warm-amber radio widget, a green end-day
+ * button, a navy dialogue panel, ...). If every unset field fell back to
+ * one shared DEFAULT_UI_KIT literal, switching to any skin (even one with no
+ * uiKit at all) would flatten every component to the same generic gradient
+ * — a real regression, not the no-op Section 1 requires. So an absent field
+ * clears the CSS variable instead, letting each component's own local
+ * `var(--ui-x, <its current hardcoded value>)` fallback keep doing its job.
+ * Only a skin that actually opts into a field (e.g. Aurora Glass) makes
+ * every panel referencing that variable pick up the new shared look.
+ */
+function applyUiKit(manifest: SkinManifest): void {
+  const kit = manifest.uiKit;
+  const root = document.documentElement;
+  const setOrClear = (prop: string, value: string | undefined): void => {
+    if (value !== undefined) root.style.setProperty(prop, value);
+    else root.style.removeProperty(prop);
+  };
+  setOrClear('--ui-font', kit?.fontFamily);
+  setOrClear('--ui-font-display', kit?.fontFamilyDisplay ?? kit?.fontFamily);
+  setOrClear('--ui-radius-sm', kit?.radiusSm);
+  setOrClear('--ui-radius-md', kit?.radiusMd);
+  setOrClear('--ui-radius-lg', kit?.radiusLg);
+  setOrClear('--ui-shadow-panel', kit?.shadowPanel);
+  setOrClear('--ui-shadow-glow', kit?.shadowGlow);
+  setOrClear('--ui-gradient-panel', kit?.gradientPanel);
+  setOrClear('--ui-gradient-accent', kit?.gradientAccent);
+  setOrClear('--ui-blur', kit?.blur === undefined ? undefined : kit.blur === 'none' ? 'none' : `blur(${kit.blur})`);
+  root.dataset['pixelArt'] = String(kit?.pixelArt ?? DEFAULT_UI_KIT.pixelArt);
+}
+
 function applyPalette(manifest: SkinManifest): void {
   const { palette } = manifest;
   const root = document.documentElement;
@@ -97,6 +171,7 @@ function applyPalette(manifest: SkinManifest): void {
 export async function switchSkin(skinId: string, scene?: Phaser.Scene): Promise<void> {
   const manifest = await fetchManifest(skinId);
   applyPalette(manifest);
+  applyUiKit(manifest);
   setSfxProfile(manifest.audioProfile.sfxType);
   setBgmProfile(manifest.audioProfile.bgmType);
 
@@ -129,6 +204,7 @@ export async function activateDefaultSkin(): Promise<void> {
   try {
     const manifest = await fetchManifest(activeSkin);
     applyPalette(manifest);
+    applyUiKit(manifest);
     setSfxProfile(manifest.audioProfile.sfxType);
     setBgmProfile(manifest.audioProfile.bgmType);
   } catch {

@@ -1,8 +1,55 @@
 import { useGameStore } from '../core/state/useGameStore';
-import { validateManifest, type SkinManifest } from './SkinInterface';
+import { validateManifest, type SkinManifest, type SkinPalette } from './SkinInterface';
 import { setSfxProfile, setBgmProfile } from '../core/audio/SoundSynth';
 
 const MANIFEST_CACHE = new Map<string, SkinManifest>();
+
+/** M21 — the pre-M21 hardcoded hex literals from `createTilesetTexture()`, kept
+ * as the fallback for skins (or the no-skin-loaded boot moment) that don't
+ * populate the new world-tile palette fields yet. */
+export const DEFAULT_WORLD_PALETTE: Required<Pick<SkinPalette,
+  'worldFloor' | 'worldWall' | 'worldWallShadow' | 'worldGrass' | 'worldRoad' |
+  'worldRoadBorder' | 'worldPlaza' | 'worldDoor' | 'worldHighlight'
+>> = {
+  worldFloor: '#18182a',
+  worldWall: '#1e1e30',
+  worldWallShadow: '#444268',
+  worldGrass: '#1a2c18',
+  worldRoad: '#2c2c3a',
+  worldRoadBorder: '#20202e',
+  worldPlaza: '#20202e',
+  worldDoor: '#5a3c14',
+  worldHighlight: '#44ee88',
+};
+
+export type ResolvedWorldPalette = typeof DEFAULT_WORLD_PALETTE;
+
+/** Fills in any missing world-tile field with the pre-M21 default so
+ * `createTilesetTexture()` always has a complete palette to draw from. */
+export function resolveWorldPalette(palette?: Partial<SkinPalette>): ResolvedWorldPalette {
+  return {
+    worldFloor: palette?.worldFloor ?? DEFAULT_WORLD_PALETTE.worldFloor,
+    worldWall: palette?.worldWall ?? DEFAULT_WORLD_PALETTE.worldWall,
+    worldWallShadow: palette?.worldWallShadow ?? DEFAULT_WORLD_PALETTE.worldWallShadow,
+    worldGrass: palette?.worldGrass ?? DEFAULT_WORLD_PALETTE.worldGrass,
+    worldRoad: palette?.worldRoad ?? DEFAULT_WORLD_PALETTE.worldRoad,
+    worldRoadBorder: palette?.worldRoadBorder ?? DEFAULT_WORLD_PALETTE.worldRoadBorder,
+    worldPlaza: palette?.worldPlaza ?? DEFAULT_WORLD_PALETTE.worldPlaza,
+    worldDoor: palette?.worldDoor ?? DEFAULT_WORLD_PALETTE.worldDoor,
+    worldHighlight: palette?.worldHighlight ?? DEFAULT_WORLD_PALETTE.worldHighlight,
+  };
+}
+
+/** Resolves the world-tile palette for whichever skin is currently active,
+ * reading straight from the manifest cache so it's usable synchronously
+ * from `WorldScene.preload()` (which can't await a fetch). Falls back to
+ * `DEFAULT_WORLD_PALETTE` when the manifest hasn't been fetched yet — the
+ * scene re-fetches/redraws when `switchSkin()` completes shortly after boot. */
+export function getActiveWorldPalette(): ResolvedWorldPalette {
+  const { activeSkin } = useGameStore.getState().meta;
+  const cached = MANIFEST_CACHE.get(activeSkin);
+  return resolveWorldPalette(cached?.palette);
+}
 
 async function fetchManifest(skinId: string): Promise<SkinManifest> {
   const cached = MANIFEST_CACHE.get(skinId);

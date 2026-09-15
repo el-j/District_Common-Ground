@@ -1,4 +1,6 @@
 let ctx: AudioContext | null = null;
+let masterOutput: GainNode | null = null;
+let analyserNode: AnalyserNode | null = null;
 
 function getCtx(): AudioContext | null {
   if (!ctx || ctx.state !== 'running') return null;
@@ -8,6 +10,24 @@ function getCtx(): AudioContext | null {
 function initAudio(): void {
   if (ctx) return;
   ctx = new AudioContext();
+  // M21 §9 — every sound below routes through this shared bus instead of
+  // straight to `ctx.destination`, purely so RadioWidget's waveform canvas
+  // has something real to tap with an AnalyserNode. Gain is 1 (no volume
+  // change) — it's a pass-through tap, not a mix change.
+  masterOutput = ctx.createGain();
+  analyserNode = ctx.createAnalyser();
+  analyserNode.fftSize = 64;
+  masterOutput.connect(analyserNode);
+  analyserNode.connect(ctx.destination);
+}
+
+function getMasterOutput(): AudioNode {
+  return masterOutput ?? (ctx as AudioContext).destination;
+}
+
+/** M21 §9 — RadioWidget's waveform canvas taps this to drive its visual; null until first user interaction unlocks audio. */
+export function getRadioAnalyser(): AnalyserNode | null {
+  return analyserNode;
 }
 
 export function setupAudioOnInteraction(): void {
@@ -38,7 +58,7 @@ export function playFootstep(): void {
   const gain = audio.createGain();
   gain.gain.setValueAtTime(0.08, audio.currentTime);
   src.connect(gain);
-  gain.connect(audio.destination);
+  gain.connect(getMasterOutput());
   src.start();
 }
 
@@ -52,7 +72,7 @@ export function playUIClick(): void {
   gain.gain.setValueAtTime(0.15, audio.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.1);
   osc.connect(gain);
-  gain.connect(audio.destination);
+  gain.connect(getMasterOutput());
   osc.start();
   osc.stop(audio.currentTime + 0.1);
 }
@@ -70,7 +90,7 @@ export function playDayChime(): void {
     gain.gain.setValueAtTime(0.12, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
     osc.connect(gain);
-    gain.connect(audio.destination);
+    gain.connect(getMasterOutput());
     osc.start(t);
     osc.stop(t + 0.3);
   });
@@ -117,7 +137,7 @@ export function playRain(): void {
 
   src.connect(filter);
   filter.connect(gain);
-  gain.connect(audio.destination);
+  gain.connect(getMasterOutput());
   src.start();
   _rainSource = src;
 
@@ -132,7 +152,7 @@ export function playRain(): void {
     dropGain.gain.setValueAtTime(0.08, a.currentTime);
     dropGain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + 0.08);
     dropOsc.connect(dropGain);
-    dropGain.connect(a.destination);
+    dropGain.connect(getMasterOutput());
     dropOsc.start();
     dropOsc.stop(a.currentTime + 0.08);
   }, 50 + Math.random() * 150);
@@ -173,7 +193,7 @@ export function playCatPurr(): void {
   lfoOsc.connect(lfoGain);
   lfoGain.connect(mainOsc.frequency);
   mainOsc.connect(mainGain);
-  mainGain.connect(audio.destination);
+  mainGain.connect(getMasterOutput());
 
   const end = audio.currentTime + 3;
   lfoOsc.start();
@@ -197,7 +217,7 @@ export function playBikeBell(): void {
     gain.gain.setValueAtTime(0.3, audio.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.8);
     osc.connect(gain);
-    gain.connect(audio.destination);
+    gain.connect(getMasterOutput());
     osc.start();
     osc.stop(audio.currentTime + 0.8);
   });
@@ -228,7 +248,7 @@ export function playRadioStatic(tuningFraction: number): void {
 
   src.connect(filter);
   filter.connect(gain);
-  gain.connect(audio.destination);
+  gain.connect(getMasterOutput());
   src.start();
 }
 
@@ -240,7 +260,7 @@ export function playLoFiChord(rootHz: number): void {
   const masterGain = audio.createGain();
   masterGain.gain.setValueAtTime(0.08, audio.currentTime);
   masterGain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
-  masterGain.connect(audio.destination);
+  masterGain.connect(getMasterOutput());
 
   const oscDefs: Array<[OscillatorType, number, number]> = [
     ['triangle', rootHz, -3],
@@ -267,7 +287,7 @@ export function playLoFiChord(rootHz: number): void {
   const crackleGain = audio.createGain();
   crackleGain.gain.setValueAtTime(0.03, audio.currentTime);
   crackleSrc.connect(crackleGain);
-  crackleGain.connect(audio.destination);
+  crackleGain.connect(getMasterOutput());
   crackleSrc.start();
 }
 
@@ -286,7 +306,7 @@ export function playCrisisStab(): void {
     gain.gain.setValueAtTime(0.15, audio.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.4);
     osc.connect(gain);
-    gain.connect(audio.destination);
+    gain.connect(getMasterOutput());
     osc.start();
     osc.stop(audio.currentTime + 0.4);
   });
@@ -306,7 +326,7 @@ export function playSolidarityChime(): void {
     gain.gain.setValueAtTime(0.2, t);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
     osc.connect(gain);
-    gain.connect(audio.destination);
+    gain.connect(getMasterOutput());
     osc.start(t);
     osc.stop(t + 0.15);
   });
@@ -368,7 +388,7 @@ export function startBGMLoop(): void {
   _bgmRunning = true;
   _bgmMaster  = audio.createGain();
   _bgmMaster.gain.setValueAtTime(_bgmMuted ? 0 : 1, audio.currentTime);
-  _bgmMaster.connect(audio.destination);
+  _bgmMaster.connect(getMasterOutput());
   _bgmTick();
 }
 

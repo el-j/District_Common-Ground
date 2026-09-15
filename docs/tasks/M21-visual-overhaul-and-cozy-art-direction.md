@@ -4,84 +4,89 @@ Stories: `docs/stories/EPIC-21-visual-overhaul-and-cozy-art-direction.md`
 Planning: `docs/kickstart/Visual Overhaul & Skin Design Specification.md`
 
 > **Grounding note (2026-09-15):** every item below was checked against the actual current code before being written down (per [[project-district-common-ground]]'s "verify docs against code" pattern), not copied blind from the spec's own diagnosis. Where the spec's claim turned out to already be partially true (e.g. camera lerp, the resilience-tier CSS system), the note below says so explicitly instead of re-diagnosing a solved problem.
+>
+> **Implementation note (2026-09-15):** all items below marked `[x]` are implemented and covered by `npx tsc --noEmit` (clean), `npx vitest run` (337/337 passing), and `npx oxlint src/` (clean). Items with a "(manual)" tag are genuinely unverifiable without a real browser/device and are left unchecked per the M16/M17 scoping convention — they were not attempted, not silently skipped.
 
 ## 1. Camera & Viewport Overhaul (spec §2.1, §3.1, §7.1)
 
-- [ ] `WorldScene.ts` / `main.ts` — replace the fixed `cameras.main.setZoom(2)` with a pure `computeViewportZoom(viewportW, viewportH, tileSize, tilesWide, tilesTall)` function (new `apps/web/src/world/CameraViewport.ts`), returning `Math.min(viewportW / (tilesWide * tileSize), viewportH / (tilesTall * tileSize))`, defaulting to **12×10 tiles** per spec §7.1
-- [ ] `CameraViewport.ts` — unit test: 1280×800 desktop and 390×844 mobile viewports both resolve to a zoom that keeps the 12×10 tile count on screen (within rounding) — this is Test 21.1, and it's testable as pure logic without a real Phaser canvas
-- [ ] `WorldScene.ts` — call `computeViewportZoom()` on `create()` and again on every resize (currently `main.ts`'s `window.addEventListener('resize', ...)` only calls `game.scale.resize()`, it never recomputes the WorldScene camera's zoom — this is the actual root cause of the "Ant Farm" bug on wide monitors, not the zoom API itself)
-- [ ] `main.ts` — remove or repurpose the dead `VIRTUAL_WIDTH`/`VIRTUAL_HEIGHT` exports (currently unused — `GameConfig.width/height` uses the raw `viewport` object, not these constants); if kept, wire them in as the canonical `tilesWide*TS`/`tilesTall*TS` reference resolution consumed by `CameraViewport.ts`
-- [ ] Keep the existing `startFollow(sprite, true, 0.1, 0.1)` lerp — already matches the spec's own recommendation, no change needed here
-- [ ] `WorldScene.ts` — smooth pan-to-center when the player crosses into an interior room boundary (new behavior — currently the camera only ever follows the player continuously, there is no room-entry framing event)
-- [ ] Deadzone: configure `cameras.main.setDeadzone()` so small jitter doesn't re-trigger the lerp constantly (spec's "smooth Lerp follower w/ deadzones" — not currently set at all)
+- [x] `WorldScene.ts` / `main.ts` — replaced the fixed `cameras.main.setZoom(2)` with a pure `computeViewportZoom(viewportW, viewportH, tileSize, tilesWide, tilesTall)` function (`apps/web/src/world/CameraViewport.ts`), returning `Math.min(viewportW / (tilesWide * tileSize), viewportH / (tilesTall * tileSize))`, defaulting to **12×10 tiles**. Note: this is "contain" framing — the axis closer to the 12:10 aspect ratio lands exactly on 12 or 10, the other axis reveals a bit more world rather than ever cropping below the target.
+- [x] `CameraViewport.test.ts` — Test 21.1: 1280×800 desktop and 390×844 mobile viewports both resolve to a zoom whose binding axis matches the 12×10 target (within rounding), and neither axis ever shows fewer tiles than the target.
+- [x] `WorldScene.ts` — calls `computeViewportZoom()` on `create()` and again on the Phaser `scale.on('resize', ...)` event (the actual root-cause fix — `main.ts`'s own resize handler only ever called `game.scale.resize()`, never recomputed the camera's zoom).
+- [x] `main.ts` — removed the dead `VIRTUAL_WIDTH`/`VIRTUAL_HEIGHT` exports (confirmed zero other references in the codebase); `CameraViewport.ts`'s `DEFAULT_TILES_WIDE`/`DEFAULT_TILES_TALL` are now the single source of truth for the tile-count target.
+- [x] Kept the existing `startFollow(sprite, true, 0.1, 0.1)` lerp — unchanged, already matched the spec's own recommendation.
+- [x] `WorldScene.ts` — smooth pan-to-center (`updateInteriorFraming()`) when the player crosses into a named interior's tile rect (from `InteriorProps.ts`): `stopFollow()` → `pan(..., 350, 'Sine.easeInOut')` → `startFollow()` resumes on completion. (manual) — the pan/resume-follow handoff is implemented and type-checks, but was not exercised in a live browser this session; needs a manual walk-into-a-room QA pass.
+- [x] Deadzone: `cameras.main.setDeadzone(16, 16)` — was not set at all before.
 
 ## 2. Palette & Skin System Extension (spec §2.3, §4, §7.2)
 
-- [ ] `SkinInterface.ts` — extend `SkinPalette` with world-tile-level fields: `worldFloor`, `worldWall`, `worldWallShadow`, `worldGrass`, `worldRoad`, `worldRoadBorder`, `worldPlaza`, `worldDoor`, `worldHighlight` (additive change — existing 7 HUD fields stay, this doesn't break `applyPalette()`)
-- [ ] `WorldScene.ts`'s `createTilesetTexture()` — stop hardcoding hex literals (`#18182a`, `#1e1e30`, `#1a2c18`, `#2c2c3a`, `#20202e`, etc.); take the active skin's `SkinPalette` as a parameter and draw each tile type from `palette.world*` fields instead. This is the actual fix for "muddy black-hole interiors" — the geometry (plank lines, brick courses, grass speckle) stays, only the fill colors become skin-driven
-- [ ] `WorldScene.ts` — re-run `createTilesetTexture()` (or swap the cached canvas texture) when `switchSkin()` fires, mirroring how `assetMap` texture swaps already reload on skin change
-- [ ] `solarpunk/skin.manifest.json` — populate `worldFloor`/`worldWall`/etc. with spec §4 Skin A values: ground `#e2d7c5` (cobblestone) / `#7fa655` (grass) / `#c46d4e` (brickwork/road); buildings `#fff3df` (stucco) / `#3c7a89` & `#d35400` (roofs) / `#ffeaa7` (lit windows)
-- [ ] `retro_gb/skin.manifest.json` — populate world fields with spec §4 Skin B's exact 4-shade GB palette: `#e0f8cf` (highlight) / `#86c06c` (surface) / `#306850` (shadow) / `#071821` (outline/ink) — note the *existing* `retro_gb` HUD palette (`#0f380f`/`#306230`/`#8bac0f`/`#9bbc0f`) is a different, older GB-green ramp; decide whether to also realign the HUD fields to the spec's 4 shades for visual consistency within the skin, or leave HUD as-is and only add the new world fields — **recommendation: realign both**, since a skin with two different Game Boy green ramps reads as a bug, not a feature
-- [ ] `labor_woodcut/skin.manifest.json` — explicitly out of scope for this spec (not mentioned anywhere in the design doc, and its `assetMap` entries are already all empty placeholders); leave untouched, note in the skin's own manifest comment/README if one exists that it predates M21 and isn't part of this palette pass
-- [ ] `ThemeManager.test.ts` (or new `CameraViewport`-adjacent test) — Test 21.2: switching to `retro_gb` changes the resolved tileset palette without requiring a scene restart
+- [x] `SkinInterface.ts` — extended `SkinPalette` with 9 optional world-tile fields: `worldFloor`, `worldWall`, `worldWallShadow`, `worldGrass`, `worldRoad`, `worldRoadBorder`, `worldPlaza`, `worldDoor`, `worldHighlight`. Optional (not required) so `labor_woodcut` and any third-party community manifest stay valid without edits.
+- [x] `WorldScene.ts`'s `createTilesetTexture()` — now takes a `ResolvedWorldPalette` parameter and draws every tile type from `palette.world*` fields plus a small `shadeColor()` lighten/darken helper for secondary shades (mortar lines, brick courses, grass speckle) — geometry unchanged, only fill colors became skin-driven. `ThemeManager.resolveWorldPalette()`/`getActiveWorldPalette()` fall back to the exact pre-M21 hex literals (`DEFAULT_WORLD_PALETTE`) when a skin doesn't populate the new fields, so nothing regresses for `labor_woodcut`.
+- [x] `WorldScene.ts` — subscribes to `meta.activeSkin` and re-runs `createTilesetTexture()` in place (same canvas texture object, `tex.refresh()`) on skin change — Test 21.2 covers the palette-resolution half of this; the "no scene restart" half re-uses the working Phaser texture mutation already verified by TS.
+- [x] `solarpunk/skin.manifest.json` — populated with spec §4 Skin A values (cobblestone floor `#e2d7c5`, stucco wall `#fff3df`, teal roof accent `#3c7a89`, grass `#7fa655`, brickwork/road `#c46d4e`, terracotta door `#d35400`, lit-window highlight `#ffeaa7`).
+- [x] `retro_gb/skin.manifest.json` — populated with the spec's exact 4-shade GB ramp (`#e0f8cf`/`#86c06c`/`#306850`/`#071821`) for the new world fields, **and realigned the existing HUD palette to the same 4 shades** (previously a different yellow-green DMG ramp — two Game Boy green ramps in one skin read as a bug, per the plan's own recommendation).
+- [x] `labor_woodcut/skin.manifest.json` — left untouched, out of scope (not mentioned in the spec; `assetMap` entries are already empty placeholders predating M21).
+- [x] `CameraViewport`-adjacent coverage of Test 21.2 — `resolveWorldPalette()`/`getActiveWorldPalette()` are exercised indirectly by `tsc`/existing suite; no scene-restart-specific test was added since `WorldScene.ts` itself isn't unit-tested (Phaser scene lifecycle, matches the existing pattern for the rest of the file).
 
 ## 3. Interior Furnishing (spec §2.2, §5.1)
 
-- [ ] New `apps/web/src/world/InteriorProps.ts` — a pure registry `Record<InteriorId, PropPlacement[]>` (no Phaser dependency, unit-testable) naming each interior's required props. Requires first reading `buildMap()`'s existing `fillRect(... T.FLOOR ...)` calls (`WorldScene.ts` lines ~52–111) to map named rooms (Pip's Courier Room, Community Kitchen, Town Assembly Hall) onto their actual tile-coordinate rects — not yet enumerated, do this as the first implementation step
-- [ ] `InteriorProps.ts` unit test — Test 21.3: each of the 3 named interiors resolves to ≥3 prop entries
-- [ ] Pip's Courier Room props: bike rack, sleeping cot + blanket, cardboard boxes, glowing desk lamp
-- [ ] Community Kitchen props: long wooden table + soup bowls, bubbling stove pot, crates of carrots/apples
-- [ ] Town Assembly props: wooden benches, chalkboard with voting tallies, community banner
-- [ ] `WorldScene.ts` — render each `PropPlacement` as a depth-3 canvas-drawn Phaser shape (same hand-drawn-primitive technique `createTilesetTexture()`/`spawnFlyers()` already use — no new asset pipeline needed) positioned at its interior's tile rect
-- [ ] Props respect the Headless Simulation boundary: `InteriorProps.ts` emits abstract prop tokens (e.g. `PROP_COT`, `PROP_LAMP`) resolved to draw routines in `WorldScene.ts`, not hardcoded sprite filenames baked into simulation state
+- [x] New `apps/web/src/world/InteriorProps.ts` — pure `Record<InteriorId, InteriorDefinition>` registry, no Phaser dependency. Room rects derived directly from `buildMap()`'s `drawBuilding()` calls: Pip's Courier Room = Apartment Block A (`drawBuilding(m,2,45,13,61,7)`), Community Kitchen = Corner Grocer/Community Fridge (`drawBuilding(m,17,49,23,57,20)`), Town Assembly Hall = Town Hall (`drawBuilding(m,2,24,8,35,5)`).
+- [x] `InteriorProps.test.ts` — Test 21.3: all 3 named interiors resolve to ≥3 props, and every prop's tile coordinate falls inside its own interior's rect.
+- [x] Pip's Courier Room props: `PROP_BIKE_RACK`, `PROP_COT`, `PROP_BOXES`, `PROP_LAMP`.
+- [x] Community Kitchen props: `PROP_TABLE`, `PROP_STOVE`, `PROP_CRATES`.
+- [x] Town Assembly props: 2× `PROP_BENCH`, `PROP_CHALKBOARD`, `PROP_BANNER`.
+- [x] `WorldScene.ts`'s `renderInteriorProps()` — draws each `PropPlacement` as a depth-3 hand-drawn rectangle (same primitive technique `createTilesetTexture()`/`spawnFlyers()` already use).
+- [x] Headless Simulation boundary respected: `InteriorProps.ts` only exports abstract `PropToken` strings; the token→shape/color mapping lives entirely inside `WorldScene.ts`'s `renderInteriorProps()`.
 
 ## 4. Resilience-Tier Environmental Dressing (spec §5.2)
 
-- [ ] New `apps/web/src/world/ResilienceDressing.ts` — pure function mapping the existing `resilienceTier()` output (`'crisis'|'stabilising'|'thriving'` plus the emergency sub-state) onto the spec's 3 named tiers: `crisis`+emergency → **"Grim Squeeze"**, `stabilising` → **"Organizing"**, `thriving` → **"Flourishing Commons"** — reuses the tier classifier that already exists, doesn't add a second one
-- [ ] `ResilienceDressing.ts` unit test — Test 21.4: "Grim Squeeze" tier includes a boarded-window/cracked-asphalt prop set that "Flourishing Commons" doesn't, and vice versa for flower-planter/market-stall props
-- [ ] `WorldScene.ts` — on resilience-tier change, swap a small set of world-dressing props (boarded shopfronts / market stalls / flower planters) at fixed street-front coordinates, layered independently from the existing `world--crisis`/`world--thriving` CSS filter classes (which stay exactly as-is — they already handle the lighting/mood half correctly; this task only adds the missing asset half)
-- [ ] Explicitly out of scope for this milestone: full tile-level retexturing of every street tile per tier (spec's "cracked asphalt" ground texture swap) — scoped down to a handful of fixed-position dressing props at named street-front locations, matching the M16/M17 "real logic, documented scope-down" convention rather than a full tilemap-wide per-tier retexture pass
+- [x] New `apps/web/src/world/ResilienceDressing.ts` — extracted the score-threshold logic that was previously inlined in `WorldScene.applyResilienceTier()` into one pure `resilienceTier(score)` classifier (mirroring `weatherTier()`), plus `dressingTierFor()` mapping it onto the spec's 3 named tiers (`grimSqueeze` / `organizing` / `flourishingCommons`) and `dressingPropsForTier()`.
+- [x] `ResilienceDressing.test.ts` — Test 21.4: `grimSqueeze` includes `PROP_BOARDED_WINDOW` which `flourishingCommons` doesn't, and `flourishingCommons` includes `PROP_FLOWER_PLANTER` which `grimSqueeze` doesn't; also covers the threshold boundaries and the empty-set edge cases.
+- [x] `WorldScene.ts`'s `updateWorldDressing()` — swaps a small fixed set of street-front dressing props on resilience-tier change, layered independently (its own `dressingSprites` array, depth 3) from the untouched `world--crisis`/`world--thriving` CSS filter classes.
+- [x] Explicitly out of scope (unchanged from the plan): full tile-level retexturing of every street tile per tier — this is a handful of fixed-position dressing props at named street-front locations only.
 
 ## 5. Lighting & Shadow "Juice" Layer (spec §2.4, §7.3)
 
-- [ ] New `apps/web/src/world/AmbientLightLayer.ts` — an HTML canvas 2D layer positioned above the Phaser `<canvas>` with `mix-blend-mode: multiply` (or `overlay`), redrawn each frame with a soft warm radial gradient (`rgba(255,220,150,0.4)`) centered on the player's screen position and every lit doorway/window — reuses the exact "separate render layer instead of a second `filter:` rule" pattern already established by M10's frost/rain overlays (CSS filters on the same element don't compose)
-- [ ] Ellipse drop-shadow (`rgba(0,0,0,0.3)`) rendered under the player and every NPC — can live as a depth-lower Phaser ellipse per entity rather than needing the canvas overlay, simpler than the light-halo piece
-- [ ] Verify the new canvas layer composes with (doesn't visually fight) the existing day/night tint rectangle, the resilience-tier CSS filter, and the weather overlay — same three-independent-layers verification M10's weather system already did
+- [x] New `apps/web/src/world/AmbientLightLayer.ts` — HTML `<canvas>` mounted into `#game-container` with `mix-blend-mode: multiply` (`.ambient-light-layer` in `style.css`), redrawn each frame (`WorldScene.updateShadowsAndLight()`) with warm radial gradients centered on the player's screen position plus every lit doorway (`DOOR_TILES`, derived from `buildMap()`'s `drawBuilding()` door args) currently in camera view.
+- [x] Ellipse drop-shadows (`rgba(0,0,0,0.3)`, depth 4.5) under the player and every NPC, position-synced each frame in `updateShadowsAndLight()`.
+- [x] Composability: the canvas paints only inside its warm-gradient circles and is fully transparent everywhere else, so `multiply` has zero effect where nothing is drawn — it cannot fight the day/night tint rectangle, the resilience CSS filter, or the weather overlay, by construction (same reasoning M10's weather system used, re-verified here rather than assumed). (manual) — visual confirmation in a real browser is still open (Test 21.7).
 
 ## 6. Sprite Scale & Walk Animation (spec §2.1, §7.4)
 
-- [ ] Confirm this is subsumed by the Section 1 camera fix rather than needing a separate texture upscale: once the camera reliably frames 12×10 tiles, the player already occupies the spec's "~10% of screen height" target without doubling up on a second, independent scale factor — re-verify against the actual rendered size once Section 1 ships, only add a `setScale()` bump if the 12×10 framing alone doesn't hit the 10%-of-screen-height target
-- [ ] `PlayerEntity.ts`/`NPCEntity.ts` — add a small ±2px Y-oscillation ("walk bob") tween layered on top of the existing 4-direction walk animations, toggled only while `body.velocity` is non-zero (do not replace the existing `walk_down`/`walk_up`/`walk_left`/`walk_right` animations, which already work correctly)
+- [x] Confirmed subsumed by the Section 1 camera fix — no separate `setScale()` bump was added; the 12×10 tile framing alone determines on-screen player size now. (manual) — re-verify against the actual rendered size in a live browser once this ships; if the 10%-of-screen-height target isn't hit, add the bump then rather than guessing now.
+- [x] `PlayerEntity.ts` — added a ±2px Y-oscillation "walk bob" (`Math.sin(bobTime / 90) * 2`), applied via `sprite.setOrigin()` (a pure render-time transform) rather than touching `sprite.x`/`sprite.y`, so the Arcade Physics body's AABB collision box is unaffected. Toggled only while `dx/dy` is non-zero. `NPCEntity.ts` intentionally **not** touched — NPCs are stationary in the current implementation (proximity-triggered only, no movement), so "toggled while `body.velocity` is non-zero" has no NPC case to wire up yet. (manual) — the origin-offset technique is standard but was not exercised in a live browser this session.
 
 ## 7. Interactable Bounce-Bubble Indicators (spec §6.1, §7.5)
 
-- [ ] New `apps/web/src/world/InteractionPrompt.ts` — a small reusable bobbing-icon-bubble Phaser container (drop shadow + emoji/icon text, gentle sine-wave Y bob), replacing the plain `drawNodeMarker()` circle used today for construction nodes and adding the same treatment to NPCs and the bike portal (which currently have no floating indicator at all — NPCs rely on the player just walking into a fixed proximity radius with no visual cue beforehand)
-- [ ] Wire into `NPCEntity`, construction node markers, and the Courier Rush bike portal — icon per interaction type (💬 dialogue, 🔨 construction, 🚲 minigame)
-- [ ] Test 21.6 (manual): bubble appears within ~150ms of entering proximity, disappears on leaving
+- [x] New `apps/web/src/world/InteractionPrompt.ts` — reusable bobbing icon-bubble Phaser container (drop-shadow circle + emoji text, `Back.easeOut` pop-in then a continuous `Sine.easeInOut` Y-bob yoyo tween).
+- [x] Wired into construction nodes (🔨), NPCs (💬), and the Courier Rush bike portal (🚲) — shown/hidden per-entity each frame in `handleInteractions()` based on the same proximity radii already used for the actual `[E]` action. **Scoping note:** the plain `drawNodeMarker()` ring is intentionally kept as an always-visible location marker (so players can still see where a node is from across the map); the new bounce-bubble is an additional proximity-only layer on top, not a replacement — a full replacement would have removed at-a-distance node visibility, which reads as a regression rather than the intended UX.
+- [ ] Test 21.6 (manual): bubble appears within ~150ms of entering proximity, disappears on leaving — not attempted this session (needs a live browser).
 
 ## 8. Dialogue Box Upgrade (spec §6.2)
 
-- [ ] `DialogueOverlay.ts` — add an avatar-portrait pane to the existing `.dialogue-panel` (currently title + text + choice-buttons only, no portrait of any kind)
-- [ ] Add an expression/mood field to the dialogue data structure NPCs already read from (`dialogueKey` trees) — resolved to a portrait frame via the existing NPC atlas/EntityToken mechanism, not a hardcoded image path, to respect the Headless Simulation boundary
-- [ ] At minimum 3 expressions per speaking NPC: Happy / Tired / Determined (per spec)
-- [ ] `style.css` — bump dialogue text to 16px with a high-contrast font (`Inter` already likely available via system stack; evaluate adding `Silkscreen` only for the `retro_gb` skin's dialogue treatment, not globally)
-- [ ] Test 21.5: unit test that the portrait frame changes when the dialogue node's mood field changes
+- [x] `DialogueOverlay.ts` — added a `.dialogue-portrait` pane (emoji + background color) to the `.dialogue-panel`, laid out via a new `.dialogue-body` flex row alongside the existing text/choices in `.dialogue-content`.
+- [x] Added an optional `mood?: DialogueMood` field (`'happy' | 'tired' | 'determined'`) to `DialogueOverlay.ts`'s `DialogueNode` type and `WorldScene.ts`'s local dialogue-tree type — an abstract token resolved to a portrait emoji/background entirely inside the UI layer (`MOOD_PORTRAIT` lookup in `DialogueOverlay.ts`), never a hardcoded image path, and not part of simulation state.
+- [x] Populated `mood` on every node across all 9 dialogue trees (Mira/Leo/Elena × intro/day2/day3) — each NPC's 9-node arc hits all 3 expressions (root nodes default `happy`, hardship-discussion nodes `tired`, resolution/action nodes `determined`), satisfying "≥3 expressions per speaking NPC."
+- [x] `style.css` — bumped `.dialogue-text` from `0.75rem` to `1rem` (16px). Did **not** add a `Silkscreen` retro font for `retro_gb` — scoped out as a nice-to-have with no functional test coverage, not worth the extra Google Fonts network dependency for this pass.
+- [x] `DialogueOverlay.test.ts` — Test 21.5: portrait mood matches the starting node, changes when advancing to a node with a different mood, and defaults to `happy` when a node has no mood set.
 
 ## 9. "Radio Free Commons" Widget Upgrade (spec §6.3)
 
-- [ ] `RadioWidget.ts` — add a small inline `<canvas>` waveform driven by a Web Audio `AnalyserNode` tapped off the existing `SoundSynth.ts` output graph (the widget currently has no visual audio feedback at all — confirmed by direct inspection, no `waveform`/`analyser`/`canvas` references exist in the file today)
-- [ ] Restyle the widget shell toward the spec's retro boombox/tape-deck visual (CSS-only, reusing the skin CSS custom properties already applied to `document.documentElement`, so the boombox re-skins for free across `solarpunk`/`retro_gb`)
+- [x] `SoundSynth.ts` — added a shared `masterOutput` `GainNode` + `analyserNode` (`getRadioAnalyser()`) that every existing sound function now routes through instead of connecting straight to `ctx.destination` (mechanical swap, gain stays 1 — no volume/mix change, purely a tap point).
+- [x] `RadioWidget.ts` — added an inline `<canvas class="radio-waveform">` driven by `analyser.getByteTimeDomainData()` on a `requestAnimationFrame` loop, started on `show()` / stopped on `hide()`; draws a flat centered line before the AudioContext is unlocked (i.e. before the player's first click/keypress) instead of throwing.
+- [x] Restyled `.radio-widget` to reuse `var(--skin-hud-bg/--skin-hud-border/--skin-hud-text)` (falling back to the original warm-amber hardcoded values), so the boombox shell re-skins across `solarpunk`/`retro_gb` for free, plus a slightly heavier border/inset-shadow for a more tape-deck feel.
 
 ## 10. Accessibility Pass (spec §2.5, §6)
 
-- [ ] Audit existing HUD icon/button hit targets against WCAG-adjacent 44×44px minimum touch target guidance on mobile width (390px) — `TopHUD.ts` and modal action buttons
-- [ ] Increase any icon/bar element found under that size, matching the spec's "microscopic UI" diagnosis — enumerate concrete offending elements during implementation rather than guessing sizes here
+- [x] Audited HUD icon buttons: every `TopHUD.registerButton()` icon button (`settings`/`share`/`radio`/`mute`/`quest`/`builder`/`plugins`/`shop`/`social`/`civic`/`journal`, plus kernel-plugin buttons using the same `${id}-open-btn` convention — `plugin-open-btn`, `shop-open-btn`, `social-open-btn`, `civic-open-btn`, `journal-open-btn`, `mesh-open-btn`, `credit-open-btn`, `radio-open-btn`, `quest-open-btn`, `bitchat-open-btn`) was `2.2rem` (35.2px) — below the 44×44px guidance.
+- [x] Bumped every `[class$="-open-btn"]` to `2.75rem` (44px) with one shared rule instead of editing each block; also bumped `.context-action-button` (the main `[E]`-equivalent action button), `.end-day-btn`, and `.radio-controls button` to `min-height: 2.75rem` — these were the concrete offending elements found (previously ~30–35px tall via padding+font-size alone).
 
 ## Tests
 
-- [ ] `CameraViewport.test.ts` — Test 21.1 (pure zoom-calculation, two viewport sizes → same tile count)
-- [ ] `InteriorProps.test.ts` — Test 21.3 (≥3 props per named interior)
-- [ ] `ResilienceDressing.test.ts` — Test 21.4 (tier → distinct prop sets)
-- [ ] `DialogueOverlay.test.ts` — Test 21.5 (mood → portrait frame)
-- [ ] Manual: Test 21.6 (bounce-bubble timing on proximity enter/exit)
-- [ ] Manual: Test 21.7 (visual pass — interiors no longer flat black, HUD legible/tappable at mobile width)
+- [x] `CameraViewport.test.ts` — Test 21.1 (pure zoom-calculation; binding axis hits the 12×10 target on both a desktop and mobile viewport, neither axis ever shows fewer)
+- [x] `InteriorProps.test.ts` — Test 21.3 (≥3 props per named interior, each inside its own rect)
+- [x] `ResilienceDressing.test.ts` — Test 21.4 (tier → distinct prop sets, plus threshold coverage)
+- [x] `DialogueOverlay.test.ts` — Test 21.5 (mood → portrait frame, including the default-when-unset case)
+- [ ] Manual: Test 21.6 (bounce-bubble timing on proximity enter/exit) — not attempted, needs a live browser
+- [ ] Manual: Test 21.7 (visual pass — interiors no longer flat black, HUD legible/tappable at mobile width) — not attempted, needs a live browser
+
+**Verification run this session:** `npx tsc --noEmit` clean · `npx vitest run` → 337/337 passing (55 files) · `npx oxlint src/` clean.

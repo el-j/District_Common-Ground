@@ -19,12 +19,28 @@ import { startBGMLoop, playRain, stopRain } from '../core/audio/SoundSynth';
 import { weatherTier, type WeatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
 import { MinigameLoader } from '../core/kernel/MinigameLoader';
+import { computeViewportZoom } from './CameraViewport';
+import { getActiveWorldPalette, type ResolvedWorldPalette } from '../skins/ThemeManager';
+import { INTERIORS, findInteriorAtTile, type PropToken } from './InteriorProps';
+import { resilienceTier, dressingTierFor, dressingPropsForTier, type DressingTier, type DressingPropToken } from './ResilienceDressing';
+import { InteractionPrompt } from './InteractionPrompt';
+import { AmbientLightLayer } from './AmbientLightLayer';
 
 const TS = 16;
 const COLS = 64;
 const ROWS = 80;
 
 const T = { FLOOR: 0, WALL: 1, GRASS: 2, ROAD: 3, PLAZA: 4, DOOR: 5, BUILT: 6 } as const;
+
+// M21 §5 — door tile coordinates (mirrors buildMap()'s drawBuilding doorX args below),
+// used as fixed "lit window" points for AmbientLightLayer's warm-glow pooling.
+const DOOR_TILES: { x: number; y: number }[] = [
+  { x: 31, y: 10 }, { x: 7, y: 17 }, { x: 39, y: 17 },
+  { x: 5, y: 35 }, { x: 42, y: 35 },
+  { x: 7, y: 61 }, { x: 39, y: 61 }, { x: 20, y: 57 },
+  { x: 57, y: 12 }, { x: 57, y: 27 },
+  { x: 11, y: 75 }, { x: 28, y: 75 }, { x: 46, y: 75 },
+];
 
 // ── Map helpers ───────────────────────────────────────────────────────────────
 
@@ -109,17 +125,35 @@ function buildMap(): number[][] {
 
 // ── Tileset (7 tile types, 112×16 canvas) ─────────────────────────────────────
 
-function createTilesetTexture(scene: Phaser.Scene): void {
-  const tex = scene.textures.createCanvas('tileset', TS * 7, TS);
+/** Lightens (positive percent) or darkens (negative) a `#rrggbb` hex color — used to
+ * derive secondary shades (mortar lines, brick courses, speckle) from the
+ * skin's 9 world-tile palette fields without needing a dozen more fields. */
+function shadeColor(hex: string, percent: number): string {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return hex;
+  const num = parseInt(clean, 16);
+  const amt = Math.round(2.55 * percent);
+  const clamp = (v: number) => Math.max(0, Math.min(255, v));
+  const r = clamp((num >> 16) + amt);
+  const g = clamp(((num >> 8) & 0x00ff) + amt);
+  const b = clamp((num & 0x0000ff) + amt);
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
+  let tex = scene.textures.exists('tileset')
+    ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
+    : scene.textures.createCanvas('tileset', TS * 7, TS);
   if (!tex) throw new Error('tileset canvas failed');
   const ctx = tex.getContext();
+  ctx.clearRect(0, 0, TS * 7, TS);
 
-  // T.FLOOR (0): dark indoor planks
+  // T.FLOOR (0): indoor planks
   (() => {
     const ox = 0;
-    ctx.fillStyle = '#18182a';
+    ctx.fillStyle = palette.worldFloor;
     ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = '#1d1d34';
+    ctx.strokeStyle = shadeColor(palette.worldFloor, 4);
     ctx.lineWidth = 0.5;
     for (let y = 0; y < TS; y += 4) { ctx.beginPath(); ctx.moveTo(ox, y); ctx.lineTo(ox + TS, y); ctx.stroke(); }
   })();
@@ -127,9 +161,9 @@ function createTilesetTexture(scene: Phaser.Scene): void {
   // T.WALL (1): brick wall
   (() => {
     const ox = TS;
-    ctx.fillStyle = '#1e1e30';
+    ctx.fillStyle = palette.worldWall;
     ctx.fillRect(ox, 0, TS, TS);
-    const bA = '#3c3a5a', bB = '#444268', mort = '#18182a';
+    const bA = shadeColor(palette.worldWall, -8), bB = palette.worldWallShadow, mort = shadeColor(palette.worldWall, -25);
     for (let row = 0; row < 2; row++) {
       const ry = row * 8;
       const sh = row % 2 === 0 ? 0 : 4;
@@ -150,56 +184,56 @@ function createTilesetTexture(scene: Phaser.Scene): void {
   // T.GRASS (2): varied outdoor green
   (() => {
     const ox = TS * 2;
-    ctx.fillStyle = '#1a2c18';
+    ctx.fillStyle = palette.worldGrass;
     ctx.fillRect(ox, 0, TS, TS);
-    const shades = ['#1e3020', '#22341c', '#243820', '#1c2c18'];
+    const shades = [shadeColor(palette.worldGrass, 6), shadeColor(palette.worldGrass, -6), shadeColor(palette.worldGrass, 12), shadeColor(palette.worldGrass, -12)];
     [[2,3],[5,1],[8,5],[11,2],[3,9],[7,12],[12,8],[4,13],[9,6],[14,10],[1,15],[13,14],[6,7],[0,11]].forEach(([gx, gy], i) => {
       ctx.fillStyle = shades[i % shades.length];
       ctx.fillRect(ox + gx, gy, 1, 1);
     });
   })();
 
-  // T.ROAD (3): paved grey
+  // T.ROAD (3): paved
   (() => {
     const ox = TS * 3;
-    ctx.fillStyle = '#2c2c3a';
+    ctx.fillStyle = palette.worldRoad;
     ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = '#22222e'; ctx.fillRect(ox, 0, TS, 1); ctx.fillRect(ox, TS - 1, TS, 1);
-    ctx.fillStyle = '#383848'; ctx.fillRect(ox + 1, 1, TS - 2, 1);
-    ctx.fillStyle = '#44445a'; ctx.fillRect(ox + 2, 7, 3, 2); ctx.fillRect(ox + 9, 7, 3, 2);
+    ctx.fillStyle = palette.worldRoadBorder; ctx.fillRect(ox, 0, TS, 1); ctx.fillRect(ox, TS - 1, TS, 1);
+    ctx.fillStyle = shadeColor(palette.worldRoad, 10); ctx.fillRect(ox + 1, 1, TS - 2, 1);
+    ctx.fillStyle = shadeColor(palette.worldRoad, 20); ctx.fillRect(ox + 2, 7, 3, 2); ctx.fillRect(ox + 9, 7, 3, 2);
   })();
 
   // T.PLAZA (4): stone tiles with subtle grid
   (() => {
     const ox = TS * 4;
-    ctx.fillStyle = '#20202e';
+    ctx.fillStyle = palette.worldPlaza;
     ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = '#2a2a3c'; ctx.lineWidth = 0.75;
+    ctx.strokeStyle = shadeColor(palette.worldPlaza, 5); ctx.lineWidth = 0.75;
     const h = TS / 2;
     [[0,0],[h,0],[0,h],[h,h]].forEach(([dx, dy]) => ctx.strokeRect(ox + dx + 0.5, dy + 0.5, h - 1, h - 1));
-    ctx.fillStyle = '#26263a';
+    ctx.fillStyle = shadeColor(palette.worldPlaza, -8);
     [[1,1],[h+1,1],[1,h+1],[h+1,h+1]].forEach(([dx, dy]) => ctx.fillRect(ox + dx, dy, 2, 1));
   })();
 
-  // T.DOOR (5): warm wood entrance
+  // T.DOOR (5): entrance
   (() => {
     const ox = TS * 5;
-    ctx.fillStyle = '#2a341e'; ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = '#5a3c14'; ctx.fillRect(ox + 3, 1, 10, 14);
-    ctx.fillStyle = '#0e0c12'; ctx.fillRect(ox + 5, 2, 6, 11);
-    ctx.fillStyle = '#c08833'; ctx.fillRect(ox + 9, 7, 2, 3);
-    ctx.fillStyle = '#3e2a0e'; ctx.fillRect(ox + 3, 14, 10, 2);
+    ctx.fillStyle = shadeColor(palette.worldGrass, -15); ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = palette.worldDoor; ctx.fillRect(ox + 3, 1, 10, 14);
+    ctx.fillStyle = shadeColor(palette.worldDoor, -35); ctx.fillRect(ox + 5, 2, 6, 11);
+    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 9, 7, 2, 3);
+    ctx.fillStyle = shadeColor(palette.worldDoor, -45); ctx.fillRect(ox + 3, 14, 10, 2);
   })();
 
-  // T.BUILT (6): teal completed build
+  // T.BUILT (6): completed build
   (() => {
     const ox = TS * 6;
-    ctx.fillStyle = '#142218'; ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = '#2daa66'; ctx.lineWidth = 1.5;
+    ctx.fillStyle = shadeColor(palette.worldGrass, -30); ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = palette.worldHighlight; ctx.lineWidth = 1.5;
     ctx.strokeRect(ox + 2, 2, TS - 4, TS - 4);
-    ctx.fillStyle = '#1a8844';
+    ctx.fillStyle = shadeColor(palette.worldHighlight, -25);
     ctx.fillRect(ox + 6, 4, 4, 8); ctx.fillRect(ox + 4, 6, 8, 4);
-    ctx.fillStyle = '#44ee88'; ctx.fillRect(ox + 7, 7, 2, 2);
+    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 7, 7, 2, 2);
   })();
 
   tex.refresh();
@@ -291,13 +325,16 @@ function createNPCTextures(scene: Phaser.Scene): void {
 
 // ── Dialogue trees ─────────────────────────────────────────────────────────────
 
-type DialogueNode = { text: string; responses: { label: string; next: string | null }[] };
+// M21 §8 — mood is an abstract token; DialogueOverlay resolves it to a
+// portrait emoji/frame, never a hardcoded sprite path baked in here.
+type DialogueNode = { text: string; responses: { label: string; next: string | null }[]; mood?: 'happy' | 'tired' | 'determined' };
 
 const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
   // ── Mira (rotation: 3 trees) ───────────────────────────────────────────────
   mira_intro: {
     mira_intro: {
       text: "Hey. I'm Mira. Things have been tense lately, but people still look out for each other down here.",
+      mood: 'happy',
       responses: [
         { label: "What's going on?", next: 'mira_tension' },
         { label: 'Nice to meet you', next: null },
@@ -305,6 +342,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_tension: {
       text: "The corner store almost closed last month. If we keep the kitchen going, folks won't go hungry when money's tight.",
+      mood: 'tired',
       responses: [
         { label: 'I can help with that', next: 'mira_kitchen' },
         { label: "I'll keep that in mind", next: null },
@@ -312,12 +350,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_kitchen: {
       text: "Every bit helps. Even $5 or a few hours of energy goes a long way. Hit the build node nearby to contribute.",
+      mood: 'determined',
       responses: [{ label: 'Got it, thanks', next: null }],
     },
   },
   mira_day2: {
     mira_day2: {
       text: "My grandma grew up on this block. She'd say the neighbourhood was alive back then — everyone knew everyone. We can get that back.",
+      mood: 'happy',
       responses: [
         { label: "What changed?", next: 'mira_change' },
         { label: "That's beautiful", next: null },
@@ -325,6 +365,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_change: {
       text: "Rents tripled in twelve years. Half the old families moved out. The new folks don't have time to connect — they're grinding just to survive.",
+      mood: 'tired',
       responses: [
         { label: "What can we do?", next: 'mira_action' },
         { label: "Hard to hear", next: null },
@@ -332,12 +373,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_action: {
       text: "Start small. A shared meal. A community fridge. Once people eat together, they organize together. That's the whole game.",
+      mood: 'determined',
       responses: [{ label: 'I hear you', next: null }],
     },
   },
   mira_day3: {
     mira_day3: {
       text: "Heard someone tried to get the community kitchen shut down — noise complaints filed by a landlord who bought the building next door.",
+      mood: 'tired',
       responses: [
         { label: "That's outrageous", next: 'mira_outrage' },
         { label: "What happened?", next: 'mira_outrage' },
@@ -345,6 +388,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_outrage: {
       text: "Thirty neighbors showed up to the planning meeting. Landlord backed off. That's what solidarity looks like. Numbers matter.",
+      mood: 'determined',
       responses: [
         { label: 'How can I help?', next: 'mira_help' },
         { label: 'Inspiring', next: null },
@@ -352,6 +396,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     mira_help: {
       text: "Keep building. Keep showing up. And if you have cash or energy to spare — the kitchen fund never turns it away.",
+      mood: 'happy',
       responses: [{ label: "I'm with you", next: null }],
     },
   },
@@ -360,6 +405,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
   leo_intro: {
     leo_intro: {
       text: "Leo. I spend most of my time at the plaza — trying to keep the Town Hall accountable. Full-time job.",
+      mood: 'tired',
       responses: [
         { label: "What does the Town Hall do?", next: 'leo_hall' },
         { label: 'Sounds exhausting', next: null },
@@ -367,6 +413,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_hall: {
       text: "Officially? Manages disputes. In practice? Decides who gets squeezed and who gets protected. The Legal Fund changes that math.",
+      mood: 'tired',
       responses: [
         { label: 'How does the Legal Fund help?', next: 'leo_legal' },
         { label: 'I see. Thanks', next: null },
@@ -374,12 +421,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_legal: {
       text: "Gives people options when they can't afford a lawyer. Keeps power from just rolling over the block.",
+      mood: 'determined',
       responses: [{ label: "I'll try to fund it", next: null }],
     },
   },
   leo_day2: {
     leo_day2: {
       text: "You know what the most powerful thing in this district is? A resident who shows up informed. Most people don't realize that.",
+      mood: 'happy',
       responses: [
         { label: "Informed about what?", next: 'leo_info' },
         { label: 'How do I get informed?', next: 'leo_info' },
@@ -387,6 +436,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_info: {
       text: "Zoning laws, eviction rules, tenants' rights. The Town Hall keeps records — if you dig in, you can catch them bending the rules.",
+      mood: 'happy',
       responses: [
         { label: "And then what?", next: 'leo_then' },
         { label: "I'll look into it", next: null },
@@ -394,12 +444,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_then: {
       text: "You show up, you cite the code, you bring three friends. They can ignore one person. They can't ignore a crowd with evidence.",
+      mood: 'determined',
       responses: [{ label: 'Power move', next: null }],
     },
   },
   leo_day3: {
     leo_day3: {
       text: "Big vote coming up at Town Hall. They want to rezone the empty lot on 5th — market housing, no affordable units required.",
+      mood: 'tired',
       responses: [
         { label: "Can we stop it?", next: 'leo_stop' },
         { label: "What happens if it passes?", next: 'leo_stop' },
@@ -407,6 +459,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_stop: {
       text: "Only if we make noise. The Legal Fund lets us challenge bad decisions in writing. Paper trails scare developers more than protests.",
+      mood: 'determined',
       responses: [
         { label: "How do I help fund it?", next: 'leo_fund' },
         { label: "I'll spread the word", next: null },
@@ -414,6 +467,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     leo_fund: {
       text: "Hit the Legal Fund build node in the plaza. Every dollar we raise is one more letter their lawyer has to answer.",
+      mood: 'determined',
       responses: [{ label: "On it", next: null }],
     },
   },
@@ -422,6 +476,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
   elena_intro: {
     elena_intro: {
       text: "Elena. I organize the Solar Cooperative up here. The utility company wants us dependent on them forever.",
+      mood: 'determined',
       responses: [
         { label: 'Why solar?', next: 'elena_solar' },
         { label: 'Interesting approach', next: null },
@@ -429,6 +484,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_solar: {
       text: "Energy independence. When the grid goes down during a crisis, neighbors with solar can still share power.",
+      mood: 'happy',
       responses: [
         { label: 'How can I help?', next: 'elena_help' },
         { label: 'I understand', next: null },
@@ -436,12 +492,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_help: {
       text: "Find the solar node nearby. Cash buys panels. Your energy buys installation time. Every bit lowers stress across the district.",
+      mood: 'determined',
       responses: [{ label: "I'm on it", next: null }],
     },
   },
   elena_day2: {
     elena_day2: {
       text: "People think solar is expensive. It was — ten years ago. Now the panels cost less than a month's rent.",
+      mood: 'happy',
       responses: [
         { label: "So why aren't more people doing it?", next: 'elena_barrier' },
         { label: 'Good to know', next: null },
@@ -449,6 +507,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_barrier: {
       text: "Landlords. They own the rooftops. They could install panels and share the savings — but there's no short-term profit, so they don't.",
+      mood: 'tired',
       responses: [
         { label: "What's the workaround?", next: 'elena_coop' },
         { label: "That's frustrating", next: null },
@@ -456,12 +515,14 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_coop: {
       text: "A co-op buys the roof space collectively. We've done it on three buildings. The fourth is in progress — that's the node you can fund.",
+      mood: 'determined',
       responses: [{ label: 'Count me in', next: null }],
     },
   },
   elena_day3: {
     elena_day3: {
       text: "Had a call with a city planner last week. They're interested in subsidizing co-op solar if we hit a critical mass of installs.",
+      mood: 'happy',
       responses: [
         { label: "Critical mass meaning what?", next: 'elena_threshold' },
         { label: "That's promising", next: null },
@@ -469,6 +530,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_threshold: {
       text: "Twenty percent of rooftops in the district. We're at eleven. Get us to twenty and the city covers forty percent of future costs.",
+      mood: 'tired',
       responses: [
         { label: "So every install counts double", next: 'elena_double' },
         { label: "I'll help push it", next: null },
@@ -476,6 +538,7 @@ const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
     },
     elena_double: {
       text: "Exactly. One install brings the next one closer to free. Collective action has compound interest — people forget that.",
+      mood: 'determined',
       responses: [{ label: 'I love that', next: null }],
     },
   },
@@ -535,6 +598,19 @@ export class WorldScene extends Phaser.Scene {
   private currentWeatherTier: WeatherTier = 'none';
   private lastLampAlpha = -1;
 
+  // M21 — camera/palette/dressing/juice state
+  private lastActiveSkin = '';
+  private currentInteriorId: string | null = null;
+  private nodePrompts: Map<string, InteractionPrompt> = new Map();
+  private npcPrompts: Map<string, InteractionPrompt> = new Map();
+  private bikePrompt!: InteractionPrompt;
+  private dressingSprites: Phaser.GameObjects.Rectangle[] = [];
+  private currentDressingTier: DressingTier | null = null;
+  private ambientLight: AmbientLightLayer | null = null;
+  private playerShadow!: Phaser.GameObjects.Ellipse;
+  private npcShadows: Map<string, Phaser.GameObjects.Ellipse> = new Map();
+  private followingPlayer = true;
+
   // Courier Rush Cargo Bike portal (near Sal's Kitchen / Grocer)
   private bikePortal = { x: 18 * TS + TS / 2, y: 55 * TS + TS / 2 };
   private bikeMarker!: Phaser.GameObjects.Graphics;
@@ -548,7 +624,7 @@ export class WorldScene extends Phaser.Scene {
   constructor() { super({ key: 'WorldScene' }); }
 
   preload(): void {
-    createTilesetTexture(this);
+    createTilesetTexture(this, getActiveWorldPalette());
     createPlayerTexture(this);
     createNPCTextures(this);
   }
@@ -593,6 +669,10 @@ export class WorldScene extends Phaser.Scene {
       this.drawNodeMarker(g, node.position.x, node.position.y, false);
       g.setDepth(4);
       this.nodeMarkers.set(node.id, g);
+      // M21 §7 — bobbing bounce-bubble proximity prompt, layered above the
+      // always-visible location ring so the ring still helps navigation
+      // from a distance while the bubble signals "you can act here now".
+      this.nodePrompts.set(node.id, new InteractionPrompt(this, node.position.x, node.position.y, '🔨'));
     });
 
     // NPCs
@@ -606,6 +686,11 @@ export class WorldScene extends Phaser.Scene {
       const img = this.add.image(npc.position.x, npc.position.y, 'npcs', npcFrame[npc.id] ?? 0);
       img.setDepth(5);
       this.npcSprites.set(npc.id, img);
+      // M21 §5 — soft drop-shadow ellipse under each NPC (below the sprite's depth 5)
+      const shadow = this.add.ellipse(npc.position.x, npc.position.y + 6, 12, 5, 0x000000, 0.3).setDepth(4.5);
+      this.npcShadows.set(npc.id, shadow);
+      // M21 §7 — proximity bounce-bubble
+      this.npcPrompts.set(npc.id, new InteractionPrompt(this, npc.position.x, npc.position.y, '💬'));
     });
 
     // Fetch daily gossip and inject into NPC dialogue trees
@@ -637,6 +722,7 @@ export class WorldScene extends Phaser.Scene {
       backgroundColor: 'rgba(15,23,42,0.7)',
       padding: { x: 3, y: 1 },
     }).setOrigin(0.5, 1).setDepth(4);
+    this.bikePrompt = new InteractionPrompt(this, this.bikePortal.x, this.bikePortal.y, '🚲');
 
     // Subscribe to crisis state to spawn/remove division flyers
     useGameStore.subscribe((state) => {
@@ -654,12 +740,33 @@ export class WorldScene extends Phaser.Scene {
       }
     });
 
-    // Camera
+    // Camera — M21 §1: viewport-independent zoom so the camera always frames
+    // a fixed 12×10 tile count regardless of the player's window/monitor
+    // size (Scale.RESIZE otherwise lets the effective FOV in tiles balloon
+    // on wide desktop monitors — the actual "Ant Farm" root cause, not the
+    // zoom API). The startFollow lerp (0.1, 0.1) already matched the spec's
+    // own recommendation and is unchanged.
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.startFollow(sprite, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(computeViewportZoom(this.scale.width, this.scale.height, TS));
+    this.cameras.main.setDeadzone(16, 16);
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setBackgroundColor('#1a2c18');
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      this.cameras.main.setZoom(computeViewportZoom(gameSize.width, gameSize.height, TS));
+      this.ambientLight?.resize(gameSize.width, gameSize.height);
+    });
+
+    // Rebuild the tileset from whichever skin's palette is active whenever
+    // it changes — same "recolor without a scene restart" mechanism
+    // switchSkin() already uses for HUD colors (Test 21.2).
+    this.lastActiveSkin = useGameStore.getState().meta.activeSkin;
+    useGameStore.subscribe((state) => {
+      if (state.meta.activeSkin !== this.lastActiveSkin) {
+        this.lastActiveSkin = state.meta.activeSkin;
+        createTilesetTexture(this, getActiveWorldPalette());
+      }
+    });
 
     // Input
     inputManager.init(this);
@@ -670,11 +777,23 @@ export class WorldScene extends Phaser.Scene {
     this.thumbstickGraphic.setScrollFactor(0);
     this.thumbstickGraphic.setDepth(100);
 
-    // Resilience visual tier — apply initial state and subscribe to changes
+    // Resilience visual tier — apply initial state and subscribe to changes.
+    // M21 §4: also swap the small set of street-front world-dressing props
+    // (boarded shopfronts / market stalls / flower planters), layered
+    // independently from these CSS filter classes, which stay exactly as-is.
     this.applyResilienceTier(useGameStore.getState().commons.resilienceScore);
+    this.updateWorldDressing(useGameStore.getState().commons.resilienceScore);
     useGameStore.subscribe((state) => {
       this.applyResilienceTier(state.commons.resilienceScore);
+      this.updateWorldDressing(state.commons.resilienceScore);
     });
+
+    // M21 §3 — Interior Furnishing: named-room props (Pip's Courier Room,
+    // Community Kitchen, Town Assembly Hall)
+    this.renderInteriorProps();
+
+    // M21 §5 — soft drop-shadow ellipse under the player
+    this.playerShadow = this.add.ellipse(sprite.x, sprite.y + 6, 12, 5, 0x000000, 0.3).setDepth(4.5);
 
     // Scraps the cat
     this.scraps = new ScrapsEntity(this, 160, 53 * 16);
@@ -711,6 +830,17 @@ export class WorldScene extends Phaser.Scene {
       ).setScrollFactor(0).setDepth(92).setAngle(12);
       this.rainDrops.push(drop);
     }
+
+    // M21 §5 — ambient warm-light "juice" layer: a separate multiply-blended
+    // HTML canvas above the Phaser canvas (not a second CSS `filter:` rule —
+    // filters on the same element don't compose, same lesson M10's
+    // frost/rain overlays already applied).
+    const gameContainerEl = document.getElementById('game-container');
+    if (gameContainerEl) {
+      this.ambientLight = new AmbientLightLayer(gameContainerEl);
+      this.ambientLight.resize(screenW, screenH);
+    }
+
     this.updateWeather(weatherTier(useGameStore.getState().pulseState?.multipliers.heat ?? 1.0));
     useGameStore.subscribe((state) => {
       this.updateWeather(weatherTier(state.pulseState?.multipliers.heat ?? 1.0));
@@ -738,12 +868,14 @@ export class WorldScene extends Phaser.Scene {
       }
     }
 
-    this.player.update();
+    this.player.update(delta);
 
     // Day/night cycle: advance ticks, update camera tint every ~500ms
     this.ticksSinceDay += delta;
     this.updateDayNight();
     this.updateRainDrops(delta);
+    this.updateInteriorFraming();
+    this.updateShadowsAndLight();
 
     // Scraps
     const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
@@ -890,6 +1022,25 @@ export class WorldScene extends Phaser.Scene {
 
   private handleInteractions(): void {
     if (this.crisisOpen) { WorldScene.hud?.hideAction(); return; }
+
+    // M21 §7 — bounce-bubble proximity prompts (Test 21.6): appear as soon as
+    // the player enters each interactable's own radius, not just the single
+    // nearest one used for the actual [E] action below.
+    this.npcs.forEach(npc => {
+      const prompt = this.npcPrompts.get(npc.id);
+      if (!prompt) return;
+      if (npc.isActive) prompt.show(); else prompt.hide();
+    });
+    this.constructionNodes.forEach(node => {
+      const prompt = this.nodePrompts.get(node.id);
+      if (!prompt) return;
+      const dx = this.player.x - node.position.x, dy = this.player.y - node.position.y;
+      if (Math.hypot(dx, dy) <= 42) prompt.show(); else prompt.hide();
+    });
+    {
+      const dx = this.player.x - this.bikePortal.x, dy = this.player.y - this.bikePortal.y;
+      if (Math.hypot(dx, dy) <= 38) this.bikePrompt.show(); else this.bikePrompt.hide();
+    }
 
     const nearbyNpc = this.npcs.find(npc => npc.isActive);
     const nearbyBuild = this.constructionNodes.find(node => {
@@ -1053,6 +1204,7 @@ export class WorldScene extends Phaser.Scene {
       }
       tree[gossipKey] = {
         text: gossip,
+        mood: 'tired',
         responses: [{ label: 'Good to know', next: null }],
       };
     }
@@ -1094,15 +1246,115 @@ export class WorldScene extends Phaser.Scene {
     const container = document.getElementById('game-container');
     if (!container) return;
     container.classList.remove('world--thriving', 'world--stabilising', 'world--crisis', 'world--emergency');
-    if (score < 15) {
-      container.classList.add('world--emergency');
-    } else if (score < 30) {
-      container.classList.add('world--crisis');
-    } else if (score < 60) {
-      container.classList.add('world--stabilising');
-    } else {
-      container.classList.add('world--thriving');
+    container.classList.add(`world--${resilienceTier(score)}`);
+  }
+
+  /** M21 §4 — swaps the small, fixed set of street-front dressing props (boarded
+   * shopfronts / market stalls / flower planters) for the current resilience tier. */
+  private updateWorldDressing(score: number): void {
+    const tier = dressingTierFor(score);
+    if (tier === this.currentDressingTier) return;
+    this.currentDressingTier = tier;
+
+    this.dressingSprites.forEach(s => s.destroy());
+    this.dressingSprites = [];
+
+    const drawSpec: Record<DressingPropToken, { w: number; h: number; color: number }> = {
+      PROP_BOARDED_WINDOW: { w: 12, h: 10, color: 0x5a4a3a },
+      PROP_CRACKED_ASPHALT: { w: 14, h: 4, color: 0x1c1c26 },
+      PROP_MARKET_STALL: { w: 16, h: 10, color: 0xcc8844 },
+      PROP_FLOWER_PLANTER: { w: 10, h: 6, color: 0xdd5588 },
+      PROP_BUNTING: { w: 16, h: 4, color: 0xeecc44 },
+    };
+    dressingPropsForTier(tier).forEach(placement => {
+      const spec = drawSpec[placement.token];
+      const px = placement.x * TS + TS / 2, py = placement.y * TS + TS / 2;
+      this.dressingSprites.push(this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3));
+    });
+  }
+
+  /** M21 §3 — renders each named interior's furniture props as depth-3 hand-drawn
+   * rectangles, resolved from InteriorProps.ts's abstract PropTokens (same
+   * hand-drawn-primitive technique createTilesetTexture()/spawnFlyers() already use —
+   * no new asset pipeline needed, and the Headless Simulation boundary stays intact
+   * since InteriorProps.ts itself has zero Phaser/rendering knowledge). */
+  private renderInteriorProps(): void {
+    const drawSpec: Record<PropToken, { w: number; h: number; color: number }> = {
+      PROP_BIKE_RACK: { w: 12, h: 6, color: 0x556677 },
+      PROP_COT: { w: 14, h: 8, color: 0x774433 },
+      PROP_BOXES: { w: 10, h: 10, color: 0x996633 },
+      PROP_LAMP: { w: 4, h: 8, color: 0xffdd88 },
+      PROP_TABLE: { w: 20, h: 8, color: 0x8b5a2b },
+      PROP_STOVE: { w: 10, h: 10, color: 0x444444 },
+      PROP_CRATES: { w: 10, h: 8, color: 0xcc8844 },
+      PROP_BENCH: { w: 14, h: 5, color: 0x775533 },
+      PROP_CHALKBOARD: { w: 12, h: 10, color: 0x223322 },
+      PROP_BANNER: { w: 14, h: 4, color: 0xdd4444 },
+    };
+    Object.values(INTERIORS).forEach(def => {
+      def.props.forEach(prop => {
+        const spec = drawSpec[prop.token];
+        const px = prop.x * TS + TS / 2, py = prop.y * TS + TS / 2;
+        this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3);
+      });
+    });
+  }
+
+  /** M21 §1 — smooth pan-to-center when the player crosses into a named
+   * interior's room boundary, then resumes the normal follow lerp. */
+  private updateInteriorFraming(): void {
+    const tx = Math.floor(this.player.x / TS), ty = Math.floor(this.player.y / TS);
+    const interior = findInteriorAtTile(tx, ty);
+    const id = interior?.id ?? null;
+    if (id === this.currentInteriorId) return;
+    this.currentInteriorId = id;
+
+    if (interior) {
+      const cx = ((interior.rect.x1 + interior.rect.x2) / 2) * TS;
+      const cy = ((interior.rect.y1 + interior.rect.y2) / 2) * TS;
+      this.cameras.main.stopFollow();
+      this.followingPlayer = false;
+      this.cameras.main.pan(cx, cy, 350, 'Sine.easeInOut', false, (_cam, progress) => {
+        if (progress === 1) {
+          this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
+          this.followingPlayer = true;
+        }
+      });
+    } else if (!this.followingPlayer) {
+      this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
+      this.followingPlayer = true;
     }
+  }
+
+  /** M21 §5 — keeps drop-shadow ellipses under moving entities and redraws the
+   * ambient warm-light layer each frame from the player's current screen
+   * position plus any nearby lit doorway. Verified to compose (not fight)
+   * with the day/night tint, resilience CSS filter, and weather overlay —
+   * same three-independent-layers check M10's weather system already did —
+   * because this canvas only ever paints inside its warm-gradient circles
+   * and stays fully transparent (no `multiply` effect) everywhere else. */
+  private updateShadowsAndLight(): void {
+    this.playerShadow.setPosition(this.player.x, this.player.y + 6);
+    this.npcs.forEach(npc => {
+      const shadow = this.npcShadows.get(npc.id);
+      const sprite = this.npcSprites.get(npc.id);
+      if (shadow && sprite) shadow.setPosition(sprite.x, sprite.y + 6);
+    });
+
+    if (!this.ambientLight) return;
+    const cam = this.cameras.main;
+    const toScreen = (wx: number, wy: number) => ({
+      x: (wx - cam.worldView.x) * cam.zoom,
+      y: (wy - cam.worldView.y) * cam.zoom,
+    });
+    const lights = [{ ...toScreen(this.player.x, this.player.y), radius: 35 * cam.zoom }];
+    for (const door of DOOR_TILES) {
+      const wx = door.x * TS + TS / 2, wy = door.y * TS + TS / 2;
+      if (wx < cam.worldView.x - TS || wx > cam.worldView.right + TS ||
+          wy < cam.worldView.y - TS || wy > cam.worldView.bottom + TS) continue;
+      lights.push({ ...toScreen(wx, wy), radius: 25 * cam.zoom });
+    }
+    this.ambientLight.render(lights);
   }
 
   private drawThumbstick(): void {

@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { inputManager, type Facing } from '../InputManager';
 
 const PLAYER_SPEED = 80; // pixels per second
+const FRAME_SIZE = 16; // px — matches WorldScene's TS
 
 // Idle frame per direction in the 8-frame spritesheet (even indices = step A)
 const FACING_FRAME: Record<Facing, number> = {
@@ -13,6 +14,7 @@ const FACING_FRAME: Record<Facing, number> = {
 
 export class PlayerEntity {
   private readonly sprite: Phaser.Physics.Arcade.Sprite;
+  private bobTime = 0;
 
   constructor(sprite: Phaser.Physics.Arcade.Sprite) {
     this.sprite = sprite;
@@ -21,7 +23,7 @@ export class PlayerEntity {
     this.sprite.setFrame(FACING_FRAME.down);
   }
 
-  update(): void {
+  update(delta = 16): void {
     const { dx, dy } = inputManager.getDirection();
     const facing = inputManager.getFacing();
     const body = this.sprite.body as Phaser.Physics.Arcade.Body;
@@ -37,6 +39,20 @@ export class PlayerEntity {
       this.sprite.anims.stop();
       this.sprite.setFrame(FACING_FRAME[facing]);
     }
+
+    // M21 §6 — ±2px walk bob. Offsets the sprite's vertical origin (a pure
+    // render-time transform), never the physics body's x/y, so the AABB
+    // collision box used by CollisionSystem.ts stays exactly where the
+    // simulation puts it. Only active while actually moving, per spec.
+    // Not verified in a live browser this session — visual-only, low-risk,
+    // but flag for a manual QA pass per M16/M17's scoping convention.
+    if (moving) {
+      this.bobTime += delta;
+    } else {
+      this.bobTime = 0;
+    }
+    const bobPx = moving ? Math.sin(this.bobTime / 90) * 2 : 0;
+    this.sprite.setOrigin(0.5, 0.5 - bobPx / FRAME_SIZE);
   }
 
   get x(): number {

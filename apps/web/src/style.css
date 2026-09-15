@@ -199,6 +199,9 @@
   color: #edf0ff;
   border-radius: 999px;
   padding: 0.65rem 1rem;
+  min-height: 2.75rem; /* M21 §10 — 44px WCAG-adjacent touch target */
+  display: flex;
+  align-items: center;
   font-size: 0.72rem;
   font-family: ui-monospace, monospace;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
@@ -221,6 +224,9 @@
   color: #66dd88;
   border-radius: 999px;
   padding: 0.65rem 1rem;
+  min-height: 2.75rem; /* M21 §10 — 44px WCAG-adjacent touch target */
+  display: flex;
+  align-items: center;
   font-size: 0.72rem;
   font-family: ui-monospace, monospace;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
@@ -276,10 +282,36 @@
   cursor: pointer;
 }
 
+.dialogue-body {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+/* M21 §8 — avatar-portrait pane; frame swaps per DialogueOverlay's mood token */
+.dialogue-portrait {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 8px;
+  border: 1px solid #434d79;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: #22381f;
+  transition: background 0.2s ease;
+}
+
+.dialogue-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .dialogue-text {
   color: #edf0ff;
   min-height: 4.5rem;
-  font-size: 0.75rem;
+  font-size: 1rem; /* M21 §8 — bumped from 0.75rem for legibility */
   line-height: 1.5;
   margin-bottom: 0.65rem;
 }
@@ -2180,18 +2212,22 @@
 
 /* ── RadioWidget ──────────────────────────────────────────── */
 
+/* M21 §9 — retro boombox/tape-deck shell. Reuses the skin CSS custom
+   properties already applied to <html> by ThemeManager.applyPalette(), so
+   the widget re-skins across solarpunk/retro_gb for free, with the
+   original warm-amber values kept as the fallback (no skin loaded yet). */
 .radio-widget {
   position: absolute;
   bottom: 3.5rem;
   right: 0.5rem;
   width: 240px;
-  background: #1a1208;
-  border: 1px solid #3a2c10;
-  border-radius: 6px;
+  background: var(--skin-hud-bg, #1a1208);
+  border: 2px solid var(--skin-hud-border, #3a2c10);
+  border-radius: 10px;
   padding: 12px;
   z-index: 50;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-  color: #e8cc88;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.04);
+  color: var(--skin-hud-text, #e8cc88);
   font-family: monospace;
 }
 
@@ -2311,6 +2347,7 @@
   border: 1px solid #3a2c10;
   color: #e8cc88;
   padding: 6px;
+  min-height: 2.75rem; /* M21 §10 — 44px WCAG-adjacent touch target */
   border-radius: 3px;
   cursor: pointer;
   font-family: monospace;
@@ -2319,6 +2356,39 @@
 
 .radio-controls button:hover { background: #3a2c10; }
 .radio-controls button:focus-visible { outline: 2px solid #66dd88; }
+
+/* ── M21 §5 — Ambient light "juice" layer ─────────────────── */
+/* A separate multiply-blended canvas above the Phaser canvas — not a second
+   `filter:` rule on #game-container, since CSS filters on the same element
+   don't compose (same lesson the M10 weather overlays already applied). */
+.ambient-light-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  z-index: 15;
+}
+
+/* ── M21 §9 — Radio Free Commons waveform ─────────────────── */
+.radio-waveform {
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin-bottom: 8px;
+  background: #0a0800;
+  border: 1px solid #3a2c10;
+  border-radius: 3px;
+}
+
+/* ── M21 §10 — Accessibility: 44px minimum touch target ───── */
+/* Every HUD icon button (registered via TopHUD.registerButton() with the
+   `${id}-open-btn` convention) was 2.2rem (35.2px) — below WCAG-adjacent
+   44x44px touch-target guidance on mobile. Bumped here in one rule instead
+   of touching every individual `.x-open-btn` block. */
+[class$="-open-btn"] {
+  width: 2.75rem;
+  height: 2.75rem;
+}
 
 /* ── Global focus-visible (WCAG AA) ──────────────────────── */
 

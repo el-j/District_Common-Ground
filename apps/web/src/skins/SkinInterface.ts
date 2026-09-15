@@ -43,6 +43,19 @@ export interface SkinPalette {
   hudBg: string;
   hudBorder: string;
   hudText: string;
+  // M21 — world-tile-level fields (spec §4/§7.2). Optional so existing/older
+  // manifests (e.g. labor_woodcut, community themes) stay valid; WorldScene
+  // falls back to the pre-M21 hardcoded hex values via
+  // ThemeManager.resolveWorldPalette() when these are absent.
+  worldFloor?: string;
+  worldWall?: string;
+  worldWallShadow?: string;
+  worldGrass?: string;
+  worldRoad?: string;
+  worldRoadBorder?: string;
+  worldPlaza?: string;
+  worldDoor?: string;
+  worldHighlight?: string;
 }
 
 export interface SkinAudioProfile {

@@ -28,9 +28,6 @@ MinigameLoader.registerLocalMinigame(
   async () => import('@district-cg/minigame-courier-rush'),
 );
 
-export const VIRTUAL_WIDTH = 320;
-export const VIRTUAL_HEIGHT = 240;
-
 function getViewportSize(): { width: number; height: number } {
   return {
     width: Math.max(window.innerWidth, 320),

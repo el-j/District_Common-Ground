@@ -9,7 +9,16 @@
     "text": "#ddf8dd",
     "hudBg": "rgba(12,22,10,0.92)",
     "hudBorder": "#2a4a28",
-    "hudText": "#aaddaa"
+    "hudText": "#aaddaa",
+    "worldFloor": "#e2d7c5",
+    "worldWall": "#fff3df",
+    "worldWallShadow": "#3c7a89",
+    "worldGrass": "#7fa655",
+    "worldRoad": "#c46d4e",
+    "worldRoadBorder": "#a85a3e",
+    "worldPlaza": "#d8c7a4",
+    "worldDoor": "#d35400",
+    "worldHighlight": "#ffeaa7"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/solarpunk/tiles.webp",         "tileSize": [16, 16] },

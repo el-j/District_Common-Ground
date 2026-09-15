@@ -5,12 +5,24 @@ export interface DialogueChoice {
   next?: string | null;
 }
 
+/** M21 §8 — abstract mood token, resolved to a portrait emoji/frame here in
+ * the UI layer (never a hardcoded sprite path baked into simulation state,
+ * same EntityToken-style indirection the rest of the game uses). */
+export type DialogueMood = 'happy' | 'tired' | 'determined';
+
 export interface DialogueNode {
   text: string;
   responses: DialogueChoice[];
+  mood?: DialogueMood;
 }
 
 export type DialogueTree = Record<string, DialogueNode>;
+
+const MOOD_PORTRAIT: Record<DialogueMood, { emoji: string; bg: string }> = {
+  happy: { emoji: '🙂', bg: '#22381f' },
+  tired: { emoji: '😪', bg: '#2a2a3a' },
+  determined: { emoji: '😤', bg: '#3a2420' },
+};
 
 export class DialogueOverlay {
   private readonly el: HTMLElement;
@@ -34,8 +46,13 @@ export class DialogueOverlay {
           <span class="dialogue-title">${title}</span>
           <button class="dialogue-close" type="button" aria-label="Close dialogue">×</button>
         </div>
-        <div class="dialogue-text"></div>
-        <div class="dialogue-actions"></div>
+        <div class="dialogue-body">
+          <div class="dialogue-portrait" aria-hidden="true"><span class="dialogue-portrait-emoji"></span></div>
+          <div class="dialogue-content">
+            <div class="dialogue-text"></div>
+            <div class="dialogue-actions"></div>
+          </div>
+        </div>
       </div>
     `;
 
@@ -91,6 +108,8 @@ export class DialogueOverlay {
     const actionsEl = this.el.querySelector<HTMLElement>('.dialogue-actions');
     if (!textEl || !actionsEl) return;
 
+    this.renderPortrait(node.mood ?? 'happy');
+
     textEl.textContent = '';
     actionsEl.innerHTML = '';
 
@@ -115,6 +134,21 @@ export class DialogueOverlay {
     // Focus first choice after render
     const first = actionsEl.querySelector<HTMLButtonElement>('.dialogue-choice');
     first?.focus();
+  }
+
+  private renderPortrait(mood: DialogueMood): void {
+    const portrait = this.el.querySelector<HTMLElement>('.dialogue-portrait');
+    const emojiEl = this.el.querySelector<HTMLElement>('.dialogue-portrait-emoji');
+    if (!portrait || !emojiEl) return;
+    const visual = MOOD_PORTRAIT[mood];
+    portrait.dataset['mood'] = mood;
+    portrait.style.background = visual.bg;
+    emojiEl.textContent = visual.emoji;
+  }
+
+  /** Test-only accessor (Test 21.5) — the currently rendered mood, read back from the DOM. */
+  getCurrentMood(): string | undefined {
+    return this.el.querySelector<HTMLElement>('.dialogue-portrait')?.dataset['mood'];
   }
 
   private typewriter(target: HTMLElement, text: string): void {

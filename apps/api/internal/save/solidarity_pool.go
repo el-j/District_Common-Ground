@@ -3,10 +3,13 @@ package save
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/district-cg/api/internal/middleware"
 )
 
 type SolidarityHandler struct {
@@ -18,11 +21,11 @@ func NewSolidarityHandler(pool *pgxpool.Pool) *SolidarityHandler {
 }
 
 type districtResilienceResp struct {
-	GlobalIndex      float64 `json:"globalIndex"`
-	SolidarityCount  int     `json:"solidarityCount"`
-	ScapegoatCount   int     `json:"scapegoatCount"`
-	TotalDecisions   int     `json:"totalDecisions"`
-	Message          string  `json:"message"`
+	GlobalIndex     float64 `json:"globalIndex"`
+	SolidarityCount int     `json:"solidarityCount"`
+	ScapegoatCount  int     `json:"scapegoatCount"`
+	TotalDecisions  int     `json:"totalDecisions"`
+	Message         string  `json:"message"`
 }
 
 // HandleDistrictResilience serves GET /api/v1/district/resilience
@@ -76,4 +79,52 @@ func (h *SolidarityHandler) HandleDistrictResilience(w http.ResponseWriter, r *h
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		slog.Error("solidarity_pool encode", "err", err)
 	}
+}
+
+type recordCrisisChoiceRequest struct {
+	CrisisID string `json:"crisisId"`
+	Day      int    `json:"day"`
+	Choice   string `json:"choice"`
+}
+
+// HandleRecordCrisisChoice serves POST /api/v1/district/crisis-log (auth required).
+// Records one anonymous crisis-resolution choice (scapegoat/solidarity) so the
+// Global Solidarity Pool computed by HandleDistrictResilience reflects real
+// gameplay instead of only its own test fixtures. No other player data is stored.
+func (h *SolidarityHandler) HandleRecordCrisisChoice(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserID(r)
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if h.pool == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	var req recordCrisisChoiceRequest
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<12)).Decode(&req); err != nil {
+		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+	if req.CrisisID == "" || (req.Choice != "solidarity" && req.Choice != "scapegoat") {
+		http.Error(w, `{"error":"crisisId and a valid choice are required"}`, http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5000000000) // 5s
+	defer cancel()
+
+	_, err := h.pool.Exec(ctx,
+		`INSERT INTO crisis_log (user_id, crisis_id, day, choice) VALUES ($1, $2, $3, $4)`,
+		userID, req.CrisisID, req.Day, req.Choice,
+	)
+	if err != nil {
+		slog.Error("record crisis choice", "err", err)
+		http.Error(w, `{"error":"failed to record crisis choice"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

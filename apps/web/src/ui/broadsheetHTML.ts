@@ -7,6 +7,9 @@ export interface BroadsheetData {
   energyIndex: number;
   dayNumber: number;
   civicHeadlines?: string[];
+  /** Set only when the headline came from the live AI narrative pipeline
+   *  ("live" | "cached"); omitted for the hardcoded-template fallback. */
+  source?: string;
 }
 
 export function buildBroadsheetHTML(data: BroadsheetData): string {
@@ -25,6 +28,7 @@ export function buildBroadsheetHTML(data: BroadsheetData): string {
     <div class="broadsheet-columns">
       <div class="broadsheet-col broadsheet-main">
         <h2 class="broadsheet-headline">${data.headline}</h2>
+        ${data.source ? `<p class="broadsheet-citation">📡 AI Narrative Wire — ${data.source}</p>` : ''}
         <p class="broadsheet-sub">${data.subheadline}</p>
         <blockquote class="broadsheet-quote">
           "${data.npcQuote}"
@@ -43,12 +47,12 @@ export function buildBroadsheetHTML(data: BroadsheetData): string {
             <span class="${energyClass}">${energySign}${energyPct}%</span>
           </div>
         </div>
-        <div class="broadsheet-crossword">
+        <div class="broadsheet-commons-clue">
           <h3>Commons Clue (+5 Energy)</h3>
-          <p class="crossword-clue">Across: Mutual support between neighbors (9)</p>
-          <input class="crossword-input" type="text" maxlength="9" placeholder="_________"
-            aria-label="Crossword answer" autocomplete="off" spellcheck="false" />
-          <div class="crossword-feedback" aria-live="polite"></div>
+          <p class="commons-clue-hint">Across: Mutual support between neighbors (9)</p>
+          <input class="commons-clue-input" type="text" maxlength="9" placeholder="_________"
+            aria-label="Commons Clue answer" autocomplete="off" spellcheck="false" />
+          <div class="commons-clue-feedback" aria-live="polite"></div>
         </div>
         ${data.civicHeadlines && data.civicHeadlines.length > 0 ? `
         <div class="broadsheet-civic">

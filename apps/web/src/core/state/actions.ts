@@ -106,6 +106,7 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
   useGameStore.setState(state => {
     const buffedAmount = amount * (1 + state.commons.constructionSpeedBuff);
     recordedAmount = buffedAmount;
+    const wasLandTrustComplete = state.commons.landTrustProgress >= 100;
     const nextCommons = {
       ...state.commons,
       [node]: Math.min(100, Number(state.commons[node]) + buffedAmount),
@@ -117,10 +118,16 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
       legalFundProgress: nextCommons.legalFundProgress,
     });
 
+    // "Safe Haven" ending: unlocks once, the moment the Community Land Trust
+    // (node E) first reaches 100% — see EPIC-11 Test 11.2.
+    const safeHavenUnlocked = state.commons.safeHavenUnlocked
+      || (node === 'landTrustProgress' && !wasLandTrustComplete && nextCommons.landTrustProgress >= 100);
+
     return {
       commons: {
         ...nextCommons,
         resilienceScore,
+        safeHavenUnlocked,
       },
     };
   });

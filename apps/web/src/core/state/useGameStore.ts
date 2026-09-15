@@ -48,6 +48,7 @@ export interface GameState {
     landTrustProgress: number;
     constructionSpeedBuff: number;
     greenhouseUnlocked: boolean;
+    safeHavenUnlocked: boolean;
   };
   crisisState: {
     activeCrisisId: string | null;
@@ -79,6 +80,7 @@ export const INITIAL_STATE: GameState = {
     landTrustProgress: 0,
     constructionSpeedBuff: 0,
     greenhouseUnlocked: false,
+    safeHavenUnlocked: false,
   },
   crisisState: {
     activeCrisisId: null,

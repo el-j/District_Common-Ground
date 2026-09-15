@@ -34,6 +34,30 @@ export class MinigameLoader {
   }
 
   /**
+   * Load a minigame whose code lives outside this bundle, via a real
+   * `import()` of `manifest.entrypointUrl`. Trust is enforced upstream, not
+   * here: the only manifests this should ever be called with are ones that
+   * came back from `GET /api/v1/games`, which already merges only the
+   * local-registry's healthy plugins with the Go backend's owner-approved
+   * verified catalog (see `internal/kernel/verification_requests.go`) — there
+   * is no other path that feeds this method a manifest, so remote loading
+   * never bypasses that approval gate.
+   */
+  static async loadRemoteMinigame(manifest: MinigameManifest): Promise<void> {
+    if (this.registeredModules.has(manifest.id)) return;
+    if (!manifest.entrypointUrl) {
+      throw new Error(`Minigame "${manifest.id}" has no entrypointUrl to load remotely.`);
+    }
+
+    const mod = (await import(/* @vite-ignore */ manifest.entrypointUrl)) as Partial<MinigameModule>;
+    if (typeof mod.createMinigame !== 'function') {
+      throw new Error(`Remote minigame module "${manifest.id}" does not export a createMinigame() function.`);
+    }
+
+    this.registerLocalMinigame(manifest.id, manifest, async () => mod as MinigameModule);
+  }
+
+  /**
    * List all known minigames
    */
   static listMinigames(): MinigameManifest[] {

@@ -3,13 +3,13 @@
 Stories: `docs/stories/EPIC-08-living-economy.md`
 Planning: `docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md`
 
-> **Audit note (2026-09-15):** `GetPulseState()` has no live-fetch code path at all — it *unconditionally* calls `seasonalFallback(time.Now())`. There is no BLS/EIA/Eurostat/GTFS/NOAA/UNHCR fetch anywhere in the codebase, so the "live data vs. fail-safe fallback" distinction this doc and EPIC-08 describe does not exist in code; the game runs 100% on synthetic seasonal multipliers year-round. This was scoped-down silently rather than documented as a scoping note at the time. See [`M8-FOLLOWUP-live-data-feeds.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M8-FOLLOWUP-live-data-feeds.md) for the tracked follow-up (real fetch, or a formal decision to keep it synthetic-only by design).
+> **Audit note (2026-09-15), resolved same day:** `GetPulseState()` has no live-fetch code path at all — it *unconditionally* calls `seasonalFallback(time.Now())`. There is no BLS/EIA/Eurostat/GTFS/NOAA/UNHCR fetch anywhere in the codebase, so the "live data vs. fail-safe fallback" distinction this doc and EPIC-08 originally described does not exist in code; the game runs 100% on synthetic seasonal multipliers year-round. **Decision: formally re-scoped as synthetic-only** (Option 2 of the follow-up doc) rather than building a real fetch path — `EPIC-08-living-economy.md`'s Data Sources table now says so plainly instead of implying a fallback for when "the real thing" fails. `Wage`/`Transit`, which were a permanent `1.0` no-op, now have their own real (if coarse) synthetic seasonal curves too, so every multiplier actually varies. See [`M8-FOLLOWUP-live-data-feeds.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M8-FOLLOWUP-live-data-feeds.md) for the full history.
 
 ## Go Backend Tasks
 - [x] Create `apps/api/internal/pulse/` package (`economy.go` + `types.go`)
 - [x] `economy.go` — `DistrictPulseState` struct; sinusoidal seasonal multipliers; 24h in-memory cache with `sync.RWMutex`
-- [x] `economy.go` — fail-safe defaults via `seasonalFallback()`, always active (not just on fetch failure — see audit note above; only `Wage`/`Transit` are pinned at 1.0, `Food`/`Energy`/`Heat`/`Migrant` are sinusoidal even in this "default" path)
-- [x] `news.go` stub — placeholder returning empty news array (full impl planned for M9; **still a stub after M9** — see [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md))
+- [x] `economy.go` — **fully synthetic seasonal model** via `seasonalFallback()` (formally re-scoped 2026-09-15, no live external fetch exists or is planned); all 6 multipliers now vary by month, including `Wage`/`Transit` which were a permanent `1.0` no-op before
+- [x] `news.go` stub — placeholder returning empty news array; real RSS/JSON ingestion formally deferred (mirrors this decision) — see [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md)
 - [x] `GET /api/v1/pulse/economy` handler wired into chi router
 - [x] `GET /api/v1/pulse/climate` handler (heat + displacement)
 - [x] `packages/shared-types/src/index.ts` — `DistrictPulseState`, `EconomicMultipliers`
@@ -26,5 +26,5 @@ Planning: `docs/planning/02-LIVING-ECONOMY-AND-REAL-DATA.md`
 ## Tests
 - [x] Vitest: `EconomyMath.ts` with $M_\text{food} = 1.3$ and kitchen built → food upkeep = 0
 - [x] Vitest: seasonal wave returns 1.0 in spring, peaks ≥ 1.3 in winter (food)
-- [x] Go httptest: `/api/v1/pulse/economy` returns 200 with valid JSON when external fetch succeeds
-- [x] Go httptest: `/api/v1/pulse/economy` returns fail-safe defaults on network error
+- [x] Go httptest: `/api/v1/pulse/economy` returns 200 with valid JSON (synthetic seasonal path — there is no external fetch to succeed or fail)
+- [x] Go test: `TestSeasonalFallback_WageAndTransitVary` (added 2026-09-15) — regression guard proving Wage/Transit actually vary by month and are no longer a permanent `1.0` no-op

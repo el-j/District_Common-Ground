@@ -1,11 +1,11 @@
 # M14 — Dynamic Microkernel Architecture, Living District Builder & Extensible Minigames
 
-Stories: [`docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
+Stories: [`docs/archive/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
 Planning: [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md)  
 Kickstart Reference: [`docs/kickstart/Architecture Vision & Epic.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/kickstart/Architecture%20Vision%20&%20Epic.md)  
-Status: `[x] Complete` (sections 1–6 corrected below; QA coverage gaps in section 7 — see [`M14-FOLLOWUP-qa-coverage.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-FOLLOWUP-qa-coverage.md))
+Status: `[x] Complete` — all 5 QA acceptance tests now covered (last 3 landed 2026-09-15, see [`M14-FOLLOWUP-qa-coverage.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-FOLLOWUP-qa-coverage.md)).
 
-> **Audit note (2026-09-15):** sections 1–6 below were still showing every box unchecked despite the real implementation existing and passing (verified by reading the actual files, not just their presence). This was pure doc staleness — checked off below to match reality. The frontend courier-rush minigame also ended up at `packages/minigame-courier-rush/` (a standalone package, per the M20 convention) rather than the doc's originally-specified `apps/web/src/minigames/courier-rush/` — same deliberate path deviation pattern as M19's bitchat plugin.
+> **Audit note (2026-09-15):** sections 1–6 below were still showing every box unchecked despite the real implementation existing and passing (verified by reading the actual files, not just their presence). This was pure doc staleness — checked off below to match reality. The frontend courier-rush minigame also ended up at `packages/minigame-courier-rush/` (a standalone package, per the M20 convention) rather than the doc's originally-specified `apps/web/src/minigames/courier-rush/` — same deliberate path deviation pattern as M19's bitchat plugin. Section 7's 3 genuinely-uncovered tests (14.2/14.4/14.5) were built the same day; M14 now meets the same zero-gap bar as the archived milestones.
 
 ---
 
@@ -73,10 +73,10 @@ Status: `[x] Complete` (sections 1–6 corrected below; QA coverage gaps in sect
 
 ## 7. Quality Assurance & Verification Tests
 - [x] **Test 14.1 (Kernel Isolation):** covered by `TestRegistry_MockPlugin_CanBeRegisteredWithoutTouchingKernelPackage` (`registry_test.go`)
-- [ ] **Test 14.2 (Zero Memory Leaks):** no dedicated mount/unmount-×10 test exists — `MinigameLoader.test.ts` only covers registration + reward-grant mutation, not lifecycle/teardown. **Gap, not covered.**
+- [x] **Test 14.2 (Zero Memory Leaks):** **built 2026-09-15** — `MinigameLoader.test.ts`'s "mounting and unmounting a minigame 10 times leaves no leaked DOM nodes or listeners" mounts/unmounts 10× via the real `MinigameLoader.launchMinigame()` + `MinigameContainer.unmount()` and asserts zero leftover DOM nodes.
 - [x] **Test 14.3 (Tactile Builder Upgrades):** covered by `DistrictGrid.test.ts`'s "upgrades parcel to next tier when player has sufficient resources"
-- [ ] **Test 14.4 (Full Courier Delivery Loop):** no integration test exercises the full session→complete→DB-credit path end-to-end. **Gap, not covered.**
-- [ ] **Test 14.5 (Trusted Plugin Review Flow):** `verification_requests.go` has no corresponding `verification_requests_test.go` — the submit/list/review handlers are untested. **Gap, not covered.**
+- [x] **Test 14.4 (Full Courier Delivery Loop):** **built 2026-09-15** — `apps/api/internal/kernel/courier_delivery_loop_test.go` chains the real `StartSession`→`CompleteSession` handlers against the real courier-rush plugin (not a mock) over real Postgres, asserting the computed reward grant is correctly persisted to `plugin_sessions`, plus an anti-cheat rejection case. (Scope note: the Go backend never touches a server-side wallet — `RecordSession` persists an audit row only, reward application to cash/trust/energy happens client-side via the already-tested `HostPlatformAPI.grantRewards()`; the test verifies the server computes and persists the correct grant for the client to apply.)
+- [x] **Test 14.5 (Trusted Plugin Review Flow):** **built 2026-09-15** — `apps/api/internal/kernel/verification_requests_test.go` covers submit → quarantined (absent from `ListVerifiedPlugins`) → owner-approve → promoted to verified catalog, a rejection path, and a non-owner review attempt getting `403`.
 
 See [`M14-FOLLOWUP-qa-coverage.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-FOLLOWUP-qa-coverage.md) for the tracked follow-up on the three uncovered tests.
 

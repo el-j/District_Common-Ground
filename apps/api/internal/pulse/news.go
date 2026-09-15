@@ -12,13 +12,13 @@ import (
 type CrisisArchetype string
 
 const (
-	ArchetypeLaborTransit     CrisisArchetype = "LABOR_TRANSIT"
-	ArchetypeClimateExtreme   CrisisArchetype = "CLIMATE_EXTREME"
-	ArchetypeHousingSpeculate CrisisArchetype = "HOUSING_SPECULATE"
-	ArchetypeFoodHealth       CrisisArchetype = "FOOD_HEALTH"
-	ArchetypeCivicDisinfo     CrisisArchetype = "CIVIC_DISINFO"
-	ArchetypeMigrationSanct   CrisisArchetype = "MIGRATION_SANCT"
-	ArchetypeFascistAgitation CrisisArchetype = "FASCIST_AGITATION"
+	ArchetypeLaborTransit      CrisisArchetype = "LABOR_TRANSIT"
+	ArchetypeClimateExtreme    CrisisArchetype = "CLIMATE_EXTREME"
+	ArchetypeHousingSpeculate  CrisisArchetype = "HOUSING_SPECULATE"
+	ArchetypeFoodHealth        CrisisArchetype = "FOOD_HEALTH"
+	ArchetypeCivicDisinfo      CrisisArchetype = "CIVIC_DISINFO"
+	ArchetypeMigrationSanct    CrisisArchetype = "MIGRATION_SANCT"
+	ArchetypeDivisionAgitation CrisisArchetype = "DIVISION_AGITATION"
 )
 
 type NewsItem struct {
@@ -38,13 +38,13 @@ type NewsResponse struct {
 
 // archetypeKeywords maps each archetype to triggering keyword sets.
 var archetypeKeywords = map[CrisisArchetype][]string{
-	ArchetypeLaborTransit:     {"strike", "gig", "transit", "fare", "courier", "warehouse", "contract", "wage", "labour", "labor", "worker"},
-	ArchetypeClimateExtreme:   {"flood", "heat", "wildfire", "air quality", "storm", "climate", "drought", "cold snap", "power outage"},
-	ArchetypeHousingSpeculate: {"eviction", "rent", "landlord", "housing", "speculation", "gentrification", "short-term rental", "airbnb", "displacement"},
-	ArchetypeFoodHealth:       {"food", "grocery", "fridge", "nutrition", "hunger", "meal", "water shutoff", "health", "pharmacy"},
-	ArchetypeCivicDisinfo:     {"disinformation", "misinformation", "viral", "poll", "voting", "election", "surveillance", "propaganda", "social media"},
-	ArchetypeMigrationSanct:   {"migrant", "refugee", "sanctuary", "border", "immigration", "deportation", "asylum", "enforcement"},
-	ArchetypeFascistAgitation: {"far-right", "fascist", "neo-nazi", "white nationalist", "extremist", "hate group", "intimidation", "march"},
+	ArchetypeLaborTransit:      {"strike", "gig", "transit", "fare", "courier", "warehouse", "contract", "wage", "labour", "labor", "worker"},
+	ArchetypeClimateExtreme:    {"flood", "heat", "wildfire", "air quality", "storm", "climate", "drought", "cold snap", "power outage"},
+	ArchetypeHousingSpeculate:  {"eviction", "rent", "landlord", "housing", "speculation", "gentrification", "short-term rental", "airbnb", "displacement"},
+	ArchetypeFoodHealth:        {"food", "grocery", "fridge", "nutrition", "hunger", "meal", "water shutoff", "health", "pharmacy"},
+	ArchetypeCivicDisinfo:      {"disinformation", "misinformation", "viral", "poll", "voting", "election", "surveillance", "propaganda", "social media"},
+	ArchetypeMigrationSanct:    {"migrant", "refugee", "sanctuary", "border", "immigration", "deportation", "asylum", "enforcement"},
+	ArchetypeDivisionAgitation: {"far-right", "fascist", "neo-nazi", "white nationalist", "extremist", "hate group", "intimidation", "march"},
 }
 
 // ClassifyArchetype assigns the most likely archetype from title+summary text.

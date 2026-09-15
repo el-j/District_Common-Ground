@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { pickGossipLine, scenariosToGossip, fetchDailyGossip, type DailyScenario } from './narrativeGossip';
+import { pickGossipLine, scenariosToGossip, fetchDailyGossip, fetchDailyNarrative, type DailyScenario } from './narrativeGossip';
 
 function makeSessionStorage(): Storage {
   const store = new Map<string, string>();
@@ -89,6 +89,69 @@ describe('fetchDailyGossip', () => {
     // Second call should hit the session cache and not re-fetch
     const lines2 = await fetchDailyGossip();
     expect(lines2).toEqual(lines);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+// M9 follow-up (2026-09-15): fetchDailyNarrative is the function TopHUD's
+// Broadsheet headline now calls directly (see TopHUD.ts's onEndDay), so its
+// fallback/cache behavior needs its own coverage independent of the
+// gossip-derivation logic above.
+describe('fetchDailyNarrative', () => {
+  beforeEach(() => {
+    vi.stubGlobal('sessionStorage', makeSessionStorage());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns an empty-source response when fetch fails, never throws', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+    const result = await fetchDailyNarrative();
+    expect(result.scenarios).toEqual([]);
+    expect(result.source).toBe('empty');
+  });
+
+  it('returns the raw scenario list and source on a successful fetch', async () => {
+    const scenarios: DailyScenario[] = [{ id: 's1', archetype: 'CLIMATE_EXTREME', title: 'Heat Wave', context: 'Danger rises.' }];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ scenarios, source: 'live', generatedAt: '2026-01-01' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchDailyNarrative();
+    expect(result.scenarios).toEqual(scenarios);
+    expect(result.source).toBe('live');
+  });
+
+  it('caches the raw response separately from the derived gossip cache and avoids a second fetch', async () => {
+    const scenarios: DailyScenario[] = [{ id: 's1', archetype: 'CLIMATE_EXTREME', title: 'Heat Wave', context: 'x' }];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ scenarios, source: 'live', generatedAt: '2026-01-01' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchDailyNarrative();
+    expect(sessionStorage.getItem('dcg-narrative-v1')).not.toBeNull();
+    expect(sessionStorage.getItem('dcg-gossip-v1')).toBeNull();
+
+    await fetchDailyNarrative();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetchDailyGossip and fetchDailyNarrative share one underlying fetch', async () => {
+    const scenarios: DailyScenario[] = [{ id: 's1', archetype: 'CLIMATE_EXTREME', title: 'Heat Wave', context: 'x' }];
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ scenarios, source: 'live', generatedAt: '2026-01-01' }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchDailyGossip();
+    await fetchDailyNarrative();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -52,13 +52,19 @@ func seasonalFallback(t time.Time) *DistrictPulseState {
 	heat := 0.6 + 0.4*math.Sin(phase-math.Pi/2)
 	// Migration peaks Sep–Nov
 	migrant := 1.0 + 0.15*math.Sin(phase+math.Pi/4)
+	// Wage: dips in the post-holiday hiring trough (Jan), recovers through the
+	// year (M8 follow-up 2026-09-15 — this and Transit were a permanent 1.0
+	// no-op before; still fully synthetic, just no longer inert).
+	wage := 1.0 - 0.08*math.Cos(phase)
+	// Transit: ticks up in winter (heating-driven fuel cost pass-through).
+	transit := 1.0 + 0.1*math.Cos(phase)
 
 	return &DistrictPulseState{
 		Multipliers: EconomicMultipliers{
 			Food:    clamp(food, 0.7, 1.5),
 			Energy:  clamp(energy, 0.8, 1.5),
-			Wage:    1.0,
-			Transit: 1.0,
+			Wage:    clamp(wage, 0.85, 1.15),
+			Transit: clamp(transit, 0.85, 1.15),
 			Heat:    clamp(heat, 0.4, 1.5),
 			Migrant: clamp(migrant, 0.7, 1.5),
 		},

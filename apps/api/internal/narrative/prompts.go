@@ -4,12 +4,12 @@ import "fmt"
 
 // PulseContext carries the current district state for prompt injection.
 type PulseContext struct {
-	Day        int
-	FoodIndex  float64
-	EnergyIndex float64
-	HeatIndex  float64
+	Day          int
+	FoodIndex    float64
+	EnergyIndex  float64
+	HeatIndex    float64
 	MigrantIndex float64
-	Season     string // "winter" | "spring" | "summer" | "autumn"
+	Season       string // "winter" | "spring" | "summer" | "autumn"
 }
 
 const systemPrompt = `You are the narrative engine for "District: Common Ground", a community resilience game.
@@ -31,7 +31,7 @@ TONAL PRINCIPLES:
 OUTPUT FORMAT — respond ONLY with a valid JSON object matching this exact schema:
 {
   "id": "kebab-case-id",
-  "archetype": "LABOR_TRANSIT|CLIMATE_EXTREME|HOUSING_SPECULATE|FOOD_HEALTH|CIVIC_DISINFO|MIGRATION_SANCT|FASCIST_AGITATION",
+  "archetype": "LABOR_TRANSIT|CLIMATE_EXTREME|HOUSING_SPECULATE|FOOD_HEALTH|CIVIC_DISINFO|MIGRATION_SANCT|DIVISION_AGITATION",
   "title": "The [Event Name]",
   "context": "2-3 sentence situation description",
   "choiceA": {

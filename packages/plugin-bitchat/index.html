@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BitChat Plugin — Dev Harness</title>
+</head>
+<body>
+  <!--
+    M20 follow-up (audit 2026-09-15): standalone dev harness. Confirms this
+    package's src/index.ts loads on its own via `vite`, independent of
+    apps/web. Not shipped, not used by any bundled app build.
+  -->
+  <p>BitChat Plugin — Dev Harness — package loaded standalone. Check the console for errors.</p>
+  <script type="module">
+    import * as pkg from './src/index.ts';
+    console.log('Loaded package exports:', Object.keys(pkg));
+  </script>
+</body>
+</html>

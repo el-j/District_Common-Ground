@@ -42,16 +42,16 @@ export class BroadsheetModal {
     });
 
     this.paper.querySelector('.broadsheet-close')?.addEventListener('click', () => this.close());
-    this.wireCrossword();
+    this.wireCommonsClue();
   }
 
   private buildHTML(data: BroadsheetData): string {
     return buildBroadsheetHTML(data);
   }
 
-  private wireCrossword(): void {
-    const input = this.paper.querySelector<HTMLInputElement>('.crossword-input');
-    const feedback = this.paper.querySelector<HTMLElement>('.crossword-feedback');
+  private wireCommonsClue(): void {
+    const input = this.paper.querySelector<HTMLInputElement>('.commons-clue-input');
+    const feedback = this.paper.querySelector<HTMLElement>('.commons-clue-feedback');
     if (!input || !feedback) return;
 
     input.addEventListener('input', () => {

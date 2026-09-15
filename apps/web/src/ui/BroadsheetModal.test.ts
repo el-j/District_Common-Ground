@@ -63,9 +63,10 @@ describe('buildBroadsheetHTML', () => {
     expect(html).toContain('index-ok');
   });
 
-  it('includes crossword clue for commons engagement', () => {
+  it('includes the Commons Clue prompt for commons engagement', () => {
     const html = buildBroadsheetHTML(BASE_DATA);
     expect(html).toContain('Commons Clue');
+    expect(html).toContain('commons-clue-input');
     expect(html).toContain('solidarity');
   });
 
@@ -73,5 +74,16 @@ describe('buildBroadsheetHTML', () => {
     const html = buildBroadsheetHTML(BASE_DATA);
     expect(html).toContain('broadsheet-close');
     expect(html).toContain('Begin the Day');
+  });
+
+  it('renders a source citation pill when source is set', () => {
+    const html = buildBroadsheetHTML({ ...BASE_DATA, source: 'live' });
+    expect(html).toContain('AI Narrative Wire');
+    expect(html).toContain('live');
+  });
+
+  it('omits the citation pill when source is unset (hardcoded fallback path)', () => {
+    const html = buildBroadsheetHTML(BASE_DATA);
+    expect(html).not.toContain('broadsheet-citation');
   });
 });

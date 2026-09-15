@@ -1,7 +1,7 @@
 # M9 Follow-up — Real News Ingestion, AI-Driven Headlines & Naming Cleanup
 
 Found: 2026-09-15, full repo audit
-Status: `[ ] Not Started`
+Status: `[x] Resolved` — 5 of 6 gaps fixed 2026-09-15 (see `docs/SPRINT-2026-09-15-PLAN.md` §2); real RSS ingestion (gap #1) formally re-scoped/deferred rather than built, mirroring the M8 decision.
 Parent: [`M9-district-dispatch.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-district-dispatch.md)
 
 ---
@@ -33,10 +33,11 @@ Three different string constants for the same 7th crisis archetype across three 
 
 This is worth fixing precisely *because* M16's lexicon audit (`lexiconAudit.test.ts`) specifically eliminated "fascist"-family terminology from user-facing/frontend code as part of the game's zero-ideological-jargon design principle — but that audit only scanned `.ts`/JSON content, never touched this Go backend constant, so it's still there, just invisible to players. It should not silently regress if `FASCIST_AGITATION` is ever echoed into any player-facing string, log, or future admin UI.
 
-## Acceptance Criteria (once picked up)
+## Acceptance Criteria
 
-- [ ] Pick one canonical name for the 7th archetype (recommend `DIVISION_AGITATION`, matching the frontend and the lexicon-audit intent) and rename the Go-side constant + all its usages (`news.go`, `validator.go`, `prompts.go`, `validator_test.go`) to match. Re-run `lexiconAudit.test.ts` and extend it to also scan Go source if practical, so this class of regression gets caught automatically next time.
-- [ ] Decide whether real RSS/feed ingestion is in scope for `news.go`, or whether it should be formally re-scoped as "AI narrative pipeline only, real news ingestion deferred" (mirrors the M8 live-data decision — consider resolving both together, since M9's stub inherits directly from M8's).
-- [ ] If real ingestion is built: wire the Broadsheet's headline through `/api/v1/narrative/daily-scenarios` (or a dedicated headline field on that response) instead of `TopHUD.ts`'s hardcoded templates, and add a source citation pill once a real source exists to cite.
-- [ ] Either build a real small crossword grid or rename the feature/doc language to match what's actually there (a single "commons word" prompt).
-- [ ] `npm test` and `go test -short ./...` pass with no regressions.
+- [x] Renamed the Go-side constant `FASCIST_AGITATION` → `DIVISION_AGITATION` (`news.go`, `validator.go`, `prompts.go`, `validator_test.go`, `economy_test.go`), matching the frontend. Extended `lexiconAudit.test.ts` with a Go-source scan (substring match, not the word-boundary regex — `_` is a word character, which is exactly how `FASCIST_AGITATION` slipped through originally) that deliberately exempts `news.go`'s real-world keyword-classification table (input-side, never echoed to a player) so it can't be censored into uselessness.
+- [x] Decided: real RSS/feed ingestion is **deferred**, formally re-scoped in `M9-district-dispatch.md` — mirrors the M8 live-data decision. `news.go` remains the AI-pipeline's stub; nothing implies otherwise anymore.
+- [x] Wired the Broadsheet's headline through `/api/v1/narrative/daily-scenarios` (`TopHUD.ts`'s `onEndDay()` now awaits `fetchDailyNarrative()`, using the top scenario's `title`/`context`) — this did **not** require real ingestion, since the AI pipeline generates scenarios directly. Added the source citation pill (`BroadsheetData.source` → `.broadsheet-citation`), shown only on the AI-driven path.
+- [x] Renamed the feature/doc language to match what's actually there (a single "Commons Clue" prompt) rather than building a full crossword grid — the visible copy was already honest ("Commons Clue"), only internal `crossword-*` class names and the task-doc wording needed fixing.
+- [x] RadioWidget ticker built too (was listed as low-priority/optional but was cheap once the citation data flow existed): `.radio-ticker` marquee fed by `CivicTickerWidget.getHeadlines()`.
+- [x] `npm test` (310/310) and `go test -race -short ./...` pass with no regressions.

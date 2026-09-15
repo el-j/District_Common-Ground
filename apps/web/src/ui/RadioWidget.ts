@@ -14,10 +14,12 @@ const FREQUENCIES: FrequencyProfile[] = [
 
 export class RadioWidget {
   private readonly el: HTMLElement;
+  private readonly getHeadlines?: () => string[];
   private freqIdx: number = 0;
   private tuning: boolean = false;
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, getHeadlines?: () => string[]) {
+    this.getHeadlines = getHeadlines;
     this.el = document.createElement('div');
     this.el.className = 'radio-widget';
     this.el.setAttribute('role', 'region');
@@ -38,6 +40,7 @@ export class RadioWidget {
   show(): void {
     this.el.hidden = false;
     this.update();
+    this.updateTicker();
   }
 
   hide(): void {
@@ -68,6 +71,19 @@ export class RadioWidget {
     }
   }
 
+  private updateTicker(): void {
+    const track = this.el.querySelector<HTMLElement>('.radio-ticker-track');
+    const wrap = this.el.querySelector<HTMLElement>('.radio-ticker');
+    if (!track || !wrap) return;
+    const headlines = this.getHeadlines?.() ?? [];
+    if (headlines.length === 0) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+    track.textContent = headlines.join('   •   ');
+  }
+
   private buildHTML(): string {
     const prof = FREQUENCIES[this.freqIdx];
     return `
@@ -84,6 +100,9 @@ export class RadioWidget {
         <div class="radio-dial-marks">
           ${FREQUENCIES.map(f => `<span>${f.label}</span>`).join('')}
         </div>
+      </div>
+      <div class="radio-ticker" role="marquee" aria-label="Breaking news ticker" hidden>
+        <span class="radio-ticker-track"></span>
       </div>
       <div class="radio-controls">
         <button class="radio-prev interactive" aria-label="Previous frequency">◄</button>

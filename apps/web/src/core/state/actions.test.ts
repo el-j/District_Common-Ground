@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from './useGameStore';
-import { setArchetype, spendCash, gainCash, spendEnergy, advanceDay } from './actions';
+import { setArchetype, spendCash, gainCash, spendEnergy, advanceDay, updateCommonsProgress } from './actions';
 
 function resetStore() {
   useGameStore.setState({
     meta: { day: 1, tick: 0, activeSkin: 'default', phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: { classRole: null, cash: 0, energy: 0, maxEnergy: 100, socialTrust: 0, stressLevel: 0, position: { x: 0, y: 0 }, facing: 'down' },
-    commons: { resilienceScore: 0, solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0, landTrustProgress: 0, constructionSpeedBuff: 0, greenhouseUnlocked: false },
+    commons: { resilienceScore: 0, solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0, landTrustProgress: 0, constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false },
     crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
   });
 }
@@ -88,6 +88,32 @@ describe('spendEnergy', () => {
   it('never goes below 0', () => {
     spendEnergy(9999);
     expect(useGameStore.getState().player.energy).toBe(0);
+  });
+});
+
+describe('updateCommonsProgress — Safe Haven ending', () => {
+  beforeEach(resetStore);
+
+  it('unlocks safeHavenUnlocked exactly when landTrustProgress first reaches 100', () => {
+    updateCommonsProgress('landTrustProgress', 60);
+    expect(useGameStore.getState().commons.safeHavenUnlocked).toBe(false);
+
+    updateCommonsProgress('landTrustProgress', 40);
+    expect(useGameStore.getState().commons.landTrustProgress).toBe(100);
+    expect(useGameStore.getState().commons.safeHavenUnlocked).toBe(true);
+  });
+
+  it('does not unlock for other nodes reaching 100', () => {
+    updateCommonsProgress('kitchenProgress', 100);
+    expect(useGameStore.getState().commons.kitchenProgress).toBe(100);
+    expect(useGameStore.getState().commons.safeHavenUnlocked).toBe(false);
+  });
+
+  it('stays true and does not error on further contributions once unlocked', () => {
+    updateCommonsProgress('landTrustProgress', 100);
+    expect(useGameStore.getState().commons.safeHavenUnlocked).toBe(true);
+    updateCommonsProgress('landTrustProgress', 5);
+    expect(useGameStore.getState().commons.safeHavenUnlocked).toBe(true);
   });
 });
 

@@ -69,6 +69,33 @@ func TestSeasonalFallback_AllMonths(t *testing.T) {
 		if mul.Energy < 0.8 || mul.Energy > 1.5 {
 			t.Errorf("month %d: energy %.3f out of [0.8,1.5]", m, mul.Energy)
 		}
+		if mul.Wage < 0.85 || mul.Wage > 1.15 {
+			t.Errorf("month %d: wage %.3f out of [0.85,1.15]", m, mul.Wage)
+		}
+		if mul.Transit < 0.85 || mul.Transit > 1.15 {
+			t.Errorf("month %d: transit %.3f out of [0.85,1.15]", m, mul.Transit)
+		}
+	}
+}
+
+// TestSeasonalFallback_WageAndTransitVary is a regression guard for the M8
+// follow-up (audit 2026-09-15): Wage/Transit used to be hardcoded to a
+// permanent 1.0 no-op regardless of the month. They must now actually move.
+func TestSeasonalFallback_WageAndTransitVary(t *testing.T) {
+	january := pulse.GetPulseStateAt(time.Date(2024, time.January, 15, 0, 0, 0, 0, time.UTC))
+	july := pulse.GetPulseStateAt(time.Date(2024, time.July, 15, 0, 0, 0, 0, time.UTC))
+
+	if january.Multipliers.Wage == july.Multipliers.Wage {
+		t.Error("expected Wage to vary by month, got identical values")
+	}
+	if january.Multipliers.Transit == july.Multipliers.Transit {
+		t.Error("expected Transit to vary by month, got identical values")
+	}
+	if january.Multipliers.Wage == 1.0 && july.Multipliers.Wage == 1.0 {
+		t.Error("Wage must not be a permanent 1.0 no-op")
+	}
+	if january.Multipliers.Transit == 1.0 && july.Multipliers.Transit == 1.0 {
+		t.Error("Transit must not be a permanent 1.0 no-op")
 	}
 }
 
@@ -104,8 +131,8 @@ func TestHandleNews_OK(t *testing.T) {
 	}
 	type newsResp struct {
 		Items     []pulse.NewsItem `json:"items"`
-		FetchedAt string          `json:"fetchedAt"`
-		Source    string          `json:"source"`
+		FetchedAt string           `json:"fetchedAt"`
+		Source    string           `json:"source"`
 	}
 	var resp newsResp
 	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
@@ -127,7 +154,7 @@ func TestClassifyArchetype(t *testing.T) {
 		{"Community Fridge Shutdown", "food access ends for 40 families nutrition crisis", pulse.ArchetypeFoodHealth},
 		{"Disinformation Campaign", "viral video and propaganda spread misinformation", pulse.ArchetypeCivicDisinfo},
 		{"ICE Enforcement Sweep", "deportation and sanctuary policy under threat", pulse.ArchetypeMigrationSanct},
-		{"Far-Right March Planned", "fascist neo-nazi white nationalist extremist group", pulse.ArchetypeFascistAgitation},
+		{"Far-Right March Planned", "fascist neo-nazi white nationalist extremist group", pulse.ArchetypeDivisionAgitation},
 	}
 	for _, tc := range cases {
 		got := pulse.ClassifyArchetype(tc.title, tc.summary)

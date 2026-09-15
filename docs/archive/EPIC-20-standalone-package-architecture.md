@@ -1,7 +1,9 @@
 # EPIC 20 — Standalone Package Architecture for Minigames & Plugins
 
 Planning: [`docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md)
-Tasks: [`docs/tasks/M20-standalone-packages-cleanup.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M20-standalone-packages-cleanup.md)
+Tasks: [`docs/archive/M20-standalone-packages-cleanup.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/M20-standalone-packages-cleanup.md)
+
+> **Status: Complete, archived 2026-09-15.** All 3 acceptance criteria below met — see the task doc for what shipped.
 
 ## Why This Milestone Exists
 

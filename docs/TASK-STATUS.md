@@ -1,9 +1,9 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-15
-Status: **Full repo audit completed 2026-09-15 (see [`docs/AUDIT-2026-09-15.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/AUDIT-2026-09-15.md) for the full report). Verification (`tsc --noEmit`, `oxlint`, `vitest run` — 298/298, `go build`/`go vet`, `go test -race ./...` incl. testcontainers integration tests) is 100% clean across the whole repo. M12, M15, M16, M17, M18, M19 verified genuinely complete against the real code (not just their checkboxes) and archived to `docs/archive/`. M8, M9, M10, M11 and M14 had real, substantive gaps between their checkboxes and the actual code — corrected in place, with tracked follow-up tasks (see "Post-Audit Follow-ups" below). M20 is no longer just an observation — it now has a real story/task doc.**
+Status: **Full repo audit completed 2026-09-15 (see [`docs/AUDIT-2026-09-15.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/AUDIT-2026-09-15.md)), followed by a same-day close-out sprint (see [`docs/SPRINT-2026-09-15-PLAN.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/SPRINT-2026-09-15-PLAN.md)) that closed every tracked gap. M12, M15, M16, M17, M18, M19 were audit-verified genuinely complete and archived. M11's hollow Global Solidarity Pool and missing Safe Haven ending are now real (real write path, proven end-to-end + real ending trigger). M9's Broadsheet headline is now genuinely AI-driven with a citation pill, the Go/frontend archetype-naming mismatch is fixed, and a radio ticker was added; real RSS ingestion stays formally deferred (a scope decision, not a gap). M14's 3 missing QA tests were built. M20's 3 concrete gaps (scripts, remote loading, naming) are all closed. M8 was formally re-scoped as a fully synthetic economy (Wage/Transit fixed from a permanent no-op to real seasonal curves). M10's EPIC-10 Weather System vision was built (frost/rain canvas layers + a tested pure classifier). **M14 and M20 are now archived too**, alongside the six original audit-clean milestones. Every milestone through M20 is `[x] Complete` — see "Post-Audit Follow-ups" below for the full resolution history.**
 
-Phase 1 (M1–M7) and the six audit-verified milestones above (M12, M15–M19) are archived under `docs/archive/`.
+Phase 1 (M1–M7) and eight milestones (M12, M14, M15–M19, M20) are archived under `docs/archive/`.
 
 ---
 
@@ -29,17 +29,17 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 
 | # | Milestone | Focus Area | Status | Story | Tasks |
 |---|---|---|---|---|---|
-| **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), trust-gated plugin store, Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` (implementation verified for real 2026-09-15, checkboxes were stale — see M14 tasks; 3 of 5 QA acceptance tests lack automated coverage, see follow-up) | [EPIC-14](stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](tasks/M14-microkernel-minigames.md) · [QA follow-up](tasks/M14-FOLLOWUP-qa-coverage.md) |
+| **M14** | **Dynamic Microkernel, Living District Builder & Extensible Minigames** | Microkernel plugin engine (Go + TS), trust-gated plugin store, Farmville-style tactile district builder, street questing mode, *Pizza Taxi* reference minigame | `[x] Complete` — audit-verified 2026-09-15 (checkboxes were stale, corrected; all 5 QA acceptance tests now covered), **archived** | [EPIC-14](archive/EPIC-14-dynamic-microkernel-and-extensible-minigames.md) | [M14 tasks](archive/M14-microkernel-minigames.md) · [QA follow-up (resolved)](tasks/M14-FOLLOWUP-qa-coverage.md) |
 | **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[x] Complete` — **audit-verified 2026-09-15, no gaps, archived** | [EPIC-15](archive/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](archive/M15-civic-networking-theme-shop.md) |
 | **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[x] PoC Complete` — **audit-verified 2026-09-15, no gaps, archived** | [EPIC-16](archive/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](archive/M16-real-world-geo-mode.md) |
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[x] PoC Complete` — **audit-verified 2026-09-15, no gaps, archived** | [EPIC-17](archive/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](archive/M17-offgrid-mesh-weather-currency.md) |
 | **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[x] PoC Complete` — **audit-verified 2026-09-15, no gaps, archived** | [EPIC-18](archive/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](archive/M18-offline-first-device-storage-and-sync.md) |
 | **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[x] PoC Complete` — **audit-verified 2026-09-15, no gaps, archived** | [EPIC-19](archive/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](archive/M19-bitchat-mesh-transports.md) |
-| **M20** | **Standalone Package Architecture for Minigames & Plugins** | Every plugin/minigame as an independent `packages/*` package, no internal `apps/web` subfolders | `[ ] Not Started` (real story/task doc written 2026-09-15, replacing the prior observation-only note; core requirement already largely satisfied, 3 concrete gaps tracked) | [EPIC-20](stories/EPIC-20-standalone-package-architecture.md) | [M20 tasks](tasks/M20-standalone-packages-cleanup.md) |
-| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[~] Mostly Complete` — **audit found a real gap: no live external data fetch exists anywhere, runs 100% on synthetic seasonal data year-round** (see follow-up) | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) · [follow-up](tasks/M8-FOLLOWUP-live-data-feeds.md) |
-| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[~] Gaps Found` — **audit found 5 checked items without matching code: news ingestion still a stub, Broadsheet headline is hardcoded (not AI-driven), "crossword" is a single text field, no source citation, plus a 3-way archetype-naming inconsistency** (see follow-up) | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) · [follow-up](tasks/M9-FOLLOWUP-narrative-gaps.md) |
-| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[x] Complete` (task doc itself accurate; EPIC's Weather System vision was never built — never falsely checked, just never captured as a task — see follow-up) | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) · [follow-up](tasks/M10-FOLLOWUP-weather-system.md) |
-| M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[~] Gaps Found` — **audit found the Global Solidarity Pool is functionally hollow (its source table is never written to in production) and the "Safe Haven" ending doesn't exist** (see follow-up) | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) · [follow-up](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md) |
+| **M20** | **Standalone Package Architecture for Minigames & Plugins** | Every plugin/minigame as an independent `packages/*` package, no internal `apps/web` subfolders | `[x] Complete` — all 3 concrete gaps closed 2026-09-15 | [EPIC-20](archive/EPIC-20-standalone-package-architecture.md) | [M20 tasks](archive/M20-standalone-packages-cleanup.md) |
+| M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[x] Complete` — **resolved 2026-09-15**: formally re-scoped as a fully synthetic seasonal model (real external fetch deferred, not planned); `Wage`/`Transit` fixed from a permanent no-op to real seasonal curves | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) · [follow-up (resolved)](tasks/M8-FOLLOWUP-live-data-feeds.md) |
+| M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[x] Complete` — **resolved 2026-09-15**: naming fixed, Broadsheet headline now genuinely AI-driven with a citation pill, radio ticker added; real RSS ingestion formally deferred (not a gap, a scope decision) | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) · [follow-up (resolved)](tasks/M9-FOLLOWUP-narrative-gaps.md) |
+| M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat, weather system | `[x] Complete` — **Weather System built 2026-09-15**, closing the last vision-to-task gap (see follow-up) | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) · [follow-up (resolved)](tasks/M10-FOLLOWUP-weather-system.md) |
+| M11 | Shared Commons, Climate Displacement & Community Defense | Community Land Trust, Tool Library, climate migrant mechanic, solidarity pool | `[x] Complete` — **resolved 2026-09-15**: Global Solidarity Pool now has a real write path (proven end-to-end, not fixture-seeded) and the "Safe Haven" ending is built | [EPIC-11](stories/EPIC-11-shared-commons.md) | [M11 tasks](tasks/M11-shared-commons.md) · [follow-up (resolved)](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md) |
 | M12 | Procedural Web Audio Synth v2, Mobile Polish & Release QA | Rain/cat purr synthesis, mobile haptics, accessibility WCAG AA, Lighthouse 95+ | `[x] Complete` — **audit-verified 2026-09-15, only minor stale doc text found (now corrected), archived** (WCAG contrast + Lighthouse still need a real browser) | [EPIC-12](archive/EPIC-12-audio-v2-polish.md) | [M12 tasks](archive/M12-audio-v2-polish.md) |
 
 ---
@@ -58,22 +58,22 @@ A full repo audit (all test suites run + every milestone doc cross-checked again
 
 | # | Milestone | Gap | Task |
 |---|---|---|---|
-| F1 | M8 | No live external economic/climate data fetch exists — always synthetic | [M8-FOLLOWUP-live-data-feeds.md](tasks/M8-FOLLOWUP-live-data-feeds.md) |
-| F2 | M9 | News ingestion stub, Broadsheet headline not AI-driven, fake crossword, no citation badge, archetype naming inconsistency | [M9-FOLLOWUP-narrative-gaps.md](tasks/M9-FOLLOWUP-narrative-gaps.md) |
-| F3 | M10 | EPIC-10's Weather System (rain/frost) was never implemented | [M10-FOLLOWUP-weather-system.md](tasks/M10-FOLLOWUP-weather-system.md) |
-| F4 | M11 | Global Solidarity Pool is hollow in production; Safe Haven ending missing | [M11-FOLLOWUP-solidarity-pool-and-safe-haven.md](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md) |
-| F5 | M14 | 3 of 5 QA acceptance tests (memory-leak, full delivery loop, plugin review flow) have no automated coverage | [M14-FOLLOWUP-qa-coverage.md](tasks/M14-FOLLOWUP-qa-coverage.md) |
-| F6 | M20 | Per-package dev/build scripts, remote dynamic-loading path, and a naming mismatch | [M20-standalone-packages-cleanup.md](tasks/M20-standalone-packages-cleanup.md) |
+| F1 | M8 | ~~No live external economic/climate data fetch exists — always synthetic~~ — **resolved 2026-09-15** (formally re-scoped, not built) | [M8-FOLLOWUP-live-data-feeds.md](tasks/M8-FOLLOWUP-live-data-feeds.md) |
+| F2 | M9 | ~~News ingestion stub, Broadsheet headline not AI-driven, fake crossword, no citation badge, archetype naming inconsistency~~ — **resolved 2026-09-15** (real RSS ingestion formally deferred, not a gap) | [M9-FOLLOWUP-narrative-gaps.md](tasks/M9-FOLLOWUP-narrative-gaps.md) |
+| F3 | M10 | ~~EPIC-10's Weather System (rain/frost) was never implemented~~ — **resolved 2026-09-15** | [M10-FOLLOWUP-weather-system.md](tasks/M10-FOLLOWUP-weather-system.md) |
+| F4 | M11 | ~~Global Solidarity Pool is hollow in production; Safe Haven ending missing~~ — **resolved 2026-09-15** | [M11-FOLLOWUP-solidarity-pool-and-safe-haven.md](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md) |
+| F5 | M14 | ~~3 of 5 QA acceptance tests lacked coverage~~ — **resolved 2026-09-15**, M14 archived | [M14-FOLLOWUP-qa-coverage.md](tasks/M14-FOLLOWUP-qa-coverage.md) |
+| F6 | M20 | ~~Per-package dev/build scripts, remote dynamic-loading path, and a naming mismatch~~ — **resolved 2026-09-15** | [M20-standalone-packages-cleanup.md](archive/M20-standalone-packages-cleanup.md) |
 
 ---
 
 ## M14 — Dynamic Microkernel, Living District Builder & Extensible Minigames
 
-Story: [`docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
-Tasks: [`docs/tasks/M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-microkernel-minigames.md)  
+Story: [`docs/archive/EPIC-14-dynamic-microkernel-and-extensible-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-14-dynamic-microkernel-and-extensible-minigames.md)  
+Tasks: [`docs/archive/M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/M14-microkernel-minigames.md)  
 Planning: [`docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/14-DYNAMIC-MICROKERNEL-AND-EXTENSIBLE-MINIGAMES.md)
 
-> **Audit note (2026-09-15):** the table below (sections 1–6 of the task doc) had been left 100% unchecked despite the real implementation existing and passing — pure doc staleness, corrected in the task doc itself. The 3 QA items marked `[ ]` below are a genuine, separate gap: real missing automated test coverage, not stale doc text. See [`M14-FOLLOWUP-qa-coverage.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-FOLLOWUP-qa-coverage.md).
+> **Audit note (2026-09-15):** the table below (sections 1–6 of the task doc) had been left 100% unchecked despite the real implementation existing and passing — pure doc staleness, corrected in the task doc itself. 3 of the milestone's 5 QA acceptance tests genuinely lacked automated coverage (memory-leak, full delivery loop, plugin review flow) — all 3 were built the same day (see [`M14-FOLLOWUP-qa-coverage.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-FOLLOWUP-qa-coverage.md)), closing the last gap and moving M14 into `docs/archive/` alongside M12/M15–M19.
 
 | Task | Status |
 |---|---|
@@ -202,11 +202,11 @@ Path deviation: built at `packages/plugin-bitchat/` (standalone package, matchin
 
 ## M20 — Standalone Package Architecture for Minigames & Plugins
 
-Story: [`docs/stories/EPIC-20-standalone-package-architecture.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-20-standalone-package-architecture.md)  
-Tasks: [`docs/tasks/M20-standalone-packages-cleanup.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M20-standalone-packages-cleanup.md)  
+Story: [`docs/archive/EPIC-20-standalone-package-architecture.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/EPIC-20-standalone-package-architecture.md)  
+Tasks: [`docs/archive/M20-standalone-packages-cleanup.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/M20-standalone-packages-cleanup.md)  
 Planning: [`docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md)
 
-This milestone's core requirement — "minigames and transports are not internal subfolders of `apps/web`" — is **already largely true** of the current codebase, independent of this doc: `packages/plugin-geo-weather`, `packages/plugin-mesh-comms`, `packages/plugin-mutual-credit`, `packages/minigame-courier-rush`, and (as of M19) `packages/plugin-bitchat` are all already standalone `@district-cg/*` packages with their own `package.json`/`tsconfig.json`, depending only on `@district-cg/shared-types`. 3 concrete, verified gaps remain — naming (`transport-bitchat` vs. `plugin-bitchat`), missing per-package `dev`/`build` scripts, and an unbuilt remote-URL dynamic-loading path — see the new task doc for details.
+This milestone's core requirement — "minigames and transports are not internal subfolders of `apps/web`" — is **already largely true** of the current codebase, independent of this doc: `packages/plugin-geo-weather`, `packages/plugin-mesh-comms`, `packages/plugin-mutual-credit`, `packages/minigame-courier-rush`, and (as of M19) `packages/plugin-bitchat` are all already standalone `@district-cg/*` packages with their own `package.json`/`tsconfig.json`, depending only on `@district-cg/shared-types`. **All 3 concrete gaps closed 2026-09-15:** naming fixed (`transport-bitchat` → `plugin-bitchat` in the planning docs), every package now has real `dev`/`build`/`check` scripts + a minimal `vite.config.ts` dev harness (smoke-tested), and `MinigameLoader.loadRemoteMinigame()` now does a real `import()` of a manifest's `entrypointUrl`, gated by the existing `GET /api/v1/games` trust boundary.
 
 ---
 
@@ -214,14 +214,14 @@ This milestone's core requirement — "minigames and transports are not internal
 
 Story: `docs/stories/EPIC-08-living-economy.md`
 Tasks: `docs/tasks/M8-living-economy.md`
-Follow-up (audit 2026-09-15): [`M8-FOLLOWUP-live-data-feeds.md`](tasks/M8-FOLLOWUP-live-data-feeds.md)
+Follow-up (audit 2026-09-15, resolved same day): [`M8-FOLLOWUP-live-data-feeds.md`](tasks/M8-FOLLOWUP-live-data-feeds.md)
 
 | Task | Status |
 |---|---|
 | `apps/api/internal/pulse/` package skeleton | `[x]` |
 | `economy.go` — seasonal sinusoidal multipliers + 24h in-memory cache | `[x]` |
-| `economy.go` — "fail-safe defaults on network error" | `[x]` code exists, but **there is no network fetch to fail** — `GetPulseState()` unconditionally returns the synthetic seasonal path; see follow-up |
-| `news.go` stub — placeholder empty array | `[x]` (still a stub after M9 too — see M9 follow-up) |
+| `economy.go` — synthetic seasonal model | `[x]` **formally re-scoped 2026-09-15** — there never was a network fetch to fail; `GetPulseState()` always returns the seasonal path by design now, not by accident. `Wage`/`Transit` also fixed from a permanent `1.0` no-op to real seasonal curves. |
+| `news.go` stub — placeholder empty array | `[x]` (real ingestion formally deferred, mirrors this decision — see M9 follow-up) |
 | `GET /api/v1/pulse/economy` + climate endpoints | `[x]` |
 | `packages/shared-types` — `DistrictPulseState` type | `[x]` |
 | `apps/web/src/api/endpoints/pulse.ts` | `[x]` |
@@ -238,19 +238,19 @@ Follow-up (audit 2026-09-15): [`M8-FOLLOWUP-live-data-feeds.md`](tasks/M8-FOLLOW
 
 Story: `docs/stories/EPIC-09-district-dispatch.md`
 Tasks: `docs/tasks/M9-district-dispatch.md`
-Follow-up (audit 2026-09-15): [`M9-FOLLOWUP-narrative-gaps.md`](tasks/M9-FOLLOWUP-narrative-gaps.md)
+Follow-up (audit 2026-09-15, resolved same day): [`M9-FOLLOWUP-narrative-gaps.md`](tasks/M9-FOLLOWUP-narrative-gaps.md)
 
 | Task | Status |
 |---|---|
-| `BroadsheetModal.ts` — 3D unfold, newsprint | `[x]` | headline citation badge and 4×4 crossword — **not built**, see follow-up |
-| `RadioWidget.ts` — pirate FM tuner, amber LED, 3 frequencies | `[x]` (dial is CSS not SVG, no ticker — cosmetic, see follow-up) |
+| `BroadsheetModal.ts` — 3D unfold, newsprint | `[x]` — citation pill **built 2026-09-15**; "4×4 crossword" was always a doc-wording gap, the real single "Commons Clue" prompt is correctly described now |
+| `RadioWidget.ts` — pirate FM tuner, amber LED, 3 frequencies | `[x]` (dial still CSS not SVG — cosmetic, kept as-is; scrolling ticker **built 2026-09-15**) |
 | `advanceDay()` — broadsheet trigger before day advances | `[x]` |
-| `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[ ]` **RSS ingestion never built — `HandleNews` is still the M8 stub.** Classifier itself is real; archetype naming is inconsistent across layers, see follow-up |
+| `pulse/news.go` — RSS ingestion + 7-archetype classifier | `[~]` **RSS ingestion formally deferred 2026-09-15 (re-scoped, mirrors M8)** — `HandleNews` stays the M8 stub by decision, not by accident. Classifier itself is real; archetype naming fixed (`FASCIST_AGITATION` → `DIVISION_AGITATION`, matching frontend). |
 | `narrative/client.go` — multi-provider AI client (Ollama/Groq/Cloudflare) | `[x]` |
 | `narrative/prompts.go` — system prompt, character voice pillars, lore bible | `[x]` |
 | `narrative/validator.go` — JSON schema validator + mathematical clamp | `[x]` |
 | `narrative/cache.go` — DB persistence (`dynamic_scenarios` table) | `[x]` |
-| `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[x]` (the daily-scenarios endpoint is real and AI-backed, but the Broadsheet's headline never calls it — only the NPC gossip mill does; see follow-up) |
+| `GET /api/v1/pulse/news` & `GET /api/v1/narrative/daily-scenarios` | `[x]` — **the Broadsheet headline now calls `daily-scenarios` too (fixed 2026-09-15)**, not just the NPC gossip mill; falls back to the original hardcoded templates when the pipeline is offline/empty |
 | `crisis_scenarios.json` curated fallback scenarios | `[x]` (23 entries, not "25+") |
 | Dynamic NPC Rumor Mill (`NPCEntity.ts` & `DialogueOverlay.ts`) | `[x]` (was stale — `apps/web/src/api/narrativeGossip.ts` + `WorldScene.ts`'s `openTalk()` "Heard anything lately?" branch were already wired end-to-end) |
 | Tests (Vitest + Go httptest + validator clamping tests) | `[x]` (added `narrativeGossip.test.ts` for the previously-untested pure gossip logic; only the manual broadsheet→rumor smoke test below remains unautomated) |
@@ -261,7 +261,7 @@ Follow-up (audit 2026-09-15): [`M9-FOLLOWUP-narrative-gaps.md`](tasks/M9-FOLLOWU
 
 Story: `docs/stories/EPIC-10-district-expansion.md`
 Tasks: `docs/tasks/M10-district-expansion.md`
-Follow-up (audit 2026-09-15): [`M10-FOLLOWUP-weather-system.md`](tasks/M10-FOLLOWUP-weather-system.md) — EPIC-10's Weather System (rain/frost) was never built; never falsely checked here, just missing from the task breakdown
+Follow-up (audit 2026-09-15, resolved same day): [`M10-FOLLOWUP-weather-system.md`](tasks/M10-FOLLOWUP-weather-system.md) — EPIC-10's Weather System (rain/frost) was never built; never falsely checked here, just missing from the task breakdown — built 2026-09-15
 
 | Task | Status |
 |---|---|
@@ -276,6 +276,7 @@ Follow-up (audit 2026-09-15): [`M10-FOLLOWUP-weather-system.md`](tasks/M10-FOLLO
 | Streetlamp night overlay sprite | `[x]` (`WorldScene.ts`'s `spawnStreetlamps()`/`updateStreetlamps()` — additive-blend glow circles along each road strip, fading in/out with the day/night tint) |
 | Feed interaction for Scraps (cash > 0, Stress −10) | `[x]` (`ScrapsEntity.ts`'s `onFeed()` — spends a small treat cost and reduces stress by 10 when the player has cash, otherwise a free pet still reduces stress by 5) |
 | Tests (manual) | `[ ]` manual — unchanged, requires a browser |
+| Weather System — `WeatherSystem.ts` (pure classifier) + `WorldScene.ts` frost/rain layers | `[x]` **built 2026-09-15** (previously the one genuine vision-to-task gap in this milestone) |
 
 ---
 
@@ -283,21 +284,21 @@ Follow-up (audit 2026-09-15): [`M10-FOLLOWUP-weather-system.md`](tasks/M10-FOLLO
 
 Story: `docs/stories/EPIC-11-shared-commons.md`
 Tasks: `docs/tasks/M11-shared-commons.md`
-Follow-up (audit 2026-09-15): [`M11-FOLLOWUP-solidarity-pool-and-safe-haven.md`](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md)
+Follow-up (audit 2026-09-15, resolved same day): [`M11-FOLLOWUP-solidarity-pool-and-safe-haven.md`](tasks/M11-FOLLOWUP-solidarity-pool-and-safe-haven.md)
 
 | Task | Status |
 |---|---|
 | `useGameStore.ts` — `toolLibraryProgress` + `landTrustProgress` fields | `[x]` |
 | Node D: Community Tool Library — WorldScene node + ConstructionModal | `[x]` |
 | Node E: Community Land Trust — WorldScene node + ConstructionModal | `[x]` |
-| `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[x]` endpoint/test real, but **its source table (`crisis_log`) is never written to in production** — the pool always returns its neutral default in actual gameplay; see follow-up |
-| "Safe Haven" ending on Land Trust completion | `[ ]` **genuine missing feature**, not just an unverified manual test — see follow-up |
+| `solidarity_pool.go` + `GET /api/v1/district/resilience` | `[x]` — **real write path added 2026-09-15** (`POST /api/v1/district/crisis-log`, wired from `CrisisEngine.resolveCrisis()`); proven end-to-end by a test that POSTs through the real handler and checks the very next GET reflects it |
+| "Safe Haven" ending on Land Trust completion | `[x]` **built 2026-09-15** — `commons.safeHavenUnlocked` flips once at 100% Land Trust progress, shown via new `SafeHavenBanner.ts` |
 | Tool Library 20% upkeep buff wired in EconomyMath | `[x]` (was stale — `EconomyMath.ts` already reduces energy upkeep 10→8 (20%) once `toolLibraryProgress` clears the build threshold) |
 | Climate migration crisis archetype (3 scenarios) | `[x]` (was stale — `MIGRATION_SANCT` archetype, 3 authored scenarios already in `crisis_scenarios.json`) |
 | Community unity flyer objects + tear-down action | `[x]` (was stale — `WorldScene.ts`'s `spawnFlyers()`/`tearDownFlyer()` already implemented) |
 | `TownHallAssembly.ts` — monthly vote modal | `[x]` (was stale — already implemented, gated by `shouldOpen()`'s 30-day interval) |
 | `TopHUD.ts` — District Pulse badge (global solidarity dot) | `[x]` (was stale — `pulseBadgeEl` already implemented) |
-| Tests | `[~]` (Go httptest for `/api/v1/district/resilience` exists; two Land-Trust/flyer manual smoke tests remain — see `M11-shared-commons.md`) |
+| Tests | `[~]` (Go httptest for `/api/v1/district/resilience` + the new end-to-end write-path test exist; the flyer manual smoke test remains — see `M11-shared-commons.md`) |
 
 ---
 

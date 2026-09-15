@@ -52,21 +52,24 @@ Grounding the game in **real-world open data, macroeconomic indices, climate tra
 | **17** | [**17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.md) | 📡 Mesh Systems Architect<br>☀️ Climate Physicist<br>💰 Economy Designer | Real-time astronomical solar cycle & live weather sync (SunCalc & Open-Meteo); off-grid peer communication via LoRa radio (Meshtastic over WebSerial/WebBluetooth) & BitChat/WebRTC; decentralized mutual credit ledger for local trading. |
 | **18** | [**18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md) | 💾 Offline Systems Architect<br>🔒 Cryptographic Engineer<br>⚙️ DevOps / SRE | 100% on-device autonomous execution; IndexedDB/OPFS permanent storage; Ed25519-signed append-only event log; conflict-free CRDT reconciliation; delayed multi-hop sync to mesh and internet grid. |
 | **19** | [**19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md) | 📡 Mesh Systems Architect<br>🛠️ Backend Architect<br>🔒 Security Auditor | Zero-hardware off-grid local communication via BitChat.free (mDNS/Subnet WebRTC + BLE); 100% pluggable MeshTransportPlugin microkernel contract; multi-hop gossip relaying without central servers. |
-| **20** | [**20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md) | 🏗️ Architecture Lead<br>📦 Monorepo Specialist | Standalone packages/apps for minigames (`packages/minigame-*`) and transports (`packages/transport-*`); zero coupling with `apps/web`; dynamic micro-frontend loader. |
+| **20** | [**20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md**](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md) | 🏗️ Architecture Lead<br>📦 Monorepo Specialist | Standalone packages/apps for minigames (`packages/minigame-*`) and transports/plugins (`packages/plugin-*`); zero coupling with `apps/web`; dynamic micro-frontend loader. |
 
 ---
 
 ## Active Milestone Roadmap (Phase 2)
 
+> **Note (2026-09-15):** this roadmap list had drifted out of sync with reality (wrong checkboxes, links pointing at files later archived). `docs/TASK-STATUS.md` is the authoritative status source — see it and `docs/AUDIT-2026-09-15.md`/`docs/SPRINT-2026-09-15-PLAN.md` for current detail. Checkboxes/links below corrected to match.
+
 - [x] **Milestones M1 – M7**: MVP Foundation, Top-Down Canvas, Zustand Store, Construction Nodes, Crisis Baseline, Multi-Skin Architecture, Go API & Docker Infrastructure *(Archived under `docs/archive/`)*.
-- [x] **Milestone M14**: [Dynamic Microkernel, Living District Builder & Extensible Minigames](tasks/M14-microkernel-minigames.md)
-- [ ] **Milestone M15 (🚨 Immediate Priority)**: [Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker](tasks/M15-civic-networking-theme-shop.md)
-- [ ] **Milestone M16**: [Real-World Geo-Mode (OSM PoC) & Universal Empathy Design](tasks/M16-real-world-geo-mode.md)
-- [ ] **Milestone M17**: [Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit](tasks/M17-offgrid-mesh-weather-currency.md)
-- [ ] **Milestone M18**: [Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync](tasks/M18-offline-first-device-storage-and-sync.md)
-- [ ] **Milestone M19**: [BitChat.free Integration & Pluggable Mesh Transport Architecture](tasks/M19-bitchat-mesh-transports.md)
-- [ ] **Milestone M8**: [Living Economy & District Pulse Engine](tasks/M8-living-economy.md)
-- [ ] **Milestone M9**: [The District Dispatch & Dynamic AI Narrative Engine](tasks/M9-district-dispatch.md)
-- [ ] **Milestone M10**: [District Expansion & Living World Systems](tasks/M10-district-expansion.md)
-- [ ] **Milestone M11**: [Shared Commons, Climate Displacement & Community Defense](tasks/M11-shared-commons.md)
-- [ ] **Milestone M12**: [Procedural Audio Synth v2, Mobile Polish & Release QA](tasks/M12-audio-v2-polish.md)
+- [x] **Milestone M14**: [Dynamic Microkernel, Living District Builder & Extensible Minigames](../archive/M14-microkernel-minigames.md) *(Archived — zero-gap audit-verified 2026-09-15)*
+- [x] **Milestone M15**: [Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker](../archive/M15-civic-networking-theme-shop.md) *(Archived)*
+- [x] **Milestone M16**: [Real-World Geo-Mode (OSM PoC) & Universal Empathy Design](../archive/M16-real-world-geo-mode.md) *(Archived)*
+- [x] **Milestone M17**: [Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit](../archive/M17-offgrid-mesh-weather-currency.md) *(Archived)*
+- [x] **Milestone M18**: [Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync](../archive/M18-offline-first-device-storage-and-sync.md) *(Archived)*
+- [x] **Milestone M19**: [BitChat.free Integration & Pluggable Mesh Transport Architecture](../archive/M19-bitchat-mesh-transports.md) *(Archived)*
+- [x] **Milestone M8**: [Living Economy & District Pulse Engine](../tasks/M8-living-economy.md) — resolved 2026-09-15; formally re-scoped as a synthetic economy, Wage/Transit fixed
+- [x] **Milestone M9**: [The District Dispatch & Dynamic AI Narrative Engine](../tasks/M9-district-dispatch.md) — resolved 2026-09-15; real RSS ingestion formally deferred
+- [x] **Milestone M10**: [District Expansion & Living World Systems](../tasks/M10-district-expansion.md) — resolved 2026-09-15; Weather System built
+- [x] **Milestone M11**: [Shared Commons, Climate Displacement & Community Defense](../tasks/M11-shared-commons.md) — Solidarity Pool + Safe Haven fixed 2026-09-15
+- [x] **Milestone M12**: [Procedural Audio Synth v2, Mobile Polish & Release QA](../archive/M12-audio-v2-polish.md) *(Archived)*
+- [x] **Milestone M20**: [Standalone Package Architecture Cleanup](../tasks/M20-standalone-packages-cleanup.md) — all 3 concrete gaps closed 2026-09-15

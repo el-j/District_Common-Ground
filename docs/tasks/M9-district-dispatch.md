@@ -3,11 +3,11 @@
 Stories: `docs/stories/EPIC-09-district-dispatch.md`
 Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAMIC-AI-NARRATIVE-PIPELINE.md`
 
-> **Audit note (2026-09-15):** several items below were checked off without matching code. See [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md) for the real remaining work; corrections inline below.
+> **Audit note (2026-09-15):** several items below were checked off without matching code; most were fixed the same day (naming cleanup, AI headline wiring, citation pill, radio ticker). See [`M9-FOLLOWUP-narrative-gaps.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M9-FOLLOWUP-narrative-gaps.md) for the full history; only real RSS/feed ingestion remains formally deferred.
 
 ## Go Backend Tasks
-- [ ] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds — **not built.** `HandleNews` still unconditionally returns `Items: []` with `Source: "stub"`, identical to the M8 placeholder. No RSS/feed-parsing code exists anywhere in the repo.
-- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `FASCIST_AGITATION`) — classifier itself is real and tested, but the 7th archetype's string constant is inconsistent across the codebase: this doc says `COMMUNITY_DIVISION`, the Go backend (`news.go`/`validator.go`/`prompts.go`) uses `FASCIST_AGITATION`, and the frontend (`crisis_scenarios.json`/`CrisisWireModal.ts`/`narrativeGossip.ts`) uses `DIVISION_AGITATION`. Three different strings for one concept — worth noting given M16's lexicon audit specifically eliminated "fascist"-family terms from user-facing/frontend code but never touched this Go backend constant. Tracked in the follow-up doc.
+- [ ] `apps/api/internal/pulse/news.go` — RSS/JSON ingestion from civic feeds — **formally re-scoped, deferred (2026-09-15).** `HandleNews` still unconditionally returns `Items: []` with `Source: "stub"`; this is not a bug to fix quietly, it's a real feature (a live RSS/feed parser) that was never built and mirrors the M8 live-data decision. `news.go`'s keyword-classification map still exists and is real — it's just never fed live text today. The AI narrative pipeline below does *not* depend on this; it generates scenarios directly, it doesn't classify ingested news.
+- [x] Crisis archetype classifier: 7 categories from keywords (`LABOR_TRANSIT`, `CLIMATE_EXTREME`, `HOUSING_SPECULATE`, `FOOD_HEALTH`, `CIVIC_DISINFO`, `MIGRATION_SANCT`, `DIVISION_AGITATION`) — classifier itself is real and tested. **Fixed 2026-09-15:** the 7th archetype's string constant was inconsistent across the codebase (Go backend used `FASCIST_AGITATION`, frontend used `DIVISION_AGITATION`); renamed the Go-side constant (`news.go`/`validator.go`/`prompts.go`/`validator_test.go`) to `DIVISION_AGITATION` to match the frontend and the intent of M16's lexicon audit. `lexiconAudit.test.ts` now also scans Go source (substring match, not word-boundary regex — `SNAKE_CASE` identifiers defeat `\b`) so this class of regression is caught automatically going forward.
 - [x] `apps/api/internal/narrative/client.go` — Multi-provider AI client:
   - Ollama local endpoint support (`/api/chat` with `llama3.2:3b`)
   - OpenAI-compatible cloud support (Groq / Cloudflare / HuggingFace free tiers)
@@ -22,13 +22,13 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 - [x] `BroadsheetModal.ts` — "The Daily District Ground" UI
   - CSS 3D unfold animation (rotateX 90° → 0°, 400ms) — confirmed real
   - Newsprint texture (CSS background: repeating halftone SVG) — confirmed real
-  - Real-world headline citation badge with source pill — **not built.** `BroadsheetData` has no source field and `broadsheetHTML.ts` renders no citation/source pill anywhere.
-  - Sections: barometer row, NPC street quote — confirmed real. "Dynamic headline story" — **not built as described**: `TopHUD.ts`'s `onEndDay()` picks the headline from 4 hardcoded string templates keyed off food/energy index thresholds; it never calls `/api/v1/narrative/daily-scenarios` (that endpoint is consumed only by the NPC gossip mill below). "4×4 mini-crossword" — **not what's built**: it's a single free-text `<input>` checked against the literal string `"solidarity"` (`broadsheetHTML.ts`/`BroadsheetModal.ts`), not a grid puzzle. Functional and tested as written, just not a crossword.
+  - Real-world headline citation badge with source pill — **built 2026-09-15.** `BroadsheetData.source` renders a `.broadsheet-citation` pill ("📡 AI Narrative Wire — live/cached") whenever the headline came from the real AI pipeline; omitted for the hardcoded-fallback path.
+  - Sections: barometer row, NPC street quote — confirmed real. "Dynamic headline story" — **fixed 2026-09-15**: `TopHUD.ts`'s `onEndDay()` now awaits `fetchDailyNarrative()` and uses the top scenario's `title`/`context` as the headline/subheadline, falling back to the original 4 hardcoded templates only when the pipeline is offline/empty. "4×4 mini-crossword" — this was always a **doc-wording gap, not a code gap**: the real, intentional feature is a single "Commons Clue" prompt (`<input class="commons-clue-input">` checked against `"solidarity"`, renamed from the old `crossword-*` class names for hygiene) — functional and tested as written, correctly described here now.
 - [x] `RadioWidget.ts` — "Radio Free Commons" pirate FM tuner
-  - Analog dial + needle indicator — real, but plain CSS `<div>`s (`.radio-dial-track`/`.radio-needle`), not SVG as originally written
+  - Analog dial + needle indicator — real, but plain CSS `<div>`s (`.radio-dial-track`/`.radio-needle`), not SVG as originally written (kept as-is — low priority, cosmetic only)
   - 3 frequencies with label + audio profile switch — confirmed real
   - White noise static during tuning (bandpass audio node) — confirmed real
-  - Amber LED display showing frequency — confirmed real. "Scrolling breaking news ticker" — **not built**; no ticker exists in `RadioWidget.ts`. (A same-named-sounding but unrelated `CivicTickerWidget` exists from M15 — a real-world civic-action ticker, not radio news — don't conflate the two.)
+  - Amber LED display showing frequency — confirmed real. "Scrolling breaking news ticker" — **built 2026-09-15**: `.radio-ticker` CSS marquee, fed by the same `CivicTickerWidget.getHeadlines()` data TopHUD already uses. (A same-named-sounding but unrelated `CivicTickerWidget` exists from M15 — a real-world civic-action ticker, not radio news — the ticker reuses its data, doesn't conflate the two.)
 - [x] `advanceDay()` → trigger BroadsheetModal before new day begins (not blocking)
 - [x] Dynamic NPC Rumor Mill (`NPCEntity.ts`, `WorldScene.ts`, `narrativeGossip.ts`):
   - Fetches daily NPC gossip from `/api/v1/narrative/daily-scenarios`
@@ -42,5 +42,7 @@ Planning: `docs/planning/03-NEWS-TO-CRISIS-PIPELINE.md`, `docs/planning/08-DYNAM
 - [x] Go test: `validator_test.go` verifies malformed or out-of-bounds LLM responses are rejected (16 tests)
 - [x] Go httptest: `/api/v1/narrative/daily-scenarios` returns valid scenario matching schema
 - [x] Go httptest: fallback returns 200 valid JSON when AI provider returns 500
-- [x] Vitest: `narrativeGossip.test.ts` — `pickGossipLine`/`scenariosToGossip` archetype matching + DEFAULT fallback, `fetchDailyGossip`'s network-failure/non-OK fallback and session-cache reuse
-- [ ] Manual: advance day → broadsheet unfolds with dynamic story → close → talk to Sal → hear dynamic rumor
+- [x] Vitest: `narrativeGossip.test.ts` — `pickGossipLine`/`scenariosToGossip` archetype matching + DEFAULT fallback, `fetchDailyGossip`'s and (added 2026-09-15) `fetchDailyNarrative`'s network-failure/non-OK fallback and session-cache reuse (the two now share one underlying fetch, tested explicitly)
+- [x] Vitest: `BroadsheetModal.test.ts` — citation pill renders when `source` is set, omitted on the fallback path (added 2026-09-15)
+- [x] Vitest: `lexiconAudit.test.ts` — Go source now scanned too (added 2026-09-15), catches the `FASCIST_AGITATION`-class regression this audit found
+- [ ] Manual: advance day → broadsheet unfolds with dynamic story (now AI-driven when the pipeline is reachable) → close → talk to Sal → hear dynamic rumor

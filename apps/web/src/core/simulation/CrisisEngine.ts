@@ -1,5 +1,6 @@
 import { useGameStore, type CrisisLogEntry } from '../state/useGameStore';
 import { gainCash, spendCash, spendEnergy, addTrust, loseTrust, addStress, reduceStress } from '../state/actions';
+import { recordCrisisChoice } from '../../api/endpoints/district';
 import scenariosRaw from '../../../public/assets/data/crisis_scenarios.json';
 
 export interface CrisisConsequences {
@@ -153,6 +154,7 @@ export function resolveCrisis(choice: 'A' | 'B'): void {
     },
   }));
 
+  recordCrisisChoice(entry.id, entry.day, entry.choice);
   applyWorldEffect(c.worldEffect);
 }
 

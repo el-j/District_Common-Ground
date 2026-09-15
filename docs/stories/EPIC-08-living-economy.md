@@ -6,7 +6,9 @@
 ## Vision
 Connect in-game daily resource flows to normalized macroeconomic data feeds. When real food prices spike or energy tariffs climb, the district residents feel it. Community-built Commons absorb the shocks.
 
-## Data Sources
+> **Re-scoped 2026-09-15 (audit + follow-up):** the table below was this milestone's original real-data pitch. It was never built — no HTTP client, no API key config, no fetch attempt to any of these sources exists anywhere in the repo. What exists instead is a well-built, tested, **fully synthetic** sinusoidal seasonal model (`apps/api/internal/pulse/economy.go`'s `seasonalFallback()`) that produces sensible seasonal variation for all 6 indices (food/energy/heat/migrant already varied; wage/transit were a permanent `1.0` no-op until fixed the same day). Real external data integration is **formally deferred, not planned near-term** — this table now documents the original real-data ambition for reference, not what's running today. See [`M8-FOLLOWUP-live-data-feeds.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M8-FOLLOWUP-live-data-feeds.md) if that decision ever needs revisiting.
+
+## Data Sources (aspirational — not built; see re-scope note above)
 | Index | Source | Multiplier Range | Gameplay Effect |
 |---|---|---|---|
 | Food | BLS CPI-U / Eurostat HICP | $M_\text{food} \in [0.8, 1.5]$ | Grocer prices, kitchen upkeep |
@@ -17,7 +19,7 @@ Connect in-game daily resource flows to normalized macroeconomic data feeds. Whe
 | Displacement | UNHCR Open Data | $M_\text{migrant} \in [0.8, 2.5]$ | Newcomer arrival events |
 
 ## Go Backend Tasks
-- `apps/api/internal/pulse/economy.go` — fetch & normalize indices, 24h cache with fail-safe defaults
+- `apps/api/internal/pulse/economy.go` — **synthetic** seasonal indices (no live fetch), 24h in-memory cache
 - `GET /api/v1/pulse/economy` endpoint — returns `DistrictPulseState` JSON
 - `GET /api/v1/pulse/climate` endpoint — heat + displacement indices
 - `packages/shared-types/src/index.ts` — `DistrictPulseState`, `EconomicMultipliers` types

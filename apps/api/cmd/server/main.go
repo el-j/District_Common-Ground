@@ -89,6 +89,7 @@ func main() {
 		r.Get("/pulse/news", pulse.HandleNews)
 		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
+		r.With(requireAuth).Post("/district/crisis-log", solidarityHandler.HandleRecordCrisisChoice)
 		r.Get("/games", kernelHandler.ListGames)
 		r.Get("/themes", themeHandler.List)
 		r.Get("/shop/catalog", shopHandler.Catalog)

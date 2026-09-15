@@ -20,7 +20,7 @@ function resetStore() {
       resilienceScore: 50,
       solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0,
       toolLibraryProgress: 0, landTrustProgress: 0,
-      constructionSpeedBuff: 0, greenhouseUnlocked: false,
+      constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false,
     },
     crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
   });
@@ -31,6 +31,7 @@ describe('CrisisEngine', () => {
     resetStore();
     // Restore module-level scapegoat streak between tests by resolving solidarity
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('initCrisisQueue fills pendingQueue with all scenario IDs', () => {
@@ -112,5 +113,38 @@ describe('CrisisEngine', () => {
     triggerCrisis(scenario.id);
     resolveCrisis('A');
     expect(getScapegoatStreak()).toBeGreaterThan(before);
+  });
+
+  it('resolveCrisis reports the choice to the Global Solidarity Pool when authenticated', () => {
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => (key === 'dcg-token' ? 'test-token' : null),
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 204, json: async () => undefined });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const scenario = scenarios[0]!;
+    triggerCrisis(scenario.id);
+    resolveCrisis('B'); // solidarity choice
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/district/crisis-log',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const [, options] = fetchMock.mock.calls[0]!;
+    const body = JSON.parse((options as { body: string }).body);
+    expect(body).toMatchObject({ crisisId: scenario.id, choice: 'solidarity' });
+  });
+
+  it('resolveCrisis does not call the network when unauthenticated', () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const scenario = scenarios[0]!;
+    triggerCrisis(scenario.id);
+    resolveCrisis('B');
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

@@ -75,8 +75,43 @@ export function scenariosToGossip(
   return result;
 }
 
+const NARRATIVE_SESSION_KEY = 'dcg-narrative-v1';
+interface CachedNarrative {
+  data: NarrativeResponse;
+  ts: number;
+}
+
+/**
+ * Fetches (and session-caches) the raw AI-narrative response. Shared by
+ * fetchDailyGossip() (NPC dialogue) and the Broadsheet's headline (M9
+ * follow-up 2026-09-15) so both consumers reuse the same network call
+ * instead of fetching /api/v1/narrative/daily-scenarios twice per day.
+ */
+export async function fetchDailyNarrative(): Promise<NarrativeResponse> {
+  try {
+    const raw = sessionStorage.getItem(NARRATIVE_SESSION_KEY);
+    if (raw) {
+      const cached: CachedNarrative = JSON.parse(raw);
+      if (Date.now() - cached.ts < TTL_MS) return cached.data;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const res = await fetch('/api/v1/narrative/daily-scenarios');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = (await res.json()) as NarrativeResponse;
+    try {
+      sessionStorage.setItem(NARRATIVE_SESSION_KEY, JSON.stringify({ data, ts: Date.now() }));
+    } catch { /* ignore */ }
+    return data;
+  } catch {
+    return { scenarios: [], source: 'empty', generatedAt: new Date().toISOString() };
+  }
+}
+
 export async function fetchDailyGossip(): Promise<Record<string, string>> {
-  // Try session cache
+  // Try session cache (gossip-derived lines are cached separately from the
+  // raw narrative so a cache-hit here skips the scenariosToGossip() work too)
   try {
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (raw) {
@@ -85,16 +120,10 @@ export async function fetchDailyGossip(): Promise<Record<string, string>> {
     }
   } catch { /* ignore */ }
 
+  const data = await fetchDailyNarrative();
+  const lines = scenariosToGossip(data.scenarios ?? []);
   try {
-    const res = await fetch('/api/v1/narrative/daily-scenarios');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as NarrativeResponse;
-    const lines = scenariosToGossip(data.scenarios ?? []);
-    try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ lines, ts: Date.now() }));
-    } catch { /* ignore */ }
-    return lines;
-  } catch {
-    return scenariosToGossip([]);
-  }
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ lines, ts: Date.now() }));
+  } catch { /* ignore */ }
+  return lines;
 }

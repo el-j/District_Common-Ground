@@ -27,9 +27,12 @@ Expand the physical map and bring it to life with dynamic day/night lighting, re
 - In-game time advances with each `advanceDay()` call; tick counter drives time-of-day
 
 ## Weather System Tasks
-- Rain particle system: bandpass-noise drops + asphalt ripple sprites
-- Cold-snap frost overlay CSS class (`filter: hue-rotate(-10deg) brightness(0.9)`)
-- Weather state driven by $M_\text{heat}$ and $M_\text{climate}$ indices from pulse service
+
+> **Built 2026-09-15** (was a real vision-to-task gap until the M10 follow-up closed it — see [`M10-FOLLOWUP-weather-system.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M10-FOLLOWUP-weather-system.md)). Shipped as: a pure `weatherTier(heat)` classifier (`apps/web/src/world/WeatherSystem.ts`, fully unit-tested) driving a canvas frost tint overlay + a small pool of falling-streak "rain" rectangles in `WorldScene.ts`, plus the existing `SoundSynth.playRain()`/`stopRain()` for audio — reusing `DistrictPulseState.multipliers.heat` (one index, both states) rather than a separate `$M_\text{climate}$` index, since no such index exists. Not an asphalt-ripple/ambient-audio particle sim — a deliberate, documented simplification.
+
+- Rain visual: pooled falling rectangles, canvas-rendered, reusing `playRain()` for audio — not a bandpass-noise-driven particle+ripple sim
+- Cold-snap frost overlay: a canvas rectangle tint (depth-layered above the day/night tint so the two compose), not a CSS `filter` on `#game-container` — CSS filters on the same element don't compose with the existing resilience-tier filters, canvas layering does
+- Weather state driven by `DistrictPulseState.multipliers.heat` only (no separate climate index exists)
 
 ## Ambient Life Tasks
 - **Scraps the Cat**: procedural-roam NPC entity; naps at grocer (morning), plaza (midday), solar wall (dusk)
@@ -48,4 +51,4 @@ Expand the physical map and bring it to life with dynamic day/night lighting, re
 ## Acceptance Criteria
 - **Test 10.1:** All zones render at stable 60fps on mobile
 - **Test 10.2:** Petting Scraps decrements stress and triggers purr + hearts
-- **Test 10.3:** Rain overlay triggers during storm weather events
+- **Test 10.3:** Rain overlay triggers during storm weather events — covered at the pure-logic level by `WeatherSystem.test.ts` (`weatherTier(heat)` crossing the rain threshold); the Phaser rendering itself is not chased down for automated coverage, matching how Test 10.1's day/night tint and the resilience-tier visuals are verified

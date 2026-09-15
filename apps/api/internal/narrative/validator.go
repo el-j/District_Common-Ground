@@ -18,9 +18,9 @@ type DynamicScenario struct {
 }
 
 type DynamicChoice struct {
-	Label       string              `json:"label"`
-	Type        string              `json:"type"`
-	Description string              `json:"description"`
+	Label        string              `json:"label"`
+	Type         string              `json:"type"`
+	Description  string              `json:"description"`
 	Consequences DynamicConsequences `json:"consequences"`
 }
 
@@ -35,7 +35,7 @@ type DynamicConsequences struct {
 
 var validArchetypes = map[string]bool{
 	"LABOR_TRANSIT": true, "CLIMATE_EXTREME": true, "HOUSING_SPECULATE": true,
-	"FOOD_HEALTH": true, "CIVIC_DISINFO": true, "MIGRATION_SANCT": true, "FASCIST_AGITATION": true,
+	"FOOD_HEALTH": true, "CIVIC_DISINFO": true, "MIGRATION_SANCT": true, "DIVISION_AGITATION": true,
 }
 
 var idPattern = regexp.MustCompile(`^[a-z0-9-]{3,60}$`)
@@ -100,7 +100,11 @@ func clampConsequences(c DynamicConsequences, isAuthoritarian bool) DynamicConse
 }
 
 func clampInt(v, min, max int) int {
-	if v < min { return min }
-	if v > max { return max }
+	if v < min {
+		return min
+	}
+	if v > max {
+		return max
+	}
 	return v
 }

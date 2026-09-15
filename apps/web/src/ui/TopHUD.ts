@@ -13,6 +13,7 @@ import { CivicTickerWidget } from './CivicTickerWidget';
 import { CivicDirectoryModal } from './CivicDirectoryModal';
 import { CivicJournal } from '../irl/CivicJournal';
 import { getWallet } from '../api/endpoints/shop';
+import { fetchDailyNarrative } from '../api/narrativeGossip';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 import type { Kernel, HudSink } from '../core/kernel/Kernel';
 import type { KernelHudButtonDescriptor } from '@district-cg/shared-types';
@@ -70,8 +71,8 @@ export class TopHUD implements HudSink {
 
     // Broadsheet + radio instances (persistent, opened on demand)
     this.broadsheet = new BroadsheetModal(root);
-    this.radio = new RadioWidget(root);
     this.civicTicker = new CivicTickerWidget(root);
+    this.radio = new RadioWidget(root, () => this.civicTicker.getHeadlines());
 
     // End Day button — shows broadsheet first, then advances day on close
     this.endDayBtn = document.createElement('button');
@@ -80,7 +81,7 @@ export class TopHUD implements HudSink {
     this.endDayBtn.textContent = 'End Day';
     this.endDayBtn.setAttribute('aria-label', 'End day and view morning dispatch');
     this.endDayBtn.hidden = true;
-    this.endDayBtn.addEventListener('click', () => this.onEndDay(root));
+    this.endDayBtn.addEventListener('click', () => void this.onEndDay(root));
     root.appendChild(this.endDayBtn);
 
     // Built-in icon-button toolbar — same icons/labels/behavior as before,
@@ -198,7 +199,7 @@ export class TopHUD implements HudSink {
       .catch(() => { /* silently skip if API unreachable */ });
   }
 
-  private onEndDay(_root: HTMLElement): void {
+  private async onEndDay(_root: HTMLElement): Promise<void> {
     const state = useGameStore.getState();
     const pulse = state.pulseState;
     const day = state.meta.day;
@@ -215,14 +216,32 @@ export class TopHUD implements HudSink {
     const foodIdx = pulse?.multipliers.food ?? 1.0;
     const energyIdx = pulse?.multipliers.energy ?? 1.0;
 
-    let headline = 'District Holds Steady Amid Economic Pressure';
-    if (foodIdx > 1.2) headline = 'Food Prices Surge: Kitchen Coalition Responds';
-    else if (energyIdx > 1.2) headline = 'Energy Costs Spike — Solar Co-op Sees New Members';
-    else if (foodIdx < 0.95) headline = 'Seasonal Abundance: Community Fridge Overflows';
+    // M9 follow-up (2026-09-15): try the real AI narrative pipeline first —
+    // this is the Broadsheet's actual showcase surface for it, not just the
+    // NPC gossip mill. Falls back to the hardcoded index-threshold templates
+    // (unchanged) when the pipeline is offline/empty, with no citation pill.
+    const narrative = await fetchDailyNarrative();
+    const topScenario = narrative.scenarios[0];
+
+    let headline: string;
+    let subheadline: string;
+    let source: string | undefined;
+    if (topScenario) {
+      headline = topScenario.title;
+      subheadline = topScenario.context;
+      source = narrative.source;
+    } else {
+      headline = 'District Holds Steady Amid Economic Pressure';
+      if (foodIdx > 1.2) headline = 'Food Prices Surge: Kitchen Coalition Responds';
+      else if (energyIdx > 1.2) headline = 'Energy Costs Spike — Solar Co-op Sees New Members';
+      else if (foodIdx < 0.95) headline = 'Seasonal Abundance: Community Fridge Overflows';
+      subheadline = 'Neighbours, we weather this together. Every act of solidarity counts.';
+    }
 
     this.broadsheet.open({
       headline,
-      subheadline: 'Neighbours, we weather this together. Every act of solidarity counts.',
+      subheadline,
+      source,
       npcQuote,
       npcName: { pip: 'Mira', morgan: 'Leo', arthur: 'Elena' }[classRole] ?? 'Mira',
       foodIndex: foodIdx,

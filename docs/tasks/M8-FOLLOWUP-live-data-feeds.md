@@ -1,7 +1,7 @@
 # M8 Follow-up — Real Live-Data Feeds for the District Pulse Engine
 
 Found: 2026-09-15, full repo audit
-Status: `[ ] Not Started`
+Status: `[x] Resolved` — Option 2 (re-scope, not build) chosen 2026-09-15; see `docs/SPRINT-2026-09-15-PLAN.md` §5.
 Parent: [`M8-living-economy.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M8-living-economy.md)
 
 ---
@@ -23,9 +23,9 @@ This isn't a functional bug — the sinusoidal fallback is well-built, tested, a
 2. **(Recommended if scope should just be corrected)** Formally re-scope M8 as "synthetic seasonal economy, real-data integration deferred" — update `EPIC-08-living-economy.md`'s Data Sources table to say so plainly, and drop `Wage`/`Transit` from `EconomicMultipliers` if they'll never vary (or wire at least one of them to something real, even coarse, e.g. a static seasonal transit-cost curve like the others).
 3. Do nothing (status quo) — acceptable short-term (nothing is broken, the fallback is genuinely good), but the doc/EPIC should stop describing unbuilt data pipelines as done.
 
-## Acceptance Criteria (once picked up)
+## Acceptance Criteria
 
-- [ ] Decide between Option 1 (build real fetch) and Option 2 (re-scope docs honestly) — default to Option 2 unless there's a concrete near-term need for the real pipeline.
-- [ ] If Option 1: at least one real external index actually varies `DistrictPulseState` output based on live data, with the existing sinusoidal fallback kept as the error path; Go httptest covers both the live-success and live-failure-falls-back-to-seasonal cases.
-- [ ] If Option 2: `EPIC-08-living-economy.md` and `M8-living-economy.md` no longer imply real external fetches exist; `Wage`/`Transit` either get a real (even simple) seasonal curve or a code comment explaining why they're permanently 1.0.
-- [ ] `go test -short ./...` passes with no regressions either way.
+- [x] Decided Option 2 (re-scope docs honestly) — no concrete near-term need for a real pipeline surfaced.
+- [x] `EPIC-08-living-economy.md` and `M8-living-economy.md` no longer imply real external fetches exist; both explicitly state the model is fully synthetic and real integration is deferred.
+- [x] `Wage`/`Transit` got real (coarse) seasonal curves (`economy.go`) instead of a permanent `1.0` no-op — wage dips in the post-holiday trough, transit ticks up in winter — both already consumed by `EconomyMath.ts`'s earning/commute-penalty math, so this is a real gameplay change, not just a cosmetic number.
+- [x] `go test -race -short ./...` passes with no regressions; new `TestSeasonalFallback_WageAndTransitVary` guards against this becoming a no-op again.

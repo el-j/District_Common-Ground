@@ -1,7 +1,7 @@
 # M11 Follow-up — Wire the Global Solidarity Pool for Real & Build the Safe Haven Ending
 
 Found: 2026-09-15, full repo audit
-Status: `[ ] Not Started`
+Status: `[x] Complete` — both fixed 2026-09-15, see `docs/SPRINT-2026-09-15-PLAN.md` §1.
 Parent: [`M11-shared-commons.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M11-shared-commons.md)
 
 ---
@@ -32,9 +32,9 @@ This is exactly the kind of gap that automated tests don't catch: the unit/integ
 1. **(Recommended)** Build the actual trigger: on `landTrustProgress` reaching 100, show a one-time celebratory banner/modal (matching the existing `ConstructionStages.ts`/`TactileEffects.ts` completion-celebration pattern from M14) and log the milestone to `historyLog`.
 2. Drop the promise from `EPIC-11-shared-commons.md`'s Test 11.2 if it's no longer wanted as a distinct ending state.
 
-## Acceptance Criteria (once picked up)
+## Acceptance Criteria
 
-- [ ] Decide the Solidarity Pool approach (real write path vs. re-scope to per-player) and implement it; a real end-to-end Vitest/Go test proves a *live* crisis resolution (not a test-seeded row) changes the aggregate index.
-- [ ] Decide the Safe Haven approach (build vs. drop) and implement or formally remove it from `EPIC-11-shared-commons.md`.
-- [ ] `M11-shared-commons.md`'s manual-test section is updated to reflect reality once either item ships.
-- [ ] `npm test` and `go test -short ./...` pass with no regressions.
+- [x] Decided the Solidarity Pool approach (real write path — Option 1) and implemented it: `POST /api/v1/district/crisis-log` in `apps/api/internal/save/solidarity_pool.go`, wired from `CrisisEngine.ts`'s `resolveCrisis()`. `TestHandleRecordCrisisChoice_EndToEnd_ChangesAggregate` proves a *live* crisis resolution (not a test-seeded row) changes the aggregate index.
+- [x] Decided the Safe Haven approach (build — Option 1) and implemented it: `commons.safeHavenUnlocked` in `useGameStore.ts`, set in `actions.ts`, shown once via `WorldScene.ts`'s `checkSafeHaven()` + new `SafeHavenBanner.ts`.
+- [x] `M11-shared-commons.md`'s manual-test section updated to reflect reality.
+- [x] `npm test` (303/303) and `go test -race -short ./...` + full `go test ./...` (testcontainers) pass with no regressions.

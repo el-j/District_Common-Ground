@@ -27,8 +27,8 @@ The core requirement of *District: Common Ground* is that **Minigames and Transp
 │  │       ├── CourierGame.ts     (Canvas bike delivery arcade logic)     │
 │  │       └── index.ts           (createMinigame(): MinigameInstance)    │
 │  │                                                                      │
-│  └── transport-bitchat/         (STANDALONE Mesh Transport Package)     │
-│      ├── package.json           (@district-cg/transport-bitchat)        │
+│  └── plugin-bitchat/            (STANDALONE Mesh Transport Package)     │
+│      ├── package.json           (@district-cg/plugin-bitchat)          │
 │      ├── manifest.json          (Transport plugin declaration)          │
 │      └── src/                                                           │
 │          ├── BitChatProtocol.ts (Subnet WebRTC + BLE driver)            │

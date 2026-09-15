@@ -1,8 +1,8 @@
 # M14 Follow-up — Missing QA Coverage (Tests 14.2, 14.4, 14.5)
 
 Found: 2026-09-15, full repo audit
-Status: `[ ] Not Started`
-Parent: [`M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M14-microkernel-minigames.md)
+Status: `[x] Complete` — all 3 tests built 2026-09-15, see `docs/SPRINT-2026-09-15-PLAN.md` §3.
+Parent: [`M14-microkernel-minigames.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/archive/M14-microkernel-minigames.md)
 
 ---
 
@@ -20,8 +20,8 @@ This is the general risk the whole audit was looking for: code that's real and l
 
 ## Acceptance Criteria
 
-- [ ] **Test 14.2:** Add a test (Vitest, using `MinigameContainer`/`MinigameLoader`) that mounts and unmounts a minigame instance 10 times consecutively and asserts no leaked event listeners/timers/DOM nodes remain (or whatever teardown contract `MinigameInstance.unmount()` actually guarantees).
-- [ ] **Test 14.4:** Add a Go integration test (or a combined frontend+backend httptest chain) that starts a courier-rush session, submits a plausible score payload, and asserts the wallet balance and any trust-related store field actually increase — using the real `StartSession`/`CompleteSession` handlers, not mocks.
-- [ ] **Test 14.5:** Add `apps/api/internal/kernel/verification_requests_test.go` covering: submitting a request quarantines the plugin, an owner-approved review promotes it to the verified catalog, and a non-owner review attempt is rejected.
-- [ ] `M14-microkernel-minigames.md`'s section 7 checkboxes are flipped to `[x]` once each test lands.
-- [ ] `npm test` and `go test -short ./...` pass with no regressions.
+- [x] **Test 14.2:** Added to `MinigameLoader.test.ts` — mounts/unmounts 10× via the real `MinigameLoader.launchMinigame()` + `MinigameContainer.unmount()`, asserts zero leaked DOM nodes. Required adding `jsdom` as a devDependency + a per-file `// @vitest-environment jsdom` pragma, since the project default is `node` (no DOM) and this is the first test to actually mount real DOM-touching code.
+- [x] **Test 14.4:** Added `apps/api/internal/kernel/courier_delivery_loop_test.go` — real `StartSession`/`CompleteSession` handlers, real courier-rush plugin, real Postgres. **Correction to this doc's original wording:** there is no server-side wallet to assert against — `RecordSession` only persists an anti-cheat audit row (`plugin_sessions`); reward application happens client-side via the already-tested `HostPlatformAPI.grantRewards()`. The test verifies the server computes and persists the correct reward grant, plus rejects an implausible (anti-cheat-violating) payload.
+- [x] **Test 14.5:** Added `apps/api/internal/kernel/verification_requests_test.go` — submit quarantines, owner-approve promotes to the verified catalog, owner-reject never promotes, non-owner review attempt gets `403`.
+- [x] `M14-microkernel-minigames.md`'s section 7 checkboxes flipped to `[x]`; M14's top-level status updated to reflect zero remaining gaps.
+- [x] `npm test` (311/311) and `go test -race -short ./...` (plus the real-Postgres integration runs) pass with no regressions.

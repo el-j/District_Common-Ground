@@ -10,11 +10,13 @@ import { ConstructionModal, type ConstructionNodeData } from '../ui/Construction
 import { CrisisWireModal } from '../ui/CrisisWireModal';
 import { HistoryModal } from '../ui/HistoryModal';
 import { TownHallAssembly } from '../ui/TownHallAssembly';
+import { SafeHavenBanner } from '../ui/SafeHavenBanner';
 import { TopHUD } from '../ui/TopHUD';
 import { useGameStore } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
 import { addTrust, spendEnergy, reduceStress } from '../core/state/actions';
-import { startBGMLoop } from '../core/audio/SoundSynth';
+import { startBGMLoop, playRain, stopRain } from '../core/audio/SoundSynth';
+import { weatherTier, type WeatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
 import { MinigameLoader } from '../core/kernel/MinigameLoader';
 
@@ -513,6 +515,8 @@ export class WorldScene extends Phaser.Scene {
   private crisisOpen = false;
   private historyOpen = false;
   private assemblyOpen = false;
+  private safeHavenOpen = false;
+  private safeHavenShown = false;
   private actionKey!: Phaser.Input.Keyboard.Key;
   private spaceKey!: Phaser.Input.Keyboard.Key;
   private completedIds = new Set<string>();
@@ -526,6 +530,9 @@ export class WorldScene extends Phaser.Scene {
   private prevDay = 0;
   private lastTintHash = -1;
   private streetlamps: Phaser.GameObjects.Arc[] = [];
+  private weatherOverlay!: Phaser.GameObjects.Rectangle;
+  private rainDrops: Phaser.GameObjects.Rectangle[] = [];
+  private currentWeatherTier: WeatherTier = 'none';
   private lastLampAlpha = -1;
 
   // Courier Rush Cargo Bike portal (near Sal's Kitchen / Grocer)
@@ -688,6 +695,27 @@ export class WorldScene extends Phaser.Scene {
     this.tintOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0x220044, 0)
       .setScrollFactor(0).setDepth(90);
 
+    // Weather overlay (M10 follow-up 2026-09-15): frost tint layers above the
+    // day/night tint (depth 91) so the two compose instead of one CSS filter
+    // clobbering the other. Rain is a small pool of falling streak rectangles
+    // (depth 92), animated in update() only while raining — same
+    // rectangle-primitive style as spawnStreetlamps()/spawnFlyers(), no new
+    // Phaser subsystem introduced for one effect.
+    this.weatherOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0xaad4ff, 0)
+      .setScrollFactor(0).setDepth(91);
+    for (let i = 0; i < 40; i++) {
+      const drop = this.add.rectangle(
+        Math.random() * screenW,
+        Math.random() * screenH,
+        2, 12, 0xcfe8ff, 0,
+      ).setScrollFactor(0).setDepth(92).setAngle(12);
+      this.rainDrops.push(drop);
+    }
+    this.updateWeather(weatherTier(useGameStore.getState().pulseState?.multipliers.heat ?? 1.0));
+    useGameStore.subscribe((state) => {
+      this.updateWeather(weatherTier(state.pulseState?.multipliers.heat ?? 1.0));
+    });
+
     // Track day advances for day/night cycle
     this.prevDay = useGameStore.getState().meta.day;
     useGameStore.subscribe((state) => {
@@ -715,6 +743,7 @@ export class WorldScene extends Phaser.Scene {
     // Day/night cycle: advance ticks, update camera tint every ~500ms
     this.ticksSinceDay += delta;
     this.updateDayNight();
+    this.updateRainDrops(delta);
 
     // Scraps
     const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
@@ -726,6 +755,7 @@ export class WorldScene extends Phaser.Scene {
     this.updateZone();
     this.checkCrisis();
     this.checkAssembly();
+    this.checkSafeHaven();
     this.handleInteractions();
     this.drawThumbstick();
   }
@@ -810,6 +840,16 @@ export class WorldScene extends Phaser.Scene {
     if (!uiRoot) return;
     this.assemblyOpen = true;
     new TownHallAssembly(uiRoot, () => { this.assemblyOpen = false; });
+  }
+
+  private checkSafeHaven(): void {
+    if (this.safeHavenShown || this.safeHavenOpen) return;
+    if (!useGameStore.getState().commons.safeHavenUnlocked) return;
+    const uiRoot = document.getElementById('ui-root');
+    if (!uiRoot) return;
+    this.safeHavenOpen = true;
+    this.safeHavenShown = true;
+    new SafeHavenBanner(uiRoot, () => { this.safeHavenOpen = false; });
   }
 
   private spawnFlyers(): void {
@@ -1018,6 +1058,36 @@ export class WorldScene extends Phaser.Scene {
     }
 
     new DialogueOverlay(uiRoot, tree, dialogueKey, npc.name, () => { this.dialogueOpen = false; WorldScene.hud?.hideAction(); });
+  }
+
+  private updateWeather(tier: WeatherTier): void {
+    if (tier === this.currentWeatherTier) return;
+    this.currentWeatherTier = tier;
+
+    this.weatherOverlay.setFillStyle(0xaad4ff, tier === 'frost' ? 0.16 : 0);
+
+    const raining = tier === 'rain';
+    for (const drop of this.rainDrops) drop.setAlpha(raining ? 0.35 : 0);
+    if (raining) {
+      playRain();
+    } else {
+      stopRain();
+    }
+  }
+
+  private updateRainDrops(delta: number): void {
+    if (this.currentWeatherTier !== 'rain') return;
+    const screenW = this.scale.width, screenH = this.scale.height;
+    const fallSpeed = 0.4; // px/ms
+    for (const drop of this.rainDrops) {
+      drop.y += fallSpeed * delta;
+      drop.x -= fallSpeed * 0.25 * delta;
+      if (drop.y > screenH) {
+        drop.y = -10;
+        drop.x = Math.random() * screenW;
+      }
+      if (drop.x < -10) drop.x = screenW + 10;
+    }
   }
 
   private applyResilienceTier(score: number): void {

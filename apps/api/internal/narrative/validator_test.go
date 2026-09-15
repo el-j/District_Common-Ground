@@ -105,7 +105,7 @@ func TestValidateScenario_Valid(t *testing.T) {
 func TestValidateScenario_AllArchetypes(t *testing.T) {
 	archetypes := []string{
 		"LABOR_TRANSIT", "CLIMATE_EXTREME", "HOUSING_SPECULATE",
-		"FOOD_HEALTH", "CIVIC_DISINFO", "MIGRATION_SANCT", "FASCIST_AGITATION",
+		"FOOD_HEALTH", "CIVIC_DISINFO", "MIGRATION_SANCT", "DIVISION_AGITATION",
 	}
 	for _, arch := range archetypes {
 		t.Run(arch, func(t *testing.T) {
@@ -260,7 +260,7 @@ func TestValidateScenario_StripsMarkdownFencesNoLang(t *testing.T) {
 
 func TestValidateScenario_ForcesWorldEffect(t *testing.T) {
 	// worldEffect in JSON is ignored — validator overwrites to desaturate/bloom
-	raw := buildValidJSON("effect-override-01", "FASCIST_AGITATION")
+	raw := buildValidJSON("effect-override-01", "DIVISION_AGITATION")
 	s, err := narrative.ValidateScenario(raw)
 	if err != nil {
 		t.Fatal(err)

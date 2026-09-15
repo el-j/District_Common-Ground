@@ -15,6 +15,7 @@
   "devDependencies": {
     "@district-cg/shared-types": "*",
     "@tailwindcss/vite": "^4.3.3",
+    "jsdom": "^30.0.1",
     "oxlint": "^1.82.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",

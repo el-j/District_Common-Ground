@@ -234,6 +234,99 @@ func TestHandleRecordCrisisChoice_EndToEnd_ChangesAggregate(t *testing.T) {
 	}
 }
 
+// TestHandleResilienceByScenario_MixedChoicesAcrossScenarios is M13 Test
+// 13.6: a per-crisis_id breakdown of seeded mixed-choice rows across two
+// scenarios returns correct counts and flags the skewed one.
+func TestHandleResilienceByScenario_MixedChoicesAcrossScenarios(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	ctx := context.Background()
+
+	var userID string
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO users (email, password_hash) VALUES ('by-scenario-test@example.com', 'hash') RETURNING id`,
+	).Scan(&userID); err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+
+	type row struct{ crisisID, choice string }
+	rows := []row{
+		// "crisis-a": 9 solidarity / 1 scapegoat -> 90%, skewed (>85%)
+		{"crisis-a", "solidarity"}, {"crisis-a", "solidarity"}, {"crisis-a", "solidarity"},
+		{"crisis-a", "solidarity"}, {"crisis-a", "solidarity"}, {"crisis-a", "solidarity"},
+		{"crisis-a", "solidarity"}, {"crisis-a", "solidarity"}, {"crisis-a", "solidarity"},
+		{"crisis-a", "scapegoat"},
+		// "crisis-b": 1 solidarity / 1 scapegoat -> 50%, not skewed
+		{"crisis-b", "solidarity"}, {"crisis-b", "scapegoat"},
+	}
+	for i, r := range rows {
+		if _, err := pool.Exec(ctx,
+			`INSERT INTO crisis_log (user_id, crisis_id, day, choice) VALUES ($1, $2, $3, $4)`,
+			userID, r.crisisID, i+1, r.choice,
+		); err != nil {
+			t.Fatalf("insert row %d: %v", i, err)
+		}
+	}
+
+	h := save.NewSolidarityHandler(pool)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/district/resilience/by-scenario", nil)
+	rr := httptest.NewRecorder()
+	h.HandleResilienceByScenario(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rr.Code)
+	}
+
+	var resp struct {
+		Scenarios []struct {
+			CrisisID        string  `json:"crisisId"`
+			SolidarityCount int     `json:"solidarityCount"`
+			ScapegoatCount  int     `json:"scapegoatCount"`
+			SolidarityRatio float64 `json:"solidarityRatio"`
+			Skewed          bool    `json:"skewed"`
+		} `json:"scenarios"`
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(resp.Scenarios) != 2 {
+		t.Fatalf("expected 2 scenarios, got %d", len(resp.Scenarios))
+	}
+
+	byID := map[string]struct {
+		SolidarityCount int
+		ScapegoatCount  int
+		SolidarityRatio float64
+		Skewed          bool
+	}{}
+	for _, s := range resp.Scenarios {
+		byID[s.CrisisID] = struct {
+			SolidarityCount int
+			ScapegoatCount  int
+			SolidarityRatio float64
+			Skewed          bool
+		}{s.SolidarityCount, s.ScapegoatCount, s.SolidarityRatio, s.Skewed}
+	}
+
+	a := byID["crisis-a"]
+	if a.SolidarityCount != 9 || a.ScapegoatCount != 1 {
+		t.Errorf("crisis-a: got solidarity=%d scapegoat=%d, want 9/1", a.SolidarityCount, a.ScapegoatCount)
+	}
+	if a.SolidarityRatio != 90.0 || !a.Skewed {
+		t.Errorf("crisis-a: got ratio=%v skewed=%v, want 90.0/true", a.SolidarityRatio, a.Skewed)
+	}
+
+	b := byID["crisis-b"]
+	if b.SolidarityCount != 1 || b.ScapegoatCount != 1 {
+		t.Errorf("crisis-b: got solidarity=%d scapegoat=%d, want 1/1", b.SolidarityCount, b.ScapegoatCount)
+	}
+	if b.SolidarityRatio != 50.0 || b.Skewed {
+		t.Errorf("crisis-b: got ratio=%v skewed=%v, want 50.0/false", b.SolidarityRatio, b.Skewed)
+	}
+}
+
 func TestHandleRecordCrisisChoice_Unauthenticated_Returns401(t *testing.T) {
 	h := save.NewSolidarityHandler(nil)
 	body, _ := json.Marshal(map[string]any{"crisisId": "x", "day": 1, "choice": "solidarity"})

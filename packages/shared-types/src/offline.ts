@@ -10,7 +10,12 @@ export type SyncActionType =
   | 'MINIGAME_SCORE_COMMITTED'
   | 'IRL_DEED_LOGGED'
   | 'PEER_MUTUAL_CREDIT_TRANSFER'
-  | 'SHOP_ITEM_ACQUIRED';
+  | 'SHOP_ITEM_ACQUIRED'
+  // M13 — zero-PII civic telemetry events, resolved as an OR-Set (add-only,
+  // never revoked) by CRDTSyncEngine.resolveOrSet() exactly like IRL_DEED_LOGGED.
+  | 'CRISIS_RESOLVED'
+  | 'COMMONS_MILESTONE'
+  | 'LAND_TRUST_RATIFIED';
 
 export interface SignedActionDelta {
   id: string;

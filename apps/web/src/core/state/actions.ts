@@ -3,8 +3,12 @@ import { saveToDB } from './persistence';
 import { computeResilienceScore, applyDailyTick, DEFAULT_MULTIPLIERS } from '../simulation/EconomyMath';
 import { initCrisisQueue, checkForCrisis } from '../simulation/CrisisEngine';
 import { recordAction } from '../offline/offlineRuntime';
+import { recordEconomicSnapshot } from '../../api/endpoints/district';
 
-const ARCHETYPE_SEEDS: Record<ClassRole, {
+// Exported so BalanceSimulator.ts (M13) can start its solvency sweeps from
+// the exact same per-archetype Day-1 numbers the real game seeds, instead of
+// keeping a second hand-copied table that could drift out of sync.
+export const ARCHETYPE_SEEDS: Record<ClassRole, {
   cash: number;
   energy: number;
   maxEnergy: number;
@@ -99,13 +103,27 @@ export function advanceDay(): void {
   });
   checkForCrisis();
   void saveToDB(useGameStore.getState());
+
+  // M13 — fire-and-forget economic-attrition telemetry for the day that just
+  // landed. Never blocks gameplay; a fresh archetype-less state (classRole
+  // null, pre-character-select) is skipped rather than recorded as garbage.
+  const after = useGameStore.getState();
+  if (after.player.classRole) {
+    recordEconomicSnapshot(after.meta.day, after.player.classRole, after.player.cash, after.player.energy);
+  }
 }
 
 export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): void {
   let recordedAmount = 0;
+  let nodeJustCompleted = false;
+  let landTrustJustRatified = false;
+  let dayOfChange = 0;
+  let resilienceAfter = 0;
+  let trustAfter = 0;
   useGameStore.setState(state => {
     const buffedAmount = amount * (1 + state.commons.constructionSpeedBuff);
     recordedAmount = buffedAmount;
+    const wasNodeComplete = Number(state.commons[node]) >= 100;
     const wasLandTrustComplete = state.commons.landTrustProgress >= 100;
     const nextCommons = {
       ...state.commons,
@@ -123,6 +141,12 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
     const safeHavenUnlocked = state.commons.safeHavenUnlocked
       || (node === 'landTrustProgress' && !wasLandTrustComplete && nextCommons.landTrustProgress >= 100);
 
+    nodeJustCompleted = !wasNodeComplete && Number(nextCommons[node]) >= 100;
+    landTrustJustRatified = !state.commons.safeHavenUnlocked && safeHavenUnlocked;
+    dayOfChange = state.meta.day;
+    resilienceAfter = resilienceScore;
+    trustAfter = state.player.socialTrust;
+
     return {
       commons: {
         ...nextCommons,
@@ -135,6 +159,24 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
   // additively with the same node's contributions from this player's other
   // devices (see CRDTSyncEngine.mergePnCounter). Never blocks gameplay.
   recordAction('COMMONS_RESOURCE_CONTRIBUTION', { node, amount: recordedAmount });
+
+  // M13 — zero-PII civic telemetry, riding the same local signed event log.
+  // Field names deviate deliberately from the planning doc's illustrative
+  // ones (`daysToComplete` -> `completedOnDay`, `totalDonationsCash`/
+  // `energySpent` -> `contributionAmount`): per-node cumulative totals and a
+  // "day this node's build started" timestamp aren't tracked anywhere in
+  // GameState today, and adding them just to match the spec's exact field
+  // names would be new state for its own sake — see EPIC-13's scope notes.
+  if (nodeJustCompleted) {
+    recordAction('COMMONS_MILESTONE', { node, completedOnDay: dayOfChange, contributionAmount: recordedAmount });
+  }
+  if (landTrustJustRatified) {
+    recordAction('LAND_TRUST_RATIFIED', {
+      completedOnDay: dayOfChange,
+      globalResilience: resilienceAfter,
+      playerTrustScore: trustAfter,
+    });
+  }
 }
 
 export function setActiveCrisis(id: string): void {

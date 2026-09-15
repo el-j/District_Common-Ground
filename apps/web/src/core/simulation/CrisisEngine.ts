@@ -1,6 +1,7 @@
 import { useGameStore, type CrisisLogEntry } from '../state/useGameStore';
 import { gainCash, spendCash, spendEnergy, addTrust, loseTrust, addStress, reduceStress } from '../state/actions';
 import { recordCrisisChoice } from '../../api/endpoints/district';
+import { recordAction } from '../offline/offlineRuntime';
 import scenariosRaw from '../../../public/assets/data/crisis_scenarios.json';
 
 export interface CrisisConsequences {
@@ -97,6 +98,12 @@ export function resolveCrisis(choice: 'A' | 'B'): void {
   const c = chosen.consequences;
   const isScapegoat = chosen.type === 'authoritarian';
 
+  // M13 telemetry — snapshot resilience *before* this crisis's consequences
+  // land, so CRISIS_RESOLVED's payload can report the actual before/after
+  // shift instead of a value already mutated by this same resolution.
+  const resilienceBefore = state.commons.resilienceScore;
+  const totalTrustDelta = c.trustDelta + (isScapegoat ? -15 : 0);
+
   // Apply stat deltas
   if (c.cashDelta > 0) gainCash(c.cashDelta);
   else if (c.cashDelta < 0) spendCash(-c.cashDelta);
@@ -156,6 +163,17 @@ export function resolveCrisis(choice: 'A' | 'B'): void {
 
   recordCrisisChoice(entry.id, entry.day, entry.choice);
   applyWorldEffect(c.worldEffect);
+
+  // M13 — zero-PII civic telemetry, riding the same local signed event log
+  // as every other recordAction() call site (never a new pipeline).
+  recordAction('CRISIS_RESOLVED', {
+    crisisId: entry.id,
+    archetype: state.player.classRole,
+    choice: entry.choice,
+    dayNumber: entry.day,
+    resilienceBefore,
+    trustDelta: totalTrustDelta,
+  });
 }
 
 function applyWorldEffect(effect: string): void {

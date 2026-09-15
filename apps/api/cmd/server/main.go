@@ -53,6 +53,7 @@ func main() {
 	saveRepo := save.NewRepository(pool)
 	saveHandler := save.NewHandler(saveRepo)
 	solidarityHandler := save.NewSolidarityHandler(pool)
+	economicSnapshotHandler := save.NewEconomicSnapshotHandler(pool)
 
 	gamedataHandler := gamedata.NewHandler()
 	narrativeHandler := narrative.NewHandler(pool)
@@ -89,7 +90,10 @@ func main() {
 		r.Get("/pulse/news", pulse.HandleNews)
 		r.Get("/narrative/daily-scenarios", narrativeHandler.HandleDailyScenarios)
 		r.Get("/district/resilience", solidarityHandler.HandleDistrictResilience)
+		r.Get("/district/resilience/by-scenario", solidarityHandler.HandleResilienceByScenario)
 		r.With(requireAuth).Post("/district/crisis-log", solidarityHandler.HandleRecordCrisisChoice)
+		r.Get("/district/attrition", economicSnapshotHandler.HandleAttritionRate)
+		r.With(requireAuth).Post("/district/economic-snapshot", economicSnapshotHandler.HandleRecordSnapshot)
 		r.Get("/games", kernelHandler.ListGames)
 		r.Get("/themes", themeHandler.List)
 		r.Get("/shop/catalog", shopHandler.Catalog)

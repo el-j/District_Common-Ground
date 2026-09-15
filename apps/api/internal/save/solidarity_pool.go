@@ -81,6 +81,70 @@ func (h *SolidarityHandler) HandleDistrictResilience(w http.ResponseWriter, r *h
 	}
 }
 
+type scenarioSolidarityRow struct {
+	CrisisID        string  `json:"crisisId"`
+	SolidarityCount int     `json:"solidarityCount"`
+	ScapegoatCount  int     `json:"scapegoatCount"`
+	SolidarityRatio float64 `json:"solidarityRatio"`
+	Skewed          bool    `json:"skewed"`
+}
+
+type scenarioSolidarityResp struct {
+	Scenarios []scenarioSolidarityRow `json:"scenarios"`
+}
+
+// HandleResilienceByScenario serves GET /api/v1/district/resilience/by-scenario
+// — the planning doc's ">85% or <15% skew -> re-balance" check made readable:
+// a per-crisis_id breakdown of the same crisis_log table HandleDistrictResilience
+// already aggregates globally. crisis_id and day were already columns
+// (003_create_crisis_log.up.sql) — this is a GROUP BY, not new infrastructure.
+// Read-only: a designer reads `skewed` rows and edits crisis_scenarios.json by
+// hand, no auto-rebalancer is implied or built here.
+func (h *SolidarityHandler) HandleResilienceByScenario(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5000000000) // 5s
+	defer cancel()
+
+	rows := []scenarioSolidarityRow{}
+	if h.pool != nil {
+		result, err := h.pool.Query(ctx, `
+			SELECT
+				crisis_id,
+				COUNT(*) FILTER (WHERE choice = 'solidarity') AS solidarity,
+				COUNT(*) FILTER (WHERE choice = 'scapegoat')  AS scapegoat
+			FROM crisis_log
+			GROUP BY crisis_id
+			ORDER BY crisis_id
+		`)
+		if err != nil {
+			slog.Warn("solidarity_pool by-scenario query failed, returning empty", "err", err)
+		} else {
+			defer result.Close()
+			for result.Next() {
+				var row scenarioSolidarityRow
+				var solidarity, scapegoat int
+				if err := result.Scan(&row.CrisisID, &solidarity, &scapegoat); err != nil {
+					slog.Warn("solidarity_pool by-scenario row scan failed", "err", err)
+					continue
+				}
+				row.SolidarityCount = solidarity
+				row.ScapegoatCount = scapegoat
+				total := solidarity + scapegoat
+				if total > 0 {
+					row.SolidarityRatio = float64(solidarity) / float64(total) * 100
+				}
+				row.Skewed = total > 0 && (row.SolidarityRatio > 85 || row.SolidarityRatio < 15)
+				rows = append(rows, row)
+			}
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	if err := json.NewEncoder(w).Encode(scenarioSolidarityResp{Scenarios: rows}); err != nil {
+		slog.Error("solidarity_pool by-scenario encode", "err", err)
+	}
+}
+
 type recordCrisisChoiceRequest struct {
 	CrisisID string `json:"crisisId"`
 	Day      int    `json:"day"`

@@ -16,6 +16,10 @@ function makeBindings(): KernelHostBindings {
     playUIClick: vi.fn(),
     playSolidarityChime: vi.fn(),
     setInputLocked: vi.fn(),
+    sendChatMessage: vi.fn().mockResolvedValue(undefined),
+    onChatMessage: vi.fn(() => () => {}),
+    getActivePeerCount: vi.fn(() => 0),
+    getTransportBadges: vi.fn(() => []),
   };
 }
 
@@ -76,5 +80,24 @@ describe('Kernel', () => {
     expect(bindings.playUIClick).toHaveBeenCalled();
     expect(bindings.playSolidarityChime).toHaveBeenCalled();
     expect(bindings.setInputLocked).toHaveBeenCalledWith(true);
+  });
+
+  it('routes ctx.mesh calls through the injected host bindings', async () => {
+    const bindings = makeBindings();
+    const kernel = new Kernel({} as HTMLElement, bindings);
+
+    kernel.use(makeModule('feature', (ctx) => {
+      void ctx.mesh.sendChatMessage('broadsheet', 'hi neighbors');
+      ctx.mesh.onChatMessage(() => {});
+      ctx.mesh.getActivePeerCount();
+      ctx.mesh.getTransportBadges();
+    }));
+
+    await kernel.boot();
+
+    expect(bindings.sendChatMessage).toHaveBeenCalledWith('broadsheet', 'hi neighbors');
+    expect(bindings.onChatMessage).toHaveBeenCalled();
+    expect(bindings.getActivePeerCount).toHaveBeenCalled();
+    expect(bindings.getTransportBadges).toHaveBeenCalled();
   });
 });

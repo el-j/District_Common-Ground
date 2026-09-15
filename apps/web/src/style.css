@@ -2462,6 +2462,104 @@ input:focus-visible {
   margin: 0.3rem 0 0;
 }
 
+/* ── bitchat.free Off-Grid Walkie-Talkie (M19) ─────────────────── */
+
+.bitchat-open-btn {
+  position: absolute;
+  right: 21.8rem;
+  bottom: 0.85rem;
+  background: rgba(16, 20, 16, 0.9);
+  border: 1px solid #6bc48a;
+  border-radius: 50%;
+  color: #a8e8c0;
+  font-size: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 30;
+}
+.bitchat-open-btn:hover { color: #c8f0d8; border-color: #8bf0ac; }
+
+.bitchat-panel {
+  width: min(520px, calc(100% - 2rem));
+  background: linear-gradient(180deg, #10180f, #0c120c);
+  border-color: #6bc48a;
+}
+
+.bitchat-knob {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.bitchat-knob-tick {
+  flex: 1 1 auto;
+  background: rgba(24, 46, 32, 0.6);
+  border: 1px solid #305c40;
+  border-radius: 6px;
+  color: #bceaca;
+  font-size: 0.66rem;
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.bitchat-knob-tick:hover { border-color: #6bf0a0; }
+.bitchat-knob-tick--active {
+  background: #305c40;
+  border-color: #a8e8c0;
+  color: #ffffff;
+}
+
+.bitchat-log {
+  list-style: none;
+  margin: 0.4rem 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 0.7rem;
+  color: #d6f0e0;
+}
+.bitchat-log li { padding: 0.2rem 0; border-bottom: 1px solid rgba(107, 196, 138, 0.15); }
+
+.bitchat-log-empty {
+  font-size: 0.7rem;
+  color: #7a9a86;
+  margin: 0.6rem 0;
+}
+
+.bitchat-composer {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.bitchat-input {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  background: rgba(16, 20, 16, 0.9);
+  border: 1px solid #305c40;
+  border-radius: 4px;
+  color: #e2f0e6;
+  font-size: 0.7rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.bitchat-send {
+  background: rgba(48, 92, 64, 0.8);
+  border: 1px solid #6bc48a;
+  border-radius: 4px;
+  color: #e2f0e6;
+  font-size: 0.7rem;
+  padding: 0.5rem 0.8rem;
+  cursor: pointer;
+}
+.bitchat-send:hover { border-color: #8bf0ac; }
+
 /* ── Prefers reduced motion ──────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

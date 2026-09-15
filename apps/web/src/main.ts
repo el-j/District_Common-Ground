@@ -18,7 +18,9 @@ import { manifest as courierRushManifest } from '@district-cg/minigame-courier-r
 import { geoWeatherPlugin } from '@district-cg/plugin-geo-weather';
 import { meshCommsPlugin } from '@district-cg/plugin-mesh-comms';
 import { mutualCreditPlugin } from '@district-cg/plugin-mutual-credit';
+import { bitchatPlugin } from '@district-cg/plugin-bitchat';
 import { initOfflineReadiness } from './core/pwa/ServiceWorkerRegistry';
+import { initMeshRuntime, sendChatMessage, onChatMessage, getActivePeerCount, getTransportBadges } from './core/mesh/meshRuntime';
 
 MinigameLoader.registerLocalMinigame(
   'courier-rush',
@@ -45,6 +47,11 @@ async function boot(): Promise<void> {
   // handled by vite-plugin-pwa's auto-injected service worker registration.
   void initOfflineReadiness();
 
+  // M19 — start the mesh network + bitchat.free transport listening for
+  // same-device peers immediately, independent of whether the player ever
+  // opens the walkie-talkie modal.
+  initMeshRuntime();
+
   if (!getToken()) {
     await new Promise<void>((resolve) => { new AuthOverlay(uiRoot, resolve); });
   }
@@ -58,13 +65,18 @@ async function boot(): Promise<void> {
     playUIClick,
     playSolidarityChime,
     setInputLocked: (locked) => inputManager.setLocked(locked),
+    sendChatMessage,
+    onChatMessage,
+    getActivePeerCount,
+    getTransportBadges,
   });
   kernel
     .use(skinsPlugin)
     .use(worldPlugin)
     .use(geoWeatherPlugin)
     .use(meshCommsPlugin)
-    .use(mutualCreditPlugin);
+    .use(mutualCreditPlugin)
+    .use(bitchatPlugin);
 
   const viewport = getViewportSize();
 

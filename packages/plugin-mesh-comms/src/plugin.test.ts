@@ -10,6 +10,7 @@ function makeFakeContext(): KernelContext & { registered: KernelHudButtonDescrip
     theme: { switchSkin: vi.fn(), getActiveSkinId: vi.fn(() => 'default') },
     audio: { playUIClick: vi.fn(), playSolidarityChime: vi.fn() },
     input: { setLocked: vi.fn() },
+    mesh: { sendChatMessage: vi.fn(), onChatMessage: vi.fn(() => () => {}), getActivePeerCount: vi.fn(() => 0), getTransportBadges: vi.fn(() => []) },
     registered,
   };
   return ctx;

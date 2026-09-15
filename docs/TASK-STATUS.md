@@ -1,7 +1,7 @@
 # Task Status — District: Common Ground
 
 Last updated: 2026-09-15
-Status: **Phase 1 code-complete. Phase 2 (M8–M18) code-complete — remaining items are manual/browser-only smoke tests and audits, plus M18's unverified native-packaging targets (no Rust/Android toolchain in this environment). M19 planned, not started.**
+Status: **Phase 1 code-complete. Phase 2 (M8–M19) code-complete — remaining items are manual/browser-only smoke tests and audits, plus M18's unverified native-packaging targets and M19's unverified BLE hardware target (no Rust/Android toolchain or physical BLE test rig in this environment). M20 (standalone package architecture) is largely already satisfied by existing convention — see its note below — and is the next candidate milestone, not yet started.**
 
 Phase 1 task files and story epics are archived under `docs/archive/`.
 
@@ -34,7 +34,8 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[x] PoC Complete` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[x] PoC Complete` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
 | **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[x] PoC Complete` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
-| **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[ ] Planned (Decoupled Plugin)` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
+| **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[x] PoC Complete` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
+| **M20** | **Standalone Package Architecture for Minigames & Plugins** | Every plugin/minigame as an independent `packages/*` package, no internal `apps/web` subfolders | `[~] Mostly already satisfied` (no EPIC/task doc yet) | — | [planning doc only](planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md) |
 | M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[x] Complete` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
 | M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[x] Complete` (1 manual smoke test outstanding) | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
 | M10 | District Expansion & Living World Systems | North Transit Hub, East Canal, day/night cycles, resilience visual tiers, Scraps the cat | `[x] Complete` (3 manual smoke tests outstanding) | [EPIC-10](stories/EPIC-10-district-expansion.md) | [M10 tasks](tasks/M10-district-expansion.md) |
@@ -161,22 +162,37 @@ Planning: [`docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md`](
 
 ---
 
-## M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture (🚨 Immediate Next Priority)
+## M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture
 
 Story: [`docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md)  
 Tasks: [`docs/tasks/M19-bitchat-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M19-bitchat-mesh-transports.md)  
 Planning: [`docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/19-BITCHAT-FREE-AND-PLUGGABLE-MESH-TRANSPORTS.md)
 
+Path deviation: built at `packages/plugin-bitchat/` (standalone package, matching `plugin-geo-weather`/`plugin-mesh-comms`/`plugin-mutual-credit`), not the doc's original `apps/web/src/plugins/bitchat/` — see the task doc's header note.
+
 | Task | Status |
 |---|---|
-| `packages/shared-types/src/mesh.ts` — `MeshPacket`, `PeerDescriptor`, `MeshTransportPlugin` contracts | `[ ]` |
-| `apps/web/src/core/mesh/TransportRegistry.ts` — Dynamic multi-transport multiplexer & discovery registry | `[ ]` |
-| `apps/web/src/core/mesh/MeshNetworkService.ts` — Packet deduplication, TTL gossip relaying, signature verification | `[ ]` |
-| `apps/web/src/plugins/bitchat/SubnetBeacon.ts` — Local subnet mDNS / broadcast discovery without internet | `[ ]` |
-| `apps/web/src/plugins/bitchat/BleBeacon.ts` — Web Bluetooth LE discovery for close-range mobile handshakes | `[ ]` |
-| `apps/web/src/plugins/bitchat/BitChatProtocol.ts` — Local WebRTC DataChannel connection pool & X25519 key agreement | `[ ]` |
-| `apps/web/src/plugins/bitchat/ProofOfWork.ts` — Client-side Hashcash anti-spam proof solver (12 zero bits) | `[ ]` |
-| `OfflineChatModal.ts` — Tactile retro walkie-talkie modal with rotary 4-channel frequency knob & squelch audio | `[ ]` |
+| `packages/shared-types/src/mesh.ts` — `MeshPacket`, `PeerDescriptor`, `MeshTransportPlugin` contracts | `[x]` |
+| `apps/web/src/core/mesh/TransportRegistry.ts` — Dynamic multi-transport multiplexer & discovery registry | `[x]` |
+| `apps/web/src/core/mesh/MeshNetworkService.ts` — Packet deduplication, TTL gossip relaying, signature verification | `[x]` |
+| `packages/plugin-bitchat/src/SubnetBeacon.ts` — Local subnet discovery without internet (`BroadcastChannel`, same-device) | `[x]` (cross-device LAN mDNS/UDP has no browser API — documented gap) |
+| `packages/plugin-bitchat/src/BleBeacon.ts` — Web Bluetooth LE discovery for close-range mobile handshakes | `[x]` (unverified against physical hardware, same M17 boundary) |
+| `packages/plugin-bitchat/src/BitChatProtocol.ts` — Local WebRTC DataChannel connection pool & X25519 key agreement | `[x]` |
+| `packages/plugin-bitchat/src/ProofOfWork.ts` — Client-side Hashcash anti-spam proof solver (12 zero bits) | `[x]` |
+| `OfflineChatModal.ts` — Tactile retro walkie-talkie modal with rotary 4-channel frequency knob & chime audio | `[x]` |
+
+---
+
+## M20 — Standalone Package Architecture for Minigames & Plugins (observation, not yet scoped into an EPIC/task doc)
+
+Planning: [`docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/planning/20-STANDALONE-MONOREPO-PACKAGES-FOR-MINIGAMES-AND-PLUGINS.md)
+
+This milestone's core requirement — "minigames and transports are not internal subfolders of `apps/web`" — is **already largely true** of the current codebase, independent of this doc: `packages/plugin-geo-weather`, `packages/plugin-mesh-comms`, `packages/plugin-mutual-credit`, `packages/minigame-courier-rush`, and (as of M19) `packages/plugin-bitchat` are all already standalone `@district-cg/*` packages with their own `package.json`/`tsconfig.json`, depending only on `@district-cg/shared-types`. Remaining, genuinely open gaps if this becomes a real milestone:
+- Naming convention: the doc's mockup names the bitchat package `transport-bitchat`; every existing plugin (including bitchat) uses a `plugin-*` prefix instead. Pick one and rename, or formalize `plugin-*` as the actual convention in the doc.
+- Per-package independent dev/build scripts (`npm run dev --workspace=...`) — today's packages only have a `typecheck` script, not a standalone Vite dev server, so "iterate on bicycle physics in an isolated browser window" isn't possible yet.
+- Remote/external URL dynamic loading (`import(minigameManifest.entrypointUrl)` for community-hosted, non-monorepo minigames) is unverified — `MinigameLoader`'s local-package registration path is exercised, its remote-import path is not.
+
+No EPIC/task file has been written for this yet — flagging it here rather than fabricating a full task breakdown for work that's mostly already done.
 
 ---
 

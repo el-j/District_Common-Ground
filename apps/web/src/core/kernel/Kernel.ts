@@ -3,6 +3,8 @@ import type {
   KernelHudButtonDescriptor,
   KernelPluginManifest,
   KernelPluginModule,
+  MeshChatEvent,
+  MeshTransportBadge,
 } from '@district-cg/shared-types';
 
 export type { KernelContext, KernelHudButtonDescriptor, KernelPluginManifest, KernelPluginModule };
@@ -24,6 +26,10 @@ export interface KernelHostBindings {
   playUIClick(): void;
   playSolidarityChime(): void;
   setInputLocked(locked: boolean): void;
+  sendChatMessage(channel: string, text: string): Promise<void>;
+  onChatMessage(handler: (event: MeshChatEvent) => void): () => void;
+  getActivePeerCount(): number;
+  getTransportBadges(): MeshTransportBadge[];
 }
 
 /**
@@ -54,6 +60,12 @@ export class Kernel {
       },
       input: {
         setLocked: (locked) => bindings.setInputLocked(locked),
+      },
+      mesh: {
+        sendChatMessage: (channel, text) => bindings.sendChatMessage(channel, text),
+        onChatMessage: (handler) => bindings.onChatMessage(handler),
+        getActivePeerCount: () => bindings.getActivePeerCount(),
+        getTransportBadges: () => bindings.getTransportBadges(),
       },
     };
   }

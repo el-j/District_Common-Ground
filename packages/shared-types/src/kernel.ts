@@ -99,12 +99,36 @@ export interface KernelHudButtonDescriptor {
   onClick: () => void;
 }
 
+// ── Mesh chat bindings (M19) — real-time reach into the live mesh network
+// wired up by main.ts's composition root (MeshNetworkService/TransportRegistry
+// in apps/web/src/core/mesh/), exposed to any plugin the same way theme/audio/
+// input already are, so packages/plugin-bitchat never imports apps/web internals.
+
+export interface MeshChatEvent {
+  channel: string;
+  senderAlias: string;
+  text: string;
+}
+
+export interface MeshTransportBadge {
+  transportId: string;
+  peerCount: number;
+}
+
+export interface KernelMeshChatBindings {
+  sendChatMessage(channel: string, text: string): Promise<void>;
+  onChatMessage(handler: (event: MeshChatEvent) => void): () => void;
+  getActivePeerCount(): number;
+  getTransportBadges(): MeshTransportBadge[];
+}
+
 export interface KernelContext {
   uiRoot: HTMLElement;
   hud: { registerButton(button: KernelHudButtonDescriptor): void };
   theme: { switchSkin(skinId: string, scene?: unknown): Promise<void>; getActiveSkinId(): string };
   audio: { playUIClick(): void; playSolidarityChime(): void };
   input: { setLocked(locked: boolean): void };
+  mesh: KernelMeshChatBindings;
 }
 
 export interface KernelPluginModule {

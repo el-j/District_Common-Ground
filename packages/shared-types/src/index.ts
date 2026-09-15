@@ -7,6 +7,7 @@ export * from './social';
 export * from './civic';
 export * from './irl';
 export * from './offline';
+export * from './mesh';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';

@@ -184,6 +184,22 @@ build: ## Build production bundles (Vite dist + Go binary)
 	cd apps/api && CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/server ./cmd/server
 	@echo -e "$(GREEN)✔ Build outputs ready$(RESET)"
 
+.PHONY: build-offline-pwa
+build-offline-pwa: ## Build the zero-network PWA bundle (M18) — installable, offline-first via vite-plugin-pwa
+	@echo -e "$(CYAN)Building offline-first PWA bundle (Vite/Rolldown + Workbox precache)...$(RESET)"
+	npm -w apps/web run build
+	@echo -e "$(GREEN)✔ Offline PWA build ready at apps/web/dist$(RESET)"
+
+.PHONY: build-desktop-tauri
+build-desktop-tauri: build-offline-pwa ## Build the Tauri v2 desktop shell (M18) — requires a Rust toolchain, unverified in CI
+	@echo -e "$(CYAN)Building Tauri v2 desktop shell from apps/web/src-tauri...$(RESET)"
+	cd apps/web && npx tauri build
+
+.PHONY: build-android-capacitor
+build-android-capacitor: build-offline-pwa ## Build the Capacitor Android APK (M18) — requires an Android SDK, unverified in CI
+	@echo -e "$(CYAN)Syncing Capacitor Android project and building APK...$(RESET)"
+	cd apps/web && npx cap sync android && npx cap build android
+
 .PHONY: clean
 clean: ## Remove build artifacts, test outputs, and temporary caches
 	@echo -e "$(YELLOW)Cleaning build artifacts and dist directories...$(RESET)"

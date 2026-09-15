@@ -2,6 +2,7 @@ import { useGameStore, type ClassRole, type CrisisLogEntry, type GameState } fro
 import { saveToDB } from './persistence';
 import { computeResilienceScore, applyDailyTick, DEFAULT_MULTIPLIERS } from '../simulation/EconomyMath';
 import { initCrisisQueue, checkForCrisis } from '../simulation/CrisisEngine';
+import { recordAction } from '../offline/offlineRuntime';
 
 const ARCHETYPE_SEEDS: Record<ClassRole, {
   cash: number;
@@ -101,8 +102,10 @@ export function advanceDay(): void {
 }
 
 export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): void {
+  let recordedAmount = 0;
   useGameStore.setState(state => {
     const buffedAmount = amount * (1 + state.commons.constructionSpeedBuff);
+    recordedAmount = buffedAmount;
     const nextCommons = {
       ...state.commons,
       [node]: Math.min(100, Number(state.commons[node]) + buffedAmount),
@@ -121,6 +124,10 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
       },
     };
   });
+  // M18 — records this contribution as a PN-Counter delta so it merges
+  // additively with the same node's contributions from this player's other
+  // devices (see CRDTSyncEngine.mergePnCounter). Never blocks gameplay.
+  recordAction('COMMONS_RESOURCE_CONTRIBUTION', { node, amount: recordedAmount });
 }
 
 export function setActiveCrisis(id: string): void {

@@ -18,6 +18,7 @@ import { manifest as courierRushManifest } from '@district-cg/minigame-courier-r
 import { geoWeatherPlugin } from '@district-cg/plugin-geo-weather';
 import { meshCommsPlugin } from '@district-cg/plugin-mesh-comms';
 import { mutualCreditPlugin } from '@district-cg/plugin-mutual-credit';
+import { initOfflineReadiness } from './core/pwa/ServiceWorkerRegistry';
 
 MinigameLoader.registerLocalMinigame(
   'courier-rush',
@@ -38,6 +39,11 @@ function getViewportSize(): { width: number; height: number } {
 async function boot(): Promise<void> {
   const uiRoot = document.getElementById('ui-root');
   if (!uiRoot) throw new Error('ui-root element not found');
+
+  // M18 — request the persistent-storage lease so IndexedDB survives browser
+  // eviction under memory pressure; asset precaching itself is already
+  // handled by vite-plugin-pwa's auto-injected service worker registration.
+  void initOfflineReadiness();
 
   if (!getToken()) {
     await new Promise<void>((resolve) => { new AuthOverlay(uiRoot, resolve); });

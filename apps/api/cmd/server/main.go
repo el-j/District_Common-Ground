@@ -22,6 +22,7 @@ import (
 	"github.com/district-cg/api/internal/save"
 	"github.com/district-cg/api/internal/shop"
 	"github.com/district-cg/api/internal/social"
+	"github.com/district-cg/api/internal/sync"
 	"github.com/district-cg/api/internal/theme"
 )
 
@@ -63,6 +64,7 @@ func main() {
 	socialHandler := social.NewHandler(social.NewRepository(pool))
 	civicHandler := civic.NewHandler(civic.NewRepository(pool))
 	irlHandler := irl.NewHandler(irl.NewRepository(pool))
+	syncHandler := sync.NewHandler(sync.NewRepository(pool))
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
@@ -104,6 +106,7 @@ func main() {
 		r.Get("/civic/chapters", civicHandler.Chapters)
 		r.With(requireAuth).Post("/irl/deeds", irlHandler.LogDeed)
 		r.With(requireAuth).Get("/irl/deeds", irlHandler.ListDeeds)
+		r.With(requireAuth).Post("/sync/deltas", syncHandler.Exchange)
 		r.With(requireAuth).Post("/plugins/verification-requests", kernelHandler.SubmitVerificationRequest)
 		r.With(requireAuth).Get("/plugins/verification-requests", kernelHandler.ListVerificationRequests)
 		r.With(requireAuth).Post("/plugins/verification-requests/{id}/review", kernelHandler.ReviewVerificationRequest)

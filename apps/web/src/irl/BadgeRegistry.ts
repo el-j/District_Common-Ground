@@ -1,6 +1,7 @@
 import { get, set } from 'idb-keyval';
 import { logDeed } from '../api/endpoints/irl';
 import { getToken } from '../core/state/persistence';
+import { recordAction } from '../core/offline/offlineRuntime';
 import type { IrlDeedCategory, IrlVerificationMethod, IrlDeed, IrlWallet } from '@district-cg/shared-types';
 
 /**
@@ -42,6 +43,11 @@ export async function awardForDeed(
 	verificationMethod: IrlVerificationMethod,
 ): Promise<AwardResult> {
 	const pending: PendingDeed = { category, note, verificationMethod, loggedAt: Date.now() };
+
+	// M18 — every logged deed produces a local signed OR-Set delta regardless
+	// of server sync status (see CRDTSyncEngine.resolveOrSet): a deed the
+	// player genuinely did is never lost even if it never reaches the server.
+	recordAction('IRL_DEED_LOGGED', { category, note, verificationMethod });
 
 	if (!getToken()) {
 		await queueOffline(pending);

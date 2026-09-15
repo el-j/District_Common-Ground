@@ -1,7 +1,7 @@
 # Task Status — District: Common Ground
 
-Last updated: 2026-09-14
-Status: **Phase 1 code-complete. Phase 2 (M8–M17) code-complete — remaining items are manual/browser-only smoke tests and audits. M18/M19 planned, not started.**
+Last updated: 2026-09-15
+Status: **Phase 1 code-complete. Phase 2 (M8–M18) code-complete — remaining items are manual/browser-only smoke tests and audits, plus M18's unverified native-packaging targets (no Rust/Android toolchain in this environment). M19 planned, not started.**
 
 Phase 1 task files and story epics are archived under `docs/archive/`.
 
@@ -33,7 +33,7 @@ Task files under [`docs/tasks/`](file:///Users/rex-fab-alt/Documents/private/Dis
 | **M15** | **Pluggable Theming, Commons Bazaar, Social Graph & Civic Protest Ticker** | Theme/skin plugins, ethical in-game shop, friend district visiting & caravans, real-world community finder & democratic protest news-ticker | `[x] Complete` | [EPIC-15](stories/EPIC-15-civic-networking-theme-shop-and-demo-ticker.md) | [M15 tasks](tasks/M15-civic-networking-theme-shop.md) |
 | **M16** | **Real-World Geo-Mode (OSM PoC) & Universal Empathy Design** | OpenStreetMap playable city generation, real-world IRL deed logging (ST & CAB rewards), zero-ideological-jargon universal empathy standard | `[x] PoC Complete` | [EPIC-16](stories/EPIC-16-real-world-geo-mode-and-irl-actions.md) | [M16 tasks](tasks/M16-real-world-geo-mode.md) |
 | **M17** | **Off-Grid Mesh Networks, Real-Time Weather & Mutual Credit** | Real-time solar/weather sync (SunCalc/Open-Meteo), LoRa Meshtastic & BitChat P2P mesh, decentralized mutual credit ledger | `[x] PoC Complete` | [EPIC-17](stories/EPIC-17-offgrid-mesh-weather-and-mutual-credit.md) | [M17 tasks](tasks/M17-offgrid-mesh-weather-currency.md) |
-| **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[ ] Planned (Offline Architecture)` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
+| **M18** | **Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync** | 100% on-device autonomous execution, IndexedDB/OPFS permanent storage, Ed25519-signed append-only event log, conflict-free CRDT reconciliation, delayed multi-hop sync | `[x] PoC Complete` | [EPIC-18](stories/EPIC-18-offline-first-device-storage-and-sync.md) | [M18 tasks](tasks/M18-offline-first-device-storage-and-sync.md) |
 | **M19** | **BitChat.free Integration & Pluggable Mesh Transport Architecture** | Zero-hardware off-grid local communication via BitChat.free, headless `MeshTransportPlugin` contract, multi-hop packet relay | `[ ] Planned (Decoupled Plugin)` | [EPIC-19](stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md) | [M19 tasks](tasks/M19-bitchat-mesh-transports.md) |
 | M8 | The Living Economy & District Pulse Engine | Real-world macroeconomic indices, dynamic income/upkeep math, NOAA climate indices | `[x] Complete` | [EPIC-08](stories/EPIC-08-living-economy.md) | [M8 tasks](tasks/M8-living-economy.md) |
 | M9 | "The District Dispatch" & Dynamic AI Narrative Engine | Free AI model pipeline (Ollama/Groq), news-to-crisis synthesis, dynamic NPC rumors | `[x] Complete` (1 manual smoke test outstanding) | [EPIC-09](stories/EPIC-09-district-dispatch.md) | [M9 tasks](tasks/M9-district-dispatch.md) |
@@ -141,7 +141,7 @@ Planning: [`docs/planning/17-OFF-GRID-MESH-REALTIME-WEATHER-AND-LOCAL-CURRENCY.m
 
 ---
 
-## M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync (🚨 Immediate Next Priority)
+## M18 — Offline-First Device Storage, Autonomous Local Runtime & Delayed Mesh/Grid Sync
 
 Story: [`docs/stories/EPIC-18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-18-offline-first-device-storage-and-sync.md)  
 Tasks: [`docs/tasks/M18-offline-first-device-storage-and-sync.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M18-offline-first-device-storage-and-sync.md)  
@@ -149,19 +149,19 @@ Planning: [`docs/planning/18-OFFLINE-FIRST-DEVICE-STORAGE-AND-DELAYED-SYNC.md`](
 
 | Task | Status |
 |---|---|
-| `DeviceStorageEngine.ts` — IndexedDB/OPFS manager with permanent storage lease (`navigator.storage.persist()`) | `[ ]` |
-| `SignedEventLog.ts` — Append-only action delta ledger with on-device Ed25519 signing & hash-chaining | `[ ]` |
-| `VectorClockManager.ts` — Monotonic logical clock & multi-node causality tracker | `[ ]` |
-| `CRDTSyncEngine.ts` — PN-Counter, LWW, and OR-Set conflict-free reconciliation engine | `[ ]` |
-| `SyncQueueService.ts` — Background delta sync worker with network listener & exponential backoff | `[ ]` |
-| `DistrictGatewayClient.ts` — Lightweight HTTP/CBOR vector clock delta synchronizer | `[ ]` |
-| `ServiceWorkerRegistry.ts` — Cache-first static asset pre-caching with instant offline boot (< 400ms) | `[ ]` |
-| `PaperMeshQR.ts` — Animated QR code sequence generator for high-density air-gapped sneakernet sync | `[ ]` |
-| Standalone Packaging — Tauri v2 desktop & Capacitor Android offline packaging recipes | `[ ]` |
+| `DeviceStorageEngine.ts` — IndexedDB/OPFS manager with permanent storage lease (`navigator.storage.persist()`) | `[x]` (OPFS is feature-detected only, not a second storage backend — see M18 task doc) |
+| `SignedEventLog.ts` — Append-only action delta ledger with on-device Ed25519 signing & hash-chaining | `[x]` |
+| `VectorClockManager.ts` — Monotonic logical clock & multi-node causality tracker | `[x]` |
+| `CRDTSyncEngine.ts` — PN-Counter, LWW, and OR-Set conflict-free reconciliation engine | `[x]` (incl. Test 18.4's zero-data-loss two-device merge scenario) |
+| `SyncQueueService.ts` — Background delta sync worker with network listener & exponential backoff | `[x]` (built + unit-tested; not yet activated in `main.ts`'s boot sequence — see M18 task doc) |
+| `DistrictGatewayClient.ts` — Lightweight HTTP vector clock delta synchronizer | `[x]` (JSON, not CBOR — see M18 task doc; real Go backend at `POST /api/v1/sync/deltas`, verified against Postgres) |
+| `ServiceWorkerRegistry.ts` — Cache-first static asset pre-caching with instant offline boot (< 400ms) | `[x]` (pre-caching was already handled by `vite-plugin-pwa`'s Workbox config — this module adds persistent-storage request + SW-controlled status) |
+| `PaperMeshQR.ts` — Chunking/reassembly protocol for high-density air-gapped sneakernet sync | `[x]` (protocol only — no QR rendering/camera-scan library added, matching M16's PeerVerification boundary) |
+| Standalone Packaging — Tauri v2 desktop & Capacitor Android offline packaging recipes | `[x]` (config + Makefile targets added; unverified — no Rust/Android toolchain in this environment) |
 
 ---
 
-## M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture
+## M19 — BitChat.free Integration & Pluggable Mesh Transport Architecture (🚨 Immediate Next Priority)
 
 Story: [`docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/stories/EPIC-19-bitchat-free-and-pluggable-mesh-transports.md)  
 Tasks: [`docs/tasks/M19-bitchat-mesh-transports.md`](file:///Users/rex-fab-alt/Documents/private/District_Common-Ground/docs/tasks/M19-bitchat-mesh-transports.md)  

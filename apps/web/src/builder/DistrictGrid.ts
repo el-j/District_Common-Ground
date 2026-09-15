@@ -3,6 +3,7 @@ import { BUILDING_BLUEPRINTS, type BuildingBlueprint, type StageDefinition } fro
 import { TactileEffects } from './TactileEffects';
 import { useGameStore } from '../core/state/useGameStore';
 import { spendCash, spendEnergy, addTrust, updateCommonsProgress } from '../core/state/actions';
+import { recordAction } from '../core/offline/offlineRuntime';
 
 export interface DistrictGridCallbacks {
   onParcelUpdated?: (parcel: DistrictParcelState) => void;
@@ -98,6 +99,11 @@ export class DistrictGrid {
     // Apply progression
     parcel.stage = (parcel.stage + 1) as 0 | 1 | 2 | 3;
     parcel.progress = Math.min(100, (parcel.stage / 3) * 100);
+
+    // M18 — records this stage advance as a local signed LWW delta so it
+    // resolves deterministically (see CRDTSyncEngine.resolveLwwParcels) if
+    // this plot was also advanced on another of this player's devices.
+    recordAction('PARCEL_STAGE_ADVANCE', { plotId, stage: parcel.stage });
 
     // Grant rewards
     addTrust(nextStageDef.resilienceReward);

@@ -30,6 +30,29 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     icon: '🥕',
     reward: '+$30 (Raw Materials)',
   },
+  // M23 §5 — 3 additional quests so the pool can rotate instead of offering
+  // the same fixed trio every day.
+  {
+    questId: 'skillshare-swap',
+    title: 'Skill-Share Swap',
+    description: 'Teach or learn a skill from someone nearby today.',
+    icon: '🎓',
+    reward: '+$20 (Bartered Value)',
+  },
+  {
+    questId: 'green-space-tidy',
+    title: 'Green Space Tidy-Up',
+    description: 'Spend a few minutes tidying a shared or public green space.',
+    icon: '🌳',
+    reward: 'Stress -15 (Fresh Air)',
+  },
+  {
+    questId: 'check-in-call',
+    title: 'Check-In Call',
+    description: "Call or message someone who's been isolated lately.",
+    icon: '☎️',
+    reward: 'Social Trust +10, Energy +10',
+  },
 ];
 
 /** Returns true when a quest is available to complete today. */
@@ -57,6 +80,16 @@ export function completeQuest(questId: QuestId): void {
       case 'local-mutual-aid':
         player.cash = player.cash + 30;
         break;
+      case 'skillshare-swap':
+        player.cash = player.cash + 20;
+        break;
+      case 'green-space-tidy':
+        player.stressLevel = Math.max(0, player.stressLevel - 15);
+        break;
+      case 'check-in-call':
+        player.socialTrust = Math.min(100, player.socialTrust + 10);
+        player.energy = Math.min(player.maxEnergy, player.energy + 10);
+        break;
     }
 
     return {
@@ -68,10 +101,23 @@ export function completeQuest(questId: QuestId): void {
   });
 }
 
+const QUESTS_PER_DAY = 3;
+
+/**
+ * M23 §5 — a rotating 3-quest window over the 6-quest pool, keyed by day, so
+ * the same fixed trio isn't offered forever. Deterministic (pure function of
+ * `day`) rather than random, so it's easy to reason about/test.
+ */
+function questWindowForDay(day: number): QuestDefinition[] {
+  const poolSize = QUEST_DEFINITIONS.length;
+  const startIdx = ((day - 1) % poolSize + poolSize) % poolSize;
+  return Array.from({ length: QUESTS_PER_DAY }, (_, i) => QUEST_DEFINITIONS[(startIdx + i) % poolSize]!);
+}
+
 /** Called by advanceDay — unlocking is implicit (isQuestAvailable checks completedOnDay < day). */
 export function getQuestsForToday(): (QuestDefinition & { available: boolean })[] {
   const { quests, meta } = useGameStore.getState();
-  return QUEST_DEFINITIONS.map(def => {
+  return questWindowForDay(meta.day).map(def => {
     const state = quests.find(q => q.questId === def.questId);
     const available = state ? isQuestAvailable(state, meta.day) : true;
     return { ...def, available };

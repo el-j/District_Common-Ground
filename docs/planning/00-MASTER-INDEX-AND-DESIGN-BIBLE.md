@@ -74,3 +74,4 @@ Grounding the game in **real-world open data, macroeconomic indices, climate tra
 - [x] **Milestone M12**: [Procedural Audio Synth v2, Mobile Polish & Release QA](../archive/M12-audio-v2-polish.md) *(Archived)*
 - [x] **Milestone M20**: [Standalone Package Architecture Cleanup](../tasks/M20-standalone-packages-cleanup.md) — all 3 concrete gaps closed 2026-09-15
 - [x] **Milestone M13**: [Playtesting, Economy Balancing, Telemetry & 10-Year Resilience](../tasks/M13-playtesting-balancing-and-telemetry.md) — **planned and implemented 2026-09-15**; this planning doc had never been given a milestone number in this list at all until the "what's open in our visions" audit found it.
+- [x] **Milestone M23**: [Content Variety & Delight](../tasks/M23-content-variety-and-delight.md) — planned and implemented same-day 2026-09-16, direct user request; no planning doc under this directory (ad hoc, matching the M21/M22 precedent).

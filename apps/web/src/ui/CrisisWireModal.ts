@@ -2,11 +2,13 @@ import { resolveCrisis, getScenario } from '../core/simulation/CrisisEngine';
 import type { CrisisScenario, CrisisConsequences } from '../core/simulation/CrisisEngine';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
+import { TactileEffects } from '../builder/TactileEffects';
 
 export class CrisisWireModal {
   // el assigned in constructor after guard; '!' tells tsc it's always set before use
   private el!: HTMLElement;
   private readonly onClose: () => void;
+  private scenario!: CrisisScenario;
 
   constructor(root: HTMLElement, scenarioId: string, onClose: () => void) {
     this.onClose = onClose;
@@ -16,6 +18,7 @@ export class CrisisWireModal {
       onClose();
       return;
     }
+    this.scenario = scenario;
 
     this.el = document.createElement('div');
     this.el.className = 'crisis-overlay';
@@ -93,8 +96,14 @@ export class CrisisWireModal {
     this.el.querySelectorAll<HTMLButtonElement>('[data-choice]').forEach(btn => {
       btn.addEventListener('click', () => {
         const choice = btn.dataset['choice'] as 'A' | 'B';
+        const chosen = choice === 'A' ? this.scenario.choiceA : this.scenario.choiceB;
         playUIClick();
         resolveCrisis(choice);
+        // M23 §2 — same celebration chime already used for a completed build
+        // stage; the authoritarian path stays silent on purpose.
+        if (chosen.type === 'solidarity') {
+          TactileEffects.playStageCompleteChime();
+        }
         this.close();
       });
     });

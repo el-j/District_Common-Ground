@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useGameStore } from '../state/useGameStore';
 import {
   initCrisisQueue,
+  checkForCrisis,
   triggerCrisis,
   resolveCrisis,
   getScenario,
@@ -146,5 +147,30 @@ describe('CrisisEngine', () => {
     resolveCrisis('B');
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  // M23 Test 23.1 — real-bug fix: an exhausted queue used to make
+  // checkForCrisis() go silent forever. It should now refill instead.
+  it('checkForCrisis refills the queue once exhausted and can still trigger a crisis on a later call', () => {
+    initCrisisQueue();
+    let queue = useGameStore.getState().crisisState.pendingQueue;
+    while (queue.length > 0) {
+      triggerCrisis(queue[0]!);
+      resolveCrisis('B');
+      queue = useGameStore.getState().crisisState.pendingQueue;
+    }
+    expect(useGameStore.getState().crisisState.pendingQueue.length).toBe(0);
+
+    // First call after exhaustion just refills — no crisis triggers yet.
+    checkForCrisis();
+    expect(useGameStore.getState().crisisState.pendingQueue.length).toBeGreaterThan(0);
+    expect(useGameStore.getState().crisisState.activeCrisisId).toBeNull();
+
+    // Force the cooldown and probability checks favorable, then confirm a
+    // crisis can still trigger — the queue going empty didn't kill it forever.
+    useGameStore.setState(s => ({ meta: { ...s.meta, day: s.meta.day + 10 } }));
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    checkForCrisis();
+    expect(useGameStore.getState().crisisState.activeCrisisId).not.toBeNull();
   });
 });

@@ -113,7 +113,7 @@ export function advanceDay(): void {
   }
 }
 
-export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): void {
+export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): { nodeJustCompleted: boolean } {
   let recordedAmount = 0;
   let nodeJustCompleted = false;
   let landTrustJustRatified = false;
@@ -177,6 +177,11 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
       playerTrustScore: trustAfter,
     });
   }
+
+  // M23 §2 — callers (e.g. ConstructionModal) use this to decide whether to
+  // fire the existing celebration chime/particles; a partial contribution
+  // must not trigger them.
+  return { nodeJustCompleted };
 }
 
 export function setActiveCrisis(id: string): void {

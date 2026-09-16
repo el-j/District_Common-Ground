@@ -1,6 +1,7 @@
 import { spendCash, spendEnergy, updateCommonsProgress } from '../core/state/actions';
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
+import { TactileEffects } from '../builder/TactileEffects';
 
 export type BuildProgressKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress' | 'toolLibraryProgress' | 'landTrustProgress';
 
@@ -107,7 +108,13 @@ export class ConstructionModal {
 
       spendCash(safeCash);
       spendEnergy(safeEnergy);
-      updateCommonsProgress(this.progressKey, nextProgress - current);
+      const { nodeJustCompleted } = updateCommonsProgress(this.progressKey, nextProgress - current);
+      // M23 §2 — reuses the exact celebration calls DistrictGrid.ts already
+      // fires on a parcel stage completion; a partial contribution stays silent.
+      if (nodeJustCompleted) {
+        TactileEffects.playStageCompleteChime();
+        TactileEffects.spawnCelebrationParticles(this.el);
+      }
       this.close();
     });
   }

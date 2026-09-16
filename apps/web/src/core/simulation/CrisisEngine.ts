@@ -41,20 +41,39 @@ export function addDynamicScenario(s: CrisisScenario): void {
 let scapegoatStreak = 0;
 let lastCrisisDay = 0;
 
+// M23 §1 — shared shuffle helper so the boot-time seed (initCrisisQueue) and
+// the mid-playthrough refill (checkForCrisis) never drift into two different
+// shuffle implementations.
+function shuffleScenarioIds(excludeId?: string): string[] {
+  return scenarios
+    .map(s => s.id)
+    .filter(id => id !== excludeId)
+    .sort(() => Math.random() - 0.5);
+}
+
 export function initCrisisQueue(): void {
   const state = useGameStore.getState();
   if (state.crisisState.pendingQueue.length > 0) return;
-  // Shuffle scenario IDs into the pending queue
-  const ids = scenarios.map(s => s.id).sort(() => Math.random() - 0.5);
   useGameStore.setState(s => ({
-    crisisState: { ...s.crisisState, pendingQueue: ids },
+    crisisState: { ...s.crisisState, pendingQueue: shuffleScenarioIds() },
   }));
 }
 
 export function checkForCrisis(): void {
   const state = useGameStore.getState();
   if (state.crisisState.activeCrisisId) return;
-  if (state.crisisState.pendingQueue.length === 0) return;
+  if (state.crisisState.pendingQueue.length === 0) {
+    // M23 §1 real-bug fix — a playthrough that burns through all scenarios
+    // used to go silent forever. Reshuffle a fresh queue (excluding the most
+    // recently resolved scenario, if any, so the next crisis isn't a
+    // guaranteed instant repeat) instead of returning early forever.
+    const { historyLog } = state.crisisState;
+    const lastResolvedId = historyLog[historyLog.length - 1]?.id;
+    useGameStore.setState(s => ({
+      crisisState: { ...s.crisisState, pendingQueue: shuffleScenarioIds(lastResolvedId) },
+    }));
+    return;
+  }
 
   const daysSinceLast = state.meta.day - lastCrisisDay;
   if (daysSinceLast < 3) return;

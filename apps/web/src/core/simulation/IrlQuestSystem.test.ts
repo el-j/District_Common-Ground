@@ -20,6 +20,9 @@ function resetStore(day = 1) {
       { questId: 'digital-deescalation', completedOnDay: null },
       { questId: 'community-reconnect',  completedOnDay: null },
       { questId: 'local-mutual-aid',     completedOnDay: null },
+      { questId: 'skillshare-swap',      completedOnDay: null },
+      { questId: 'green-space-tidy',     completedOnDay: null },
+      { questId: 'check-in-call',        completedOnDay: null },
     ],
   });
 }
@@ -68,7 +71,7 @@ describe('IrlQuestSystem', () => {
     expect(q.completedOnDay).toBe(meta.day);
   });
 
-  it('getQuestsForToday returns all 3 quests with available flag', () => {
+  it('getQuestsForToday returns a 3-quest window with available flag', () => {
     const today = getQuestsForToday();
     expect(today.length).toBe(3);
     today.forEach(q => {
@@ -78,10 +81,23 @@ describe('IrlQuestSystem', () => {
     });
   });
 
-  it('getQuestsForToday marks completed quest as unavailable', () => {
-    completeQuest('community-reconnect');
+  it('getQuestsForToday marks a completed quest in today\'s window as unavailable', () => {
+    const before = getQuestsForToday();
+    const target = before[0]!.questId;
+    completeQuest(target);
     const today = getQuestsForToday();
-    const q = today.find(q => q.questId === 'community-reconnect')!;
+    const q = today.find(q => q.questId === target)!;
     expect(q.available).toBe(false);
+  });
+
+  // M23 Test 23.4 — the pool rotates instead of offering the same fixed trio forever.
+  it('getQuestsForToday returns a different subset on different days', () => {
+    resetStore(1);
+    const day1 = getQuestsForToday().map(q => q.questId).sort();
+    resetStore(4);
+    const day4 = getQuestsForToday().map(q => q.questId).sort();
+    expect(day1).not.toEqual(day4);
+    expect(day1.length).toBe(3);
+    expect(day4.length).toBe(3);
   });
 });

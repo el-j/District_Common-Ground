@@ -342,12 +342,34 @@ const BGM_BAR_S  = BGM_BEAT_S * 4;
 const BGM_LOOP_S = BGM_BAR_S  * 4;   // ~11.4 s per full cycle
 
 // [A2, C3, E3, A3], [F2, C3, F3, A3], [C3, G3, C4, E4], [G2, D3, G3, B3]
-const BGM_CHORDS: number[][] = [
+const BGM_CHORDS_DAY: number[][] = [
   [110.0, 130.8, 164.8, 220.0],
   [87.3,  130.8, 174.6, 220.0],
   [130.8, 196.0, 261.6, 329.6],
   [98.0,  146.8, 196.0, 246.9],
 ];
+
+// M23 §6 — second progression, same A-minor key family so the switch isn't
+// jarring: Am → Dm → Em → Am, sparser/darker for the night portion of the
+// day/night cycle. [A2,C3,E3,A3], [D2,D3,F3,A3], [E2,G3,B3,E4], [A2,C3,E3,A3]
+const BGM_CHORDS_NIGHT: number[][] = [
+  [110.0, 130.8, 164.8, 220.0],
+  [73.4,  146.8, 174.6, 220.0],
+  [82.4,  196.0, 246.9, 329.6],
+  [110.0, 130.8, 164.8, 220.0],
+];
+
+export type BgmPhase = 'day' | 'night';
+let _bgmPhase: BgmPhase = 'day';
+
+/** Pure selector — no AudioContext dependency, safe to unit test directly. */
+export function selectBgmChords(phase: BgmPhase): number[][] {
+  return phase === 'night' ? BGM_CHORDS_NIGHT : BGM_CHORDS_DAY;
+}
+
+/** Called by WorldScene's day/night tick so the BGM loop picks up the current phase on its next bar. */
+export function setBgmPhase(phase: BgmPhase): void { _bgmPhase = phase; }
+export function getBgmPhase(): BgmPhase { return _bgmPhase; }
 
 let _bgmMaster: GainNode | null = null;
 let _bgmRunning = false;
@@ -376,7 +398,7 @@ function _bgmTick(): void {
   const audio = getCtx();
   if (!audio || !_bgmRunning || !_bgmMaster) return;
   const loopStart = audio.currentTime + 0.05;
-  BGM_CHORDS.forEach((chord, bar) => {
+  selectBgmChords(_bgmPhase).forEach((chord, bar) => {
     _scheduleChord(audio, _bgmMaster!, chord, loopStart + bar * BGM_BAR_S, BGM_BAR_S);
   });
   _bgmSchedule = setTimeout(_bgmTick, (BGM_LOOP_S - 1.2) * 1000);

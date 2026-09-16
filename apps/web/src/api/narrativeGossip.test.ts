@@ -53,6 +53,25 @@ describe('scenariosToGossip', () => {
   });
 });
 
+// M23 Test 23.3b — gossip alternates between two authored variants by day
+// instead of the same archetype always producing an identical line.
+describe('pickGossipLine day-based variation', () => {
+  it('returns a different line for a fixed archetype on an even vs. odd day', () => {
+    const odd = pickGossipLine('mira', 'FOOD_HEALTH', 1);
+    const even = pickGossipLine('mira', 'FOOD_HEALTH', 2);
+    expect(odd).not.toBe(even);
+  });
+
+  it('is stable for the same day parity', () => {
+    expect(pickGossipLine('leo', 'CIVIC_DISINFO', 1)).toBe(pickGossipLine('leo', 'CIVIC_DISINFO', 3));
+    expect(pickGossipLine('leo', 'CIVIC_DISINFO', 2)).toBe(pickGossipLine('leo', 'CIVIC_DISINFO', 4));
+  });
+
+  it('defaults to day 1 (odd) behaviour when day is omitted', () => {
+    expect(pickGossipLine('elena', 'CLIMATE_EXTREME')).toBe(pickGossipLine('elena', 'CLIMATE_EXTREME', 1));
+  });
+});
+
 describe('fetchDailyGossip', () => {
   beforeEach(() => {
     vi.stubGlobal('sessionStorage', makeSessionStorage());

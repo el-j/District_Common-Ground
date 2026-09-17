@@ -17,10 +17,11 @@ const Category = "theme"
 
 // builtInThemes ships with the game and never needs owner review.
 var builtInThemes = []kernel.PluginMetadata{
-	{ID: "solarpunk", Version: "1.0.0", Name: "Solarpunk", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/solarpunk/skin.manifest.json"},
+	{ID: "solarpunk", Version: "1.0.0", Name: "Neon Solarpunk", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/solarpunk/skin.manifest.json"},
 	{ID: "retro_gb", Version: "1.0.0", Name: "Retro GB", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/retro_gb/skin.manifest.json"},
 	{ID: "labor_woodcut", Version: "1.0.0", Name: "1930s Labor Woodcut", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/labor_woodcut/skin.manifest.json"},
-	{ID: "aurora", Version: "1.0.0", Name: "Aurora Glass", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/aurora/skin.manifest.json"},
+	{ID: "aurora", Version: "1.0.0", Name: "Aurora Prime", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/aurora/skin.manifest.json"},
+	{ID: "sunset_commons", Version: "1.0.0", Name: "Sunset Commons", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/sunset_commons/skin.manifest.json"},
 }
 
 type Handler struct {

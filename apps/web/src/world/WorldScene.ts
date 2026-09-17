@@ -371,7 +371,7 @@ export class WorldScene extends Phaser.Scene {
   private lastLampAlpha = -1;
 
   // M21 — camera/palette/dressing/juice state
-  private lastActiveSkin = '';
+  private lastSkinRevision = -1;
   private currentInteriorId: string | null = null;
   private nodePrompts: Map<string, InteractionPrompt> = new Map();
   private npcPrompts: Map<string, InteractionPrompt> = new Map();
@@ -570,13 +570,17 @@ export class WorldScene extends Phaser.Scene {
       this.ambientLight?.resize(gameSize.width, gameSize.height);
     });
 
-    // Rebuild the tileset from whichever skin's palette is active whenever
-    // it changes — same "recolor without a scene restart" mechanism
-    // switchSkin() already uses for HUD colors (Test 21.2).
-    this.lastActiveSkin = useGameStore.getState().meta.activeSkin;
+    // Rebuild the tileset whenever a skin manifest's real data is applied —
+    // same "recolor without a scene restart" mechanism switchSkin() already
+    // uses for HUD colors (Test 21.2). M28: keyed on `skinRevision`, not
+    // `activeSkin`, because on first boot the active skin's *id* never
+    // changes (it's already the default) even though its real palette data
+    // only becomes available once the manifest fetch resolves — see
+    // ThemeManager.activateDefaultSkin()'s doc comment for the full bug.
+    this.lastSkinRevision = useGameStore.getState().meta.skinRevision;
     useGameStore.subscribe((state) => {
-      if (state.meta.activeSkin !== this.lastActiveSkin) {
-        this.lastActiveSkin = state.meta.activeSkin;
+      if (state.meta.skinRevision !== this.lastSkinRevision) {
+        this.lastSkinRevision = state.meta.skinRevision;
         createTilesetTexture(this, getActiveWorldPalette());
       }
     });
@@ -914,13 +918,13 @@ export class WorldScene extends Phaser.Scene {
     if (this.dialogueOpen || this.buildOpen || this.historyOpen || this.assemblyOpen || this.minigameOpen) {
       WorldScene.hud?.hideAction();
     } else if (nearbyFlyer) {
-      WorldScene.hud?.setAction('Tear down flyer [E] ✊', () => this.tearDownFlyer(nearbyFlyer));
+      WorldScene.hud?.setAction('Tear down flyer ✊', () => this.tearDownFlyer(nearbyFlyer));
     } else if (nearBike) {
-      WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲 [E]', () => this.launchCourierRush());
+      WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲', () => this.launchCourierRush());
     } else if (nearMinigamePortal) {
-      WorldScene.hud?.setAction(`${nearMinigamePortal.label} ${nearMinigamePortal.emoji} [E]`, () => this.launchWorldMinigame(nearMinigamePortal.id));
+      WorldScene.hud?.setAction(`${nearMinigamePortal.label} ${nearMinigamePortal.emoji}`, () => this.launchWorldMinigame(nearMinigamePortal.id));
     } else if (scrapsInRange && hasCash) {
-      WorldScene.hud?.setAction('[E] Feed Scraps 🐟', () => this.feedScraps());
+      WorldScene.hud?.setAction('Feed Scraps 🐟', () => this.feedScraps());
     } else if (nearTownHall) {
       WorldScene.hud?.setAction('Town Hall 📜', () => this.openHistory());
     } else if (nearbyBuild) {

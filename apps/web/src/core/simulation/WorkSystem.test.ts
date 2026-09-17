@@ -5,7 +5,7 @@ import { getWorkForToday, performWork, WORK_DEFINITIONS } from './WorkSystem';
 function resetStore(overrides: { classRole?: 'pip' | 'morgan' | 'arthur' | null; energy?: number; day?: number; lastWorkedDay?: number | null } = {}) {
   const { classRole = 'pip', energy = 80, day = 5, lastWorkedDay = null } = overrides;
   useGameStore.setState({
-    meta: { day, tick: 0, activeSkin: 'default', phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+    meta: { day, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: {
       classRole, cash: 50, energy, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay,

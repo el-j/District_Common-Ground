@@ -9,7 +9,16 @@
     "text": "#f0e6d2",
     "hudBg": "rgba(20,16,12,0.92)",
     "hudBorder": "#4a3c26",
-    "hudText": "#e0c68a"
+    "hudText": "#e0c68a",
+    "worldFloor": "#d8c9a3",
+    "worldWall": "#4a3c26",
+    "worldWallShadow": "#2b2013",
+    "worldGrass": "#6b7a3f",
+    "worldRoad": "#8a7048",
+    "worldRoadBorder": "#5c4a2e",
+    "worldPlaza": "#c9b98a",
+    "worldDoor": "#7a2e1d",
+    "worldHighlight": "#d8a13a"
   },
   "assetMap": {
     "TILES_ATLAS": {},

@@ -228,6 +228,7 @@
   min-height: 2.75rem; /* M21 §10 — 44px WCAG-adjacent touch target */
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   font-size: 0.72rem;
   font-family: var(--ui-font, ui-monospace, monospace);
   box-shadow: var(--ui-shadow-panel, 0 6px 20px rgba(0, 0, 0, 0.4)), var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
@@ -237,6 +238,18 @@
 .context-action-button:hover {
   background: rgba(30, 38, 72, 0.95);
   border-color: #7788cc;
+}
+/* M28 — consistent keybind badge, built once in TopHUD.setAction() instead
+   of every call site remembering to hardcode "[E]" in its label string. */
+.context-action-button .key-hint {
+  flex-shrink: 0;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  font-size: 0.62rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
 }
 
 /* ── End Day button (bottom-left) ───────────────────────── */
@@ -2772,6 +2785,481 @@ input:focus-visible {
   cursor: pointer;
 }
 .bitchat-send:hover { border-color: #8bf0ac; }
+
+/* ── M28 — Broadsheet (End Day paper) ───────────────────────
+   Was completely unstyled — every class below previously had zero rules,
+   which is why the End Day screen rendered as raw overlapping text. All
+   sizing reads var(--ui-*) so the 3 new skins (and any future one with a
+   uiKit) reskin it automatically, exactly like .context-action-button. */
+
+.broadsheet-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 6, 14, 0.82);
+  z-index: 72;
+  pointer-events: auto;
+  overflow-y: auto;
+}
+.broadsheet-overlay[hidden] { display: none; }
+
+.broadsheet-paper {
+  width: min(640px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #201c14, #14110c));
+  border: 1px solid var(--skin-hud-border, #4a3c26);
+  border-radius: var(--ui-radius-lg, 12px);
+  box-shadow: var(--ui-shadow-panel, 0 20px 50px rgba(0,0,0,0.6)), var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  backdrop-filter: var(--ui-blur, none);
+  padding: 1.5rem 1.5rem 1.75rem;
+  color: var(--skin-hud-text, #e0c68a);
+  font-family: var(--ui-font, ui-monospace, monospace);
+  transform-origin: top center;
+}
+
+.broadsheet-masthead {
+  text-align: center;
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--skin-hud-border, rgba(224, 198, 138, 0.3));
+}
+.broadsheet-name {
+  font-family: var(--ui-font-display, ui-monospace, monospace);
+  font-size: 1.3rem;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.2rem;
+}
+.broadsheet-dateline {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.broadsheet-columns {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 560px) {
+  .broadsheet-columns { grid-template-columns: 1fr; }
+}
+
+.broadsheet-headline {
+  font-size: 1.05rem;
+  font-weight: bold;
+  line-height: 1.3;
+  margin: 0 0 0.4rem;
+}
+.broadsheet-citation {
+  font-size: 0.62rem;
+  font-style: italic;
+  opacity: 0.75;
+  margin: 0 0 0.6rem;
+}
+.broadsheet-sub {
+  font-size: 0.78rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  margin: 0 0 1rem;
+}
+.broadsheet-quote {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-left: 3px solid var(--skin-accent, #d8a13a);
+  background: rgba(255,255,255,0.04);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.76rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+.broadsheet-quote cite {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.65rem;
+  font-style: normal;
+  opacity: 0.75;
+}
+
+.broadsheet-barometer,
+.broadsheet-commons-clue {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--ui-radius-sm, 6px);
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.8rem;
+}
+.broadsheet-barometer h3,
+.broadsheet-commons-clue h3 {
+  margin: 0 0 0.45rem;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+.barometer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  padding-block: 0.15rem;
+}
+.index-high { color: #ff8888; font-weight: bold; }
+.index-low  { color: #66ee88; font-weight: bold; }
+.index-ok   { color: #88cc88; }
+
+.commons-clue-hint {
+  font-size: 0.68rem;
+  font-style: italic;
+  opacity: 0.8;
+  margin: 0 0 0.5rem;
+}
+.commons-clue-input {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: var(--ui-radius-sm, 4px);
+  color: inherit;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  letter-spacing: 0.15em;
+  text-align: center;
+  padding: 0.4rem;
+  font-size: 0.8rem;
+}
+.commons-clue-input:focus {
+  outline: none;
+  border-color: var(--skin-accent, #d8a13a);
+  box-shadow: var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+}
+.commons-clue-feedback {
+  min-height: 1.1rem;
+  font-size: 0.68rem;
+  font-weight: bold;
+  margin-top: 0.35rem;
+}
+
+.broadsheet-close {
+  display: block;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-gradient-accent, linear-gradient(135deg, #d8a13a, #b8802a));
+  box-shadow: var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  color: #1a1408;
+  font-weight: bold;
+  font-size: 0.82rem;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.broadsheet-close:hover { transform: translateY(-1px); }
+
+/* ── M28 — Town Hall Assembly ────────────────────────────────
+   Was completely unstyled. Same shell language as .crisis-overlay/.crisis-panel
+   (this is the same "two-choice civic vote" shape), var-driven so it reskins. */
+
+.town-hall-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 6, 14, 0.85);
+  z-index: 70;
+  pointer-events: auto;
+}
+
+.assembly-panel {
+  width: min(520px, 100%);
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #14202e, #0c141e));
+  border: 1px solid var(--skin-hud-border, #2a4a5a);
+  border-radius: var(--ui-radius-lg, 10px);
+  box-shadow: var(--ui-shadow-panel, 0 16px 44px rgba(0,0,0,0.7));
+  backdrop-filter: var(--ui-blur, none);
+  padding: 1.25rem 1.5rem;
+  color: var(--skin-hud-text, #ddeeff);
+  font-family: var(--ui-font, ui-monospace, monospace);
+}
+
+.assembly-title {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem;
+}
+.assembly-progress {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.65;
+  margin: 0 0 0.75rem;
+}
+.assembly-question {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin: 0 0 1.1rem;
+}
+
+.assembly-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+@media (max-width: 480px) {
+  .assembly-choices { grid-template-columns: 1fr; }
+}
+
+.assembly-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 0.85rem 0.8rem;
+  border-radius: var(--ui-radius-sm, 6px);
+  font-family: var(--ui-font, ui-monospace, monospace);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+}
+.assembly-btn:hover { transform: translateY(-1px); }
+.assembly-btn--a {
+  background: rgba(60, 160, 100, 0.12);
+  border: 1px solid rgba(90, 200, 130, 0.4);
+  color: #b8ffcf;
+}
+.assembly-btn--a:hover { background: rgba(60, 160, 100, 0.22); border-color: rgba(90, 200, 130, 0.7); }
+.assembly-btn--b {
+  background: rgba(180, 90, 40, 0.12);
+  border: 1px solid rgba(220, 130, 60, 0.4);
+  color: #ffd8b8;
+}
+.assembly-btn--b:hover { background: rgba(180, 90, 40, 0.22); border-color: rgba(220, 130, 60, 0.7); }
+.assembly-desc {
+  font-size: 0.64rem;
+  opacity: 0.8;
+  line-height: 1.45;
+}
+
+/* ── M28 — Safe Haven ending banner ──────────────────────────
+   Was completely unstyled — the game's one-time celebratory "ending" moment
+   was rendering as raw text, undermining the payoff. */
+
+.safe-haven-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 14, 8, 0.85);
+  z-index: 75;
+  pointer-events: auto;
+}
+
+.safe-haven-panel {
+  width: min(460px, 100%);
+  text-align: center;
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #10241a, #0a160f));
+  border: 1px solid var(--skin-accent, #44ee88);
+  border-radius: var(--ui-radius-lg, 14px);
+  box-shadow: var(--ui-shadow-panel, 0 20px 60px rgba(0,0,0,0.7)), var(--ui-shadow-glow, 0 0 40px rgba(68,238,136,0.25));
+  backdrop-filter: var(--ui-blur, none);
+  padding: 2rem 1.75rem;
+  color: var(--skin-hud-text, #d8ffe4);
+  font-family: var(--ui-font, ui-monospace, monospace);
+}
+
+.safe-haven-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.safe-haven-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  margin: 0 0 0.75rem;
+}
+.safe-haven-body {
+  font-size: 0.82rem;
+  line-height: 1.65;
+  opacity: 0.92;
+  margin: 0 0 1.25rem;
+}
+.safe-haven-close {
+  padding: 0.7rem 1.6rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--ui-gradient-accent, linear-gradient(135deg, #44ee88, #22aa55));
+  box-shadow: var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  color: #0a1608;
+  font-weight: bold;
+  font-size: 0.8rem;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  cursor: pointer;
+}
+
+/* ── M28 — District Pulse badge ──────────────────────────────
+   Was completely unstyled (unlike the .baro-* chips right next to it). */
+
+#hud-pulse-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(20, 20, 34, 0.7);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.58rem;
+  margin-top: 0.2rem;
+  width: fit-content;
+}
+#hud-pulse-badge[data-tier="high"] { border-color: rgba(80, 220, 140, 0.4); }
+#hud-pulse-badge[data-tier="mid"]  { border-color: rgba(230, 200, 90, 0.4); }
+#hud-pulse-badge[data-tier="low"]  { border-color: rgba(230, 90, 90, 0.4); }
+.pulse-dot { font-size: 0.5rem; line-height: 1; }
+.pulse-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ccccee;
+  opacity: 0.85;
+}
+
+/* ── M28 — Icon toolbar color fixes ───────────────────────────
+   [class*="-open-btn"] (style.css above, "M22" comment) only ever set size
+   + an optional glow — no color for any button unless it had its own
+   dedicated rule. 5 of TopHUD's 12 built-in buttons had none at all, and
+   the Plugin Library button's rule was silently named wrong (singular
+   `.plugin-open-btn` vs the `plugins-open-btn` class TopHUD actually emits
+   for its `id: 'plugins'` button) and so never matched anything. */
+
+#hud-icon-toolbar {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.85rem;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  max-width: calc(100% - 1.7rem);
+  z-index: 30;
+}
+/* Every button below still keeps its own color/border/shape rule exactly as
+   written — this only takes it out of the old per-button absolute-position
+   flow now that the row itself is positioned. Higher specificity than any
+   single `.x-open-btn` class rule (id + attribute selector), so it wins
+   regardless of source order without touching those existing rules. */
+#hud-icon-toolbar [class*="-open-btn"] {
+  position: static;
+  right: auto;
+  bottom: auto;
+}
+
+.settings-open-btn,
+.share-open-btn,
+.mute-open-btn,
+.work-open-btn,
+.builder-open-btn,
+.plugins-open-btn {
+  background: var(--ui-gradient-panel, rgba(24, 24, 40, 0.85));
+  border: 1px solid var(--skin-hud-border, rgba(255,255,255,0.15));
+  color: var(--skin-hud-text, #ddddf0);
+  backdrop-filter: var(--ui-blur, none);
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+}
+.settings-open-btn:hover,
+.share-open-btn:hover,
+.mute-open-btn:hover,
+.work-open-btn:hover,
+.builder-open-btn:hover,
+.plugins-open-btn:hover {
+  border-color: var(--skin-accent, rgba(255,255,255,0.4));
+  transform: translateY(-1px);
+}
+
+/* ── M28 — Living District Builder ───────────────────────────
+   Was entirely hand-styled via inline style.cssText in TS, hardcoding
+   colors that never re-skinned. Converted to real classes reading
+   var(--ui-*) like every other modal. */
+
+.district-builder-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: rgba(10, 10, 20, 0.82);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.district-builder-card {
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #1e293b, #141d2b));
+  border: 1px solid var(--skin-hud-border, rgba(255, 255, 255, 0.15));
+  border-radius: var(--ui-radius-lg, 16px);
+  box-shadow: var(--ui-shadow-panel, 0 25px 50px -12px rgba(0, 0, 0, 0.5)), var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  backdrop-filter: var(--ui-blur, none);
+  width: 100%;
+  max-width: 960px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  color: var(--skin-hud-text, #f8fafc);
+  font-family: var(--ui-font, ui-monospace, monospace);
+  animation: district-builder-pop 0.25s ease-out;
+}
+@keyframes district-builder-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.district-builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.district-builder-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--skin-accent, #10b981);
+  font-family: var(--ui-font-display, inherit);
+}
+
+.district-builder-subtitle {
+  font-size: 0.85rem;
+  color: var(--skin-hud-text, #94a3b8);
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.district-builder-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-size: 1.5rem;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--ui-radius-sm, 8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.12s, border-color 0.12s;
+}
+.district-builder-close:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: var(--skin-accent, rgba(255,255,255,0.4));
+}
 
 /* ── Prefers reduced motion ──────────────────────────────── */
 

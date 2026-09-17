@@ -194,11 +194,23 @@ export async function switchSkin(skinId: string, scene?: Phaser.Scene): Promise<
   }
 
   useGameStore.setState(state => ({
-    meta: { ...state.meta, activeSkin: skinId },
+    // `?? 0` guards a save persisted before this field existed — without it,
+    // `undefined + 1` is `NaN`, and `NaN !== NaN` is always true, which would
+    // make WorldScene's subscription below fire on every store change forever.
+    meta: { ...state.meta, activeSkin: skinId, skinRevision: (state.meta.skinRevision ?? 0) + 1 },
   }));
 }
 
-/** Load the active skin at startup — applies palette immediately; no texture swap needed on first load. */
+/** Load the active skin at startup — applies palette immediately; no texture swap needed on first load.
+ *
+ * M28 — this used to be the boot-time cause of the world tileset never
+ * picking up the default skin's real colors: it applied the palette/uiKit to
+ * CSS vars but never touched the store, so `WorldScene`'s tileset-rebuild
+ * subscription (keyed on `activeSkin` changing) never fired on first boot,
+ * since the default skin's id never actually changes. Bumping
+ * `skinRevision` here — the same field `switchSkin()` bumps — gives
+ * `WorldScene` a signal decoupled from "did the id change" that fires
+ * exactly once real manifest data is available, on boot or any later switch. */
 export async function activateDefaultSkin(): Promise<void> {
   const { activeSkin } = useGameStore.getState().meta;
   try {
@@ -207,6 +219,9 @@ export async function activateDefaultSkin(): Promise<void> {
     applyUiKit(manifest);
     setSfxProfile(manifest.audioProfile.sfxType);
     setBgmProfile(manifest.audioProfile.bgmType);
+    useGameStore.setState(state => ({
+      meta: { ...state.meta, skinRevision: (state.meta.skinRevision ?? 0) + 1 },
+    }));
   } catch {
     // Non-fatal: game uses built-in procedural textures + default palette
   }

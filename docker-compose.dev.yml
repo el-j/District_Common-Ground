@@ -29,6 +29,10 @@ services:
       - ./apps/web:/app/apps/web
       - ./packages/shared-types:/app/packages/shared-types
       - ./packages/minigame-courier-rush:/app/packages/minigame-courier-rush
+      - ./packages/minigame-tenant-match:/app/packages/minigame-tenant-match
+      - ./packages/minigame-kitchen-rush:/app/packages/minigame-kitchen-rush
+      - ./packages/minigame-solidarity-line:/app/packages/minigame-solidarity-line
+      - ./packages/minigame-tool-workshop:/app/packages/minigame-tool-workshop
       - /app/node_modules
       - /app/apps/web/node_modules
     environment:

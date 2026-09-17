@@ -187,9 +187,16 @@ export class ToolWorkshopGame {
     }
 
     const speed = this.beltSpeed() * this.canvas.width;
-    const { x1 } = this.beltRange();
+    const { x0, x1 } = this.beltRange();
+    const zoneX0 = x0 + (x1 - x0) * ZONE_MARGIN;
+    const zoneX1 = x0 + (x1 - x0) * (1 - ZONE_MARGIN);
     for (const part of this.parts) {
-      part.x += speed * dt;
+      // Slow to a near-crawl while inside the pickup zone so sorting is a
+      // comfortable read-and-click decision instead of a reflex test — the
+      // zone itself is intentionally narrow for visual clarity, but a part
+      // shouldn't blow through it at full belt speed.
+      const inZone = part.x >= zoneX0 && part.x <= zoneX1;
+      part.x += speed * (inZone ? 0.1 : 1) * dt;
     }
     for (const part of this.parts) {
       if (part.x > x1 + 20) {

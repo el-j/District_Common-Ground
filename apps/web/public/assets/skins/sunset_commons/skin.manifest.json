@@ -1,0 +1,56 @@
+{
+  "skinId": "sunset_commons",
+  "version": "1.0.0",
+  "displayName": "Sunset Commons",
+  "palette": {
+    "background": "#2b1830",
+    "surface": "rgba(150,60,100,0.5)",
+    "accent": "#ff8f6b",
+    "text": "#fff1e6",
+    "hudBg": "rgba(40,20,35,0.75)",
+    "hudBorder": "rgba(255,143,107,0.35)",
+    "hudText": "#ffe7d6",
+    "worldFloor": "#ffdfc0",
+    "worldWall": "#ff6f91",
+    "worldWallShadow": "#b8365f",
+    "worldGrass": "#d9a62b",
+    "worldRoad": "#7a4069",
+    "worldRoadBorder": "#45213a",
+    "worldPlaza": "#ffcb9e",
+    "worldDoor": "#a83279",
+    "worldHighlight": "#ffd23f"
+  },
+  "assetMap": {
+    "TILES_ATLAS":        { "textureUrl": "assets/skins/sunset_commons/tiles.webp",         "tileSize": [16, 16] },
+    "HERO_ATLAS":         { "textureUrl": "assets/skins/sunset_commons/hero.webp",           "frameRate": 6 },
+    "NPC_MIRA_ATLAS":     { "textureUrl": "assets/skins/sunset_commons/npc_mira.webp",       "frameRate": 4 },
+    "NPC_LEO_ATLAS":      { "textureUrl": "assets/skins/sunset_commons/npc_leo.webp",        "frameRate": 4 },
+    "NPC_ELENA_ATLAS":    { "textureUrl": "assets/skins/sunset_commons/npc_elena.webp",      "frameRate": 4 },
+    "NPC_SAL_ATLAS":      { "textureUrl": "assets/skins/sunset_commons/npc_sal.webp",        "frameRate": 4 },
+    "NPC_MARCUS_ATLAS":   { "textureUrl": "assets/skins/sunset_commons/npc_marcus.webp",     "frameRate": 4 },
+    "NPC_HIGGINS_ATLAS":  { "textureUrl": "assets/skins/sunset_commons/npc_higgins.webp",    "frameRate": 4 },
+    "BUILD_KITCHEN_IDLE": { "textureUrl": "assets/skins/sunset_commons/kitchen_idle.webp",   "footprint": [32, 32] },
+    "BUILD_KITCHEN_BUILT":{ "textureUrl": "assets/skins/sunset_commons/kitchen_built.webp",  "footprint": [32, 32] },
+    "BUILD_SOLAR_IDLE":   { "textureUrl": "assets/skins/sunset_commons/solar_idle.webp",     "footprint": [32, 32] },
+    "BUILD_SOLAR_BUILT":  { "textureUrl": "assets/skins/sunset_commons/solar_built.webp",    "footprint": [32, 32] },
+    "BUILD_LEGAL_IDLE":   { "textureUrl": "assets/skins/sunset_commons/legal_idle.webp",     "footprint": [16, 16] },
+    "BUILD_LEGAL_BUILT":  { "textureUrl": "assets/skins/sunset_commons/legal_built.webp",    "footprint": [16, 16] }
+  },
+  "audioProfile": {
+    "sfxType": "warm_chimes",
+    "bgmType": "sunset_drift"
+  },
+  "uiKit": {
+    "fontFamily": "'Inter', system-ui, sans-serif",
+    "fontFamilyDisplay": "'Inter', system-ui, sans-serif",
+    "radiusSm": "10px",
+    "radiusMd": "18px",
+    "radiusLg": "28px",
+    "shadowPanel": "0 10px 30px rgba(0,0,0,0.35)",
+    "shadowGlow": "0 0 26px rgba(255,150,160,0.55)",
+    "gradientPanel": "linear-gradient(160deg, rgba(150,60,100,0.82), rgba(60,25,50,0.9))",
+    "gradientAccent": "linear-gradient(135deg, #ff9f6b, #a83279)",
+    "blur": "16px",
+    "pixelArt": false
+  }
+}

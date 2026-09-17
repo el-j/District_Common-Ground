@@ -23,10 +23,11 @@ interface SkinPreview {
 }
 
 const KNOWN_PREVIEWS: Record<string, SkinPreview> = {
-  solarpunk: { desc: 'Lush, green, community-forward', accent: '#66dd88', bg: '#1a2c18' },
+  solarpunk: { desc: 'Saturated cream, green & gold — glassy and vivid', accent: '#3ee07a', bg: '#10261c' },
   retro_gb: { desc: '4-shade Game Boy monochrome', accent: '#8bac0f', bg: '#0f380f' },
   labor_woodcut: { desc: '1930s protest-poster woodcut', accent: '#d8a13a', bg: '#1c1712' },
-  aurora: { desc: 'Modern, glassy, glowing — the shiny option', accent: '#7dd3fc', bg: '#0b1220' },
+  aurora: { desc: 'Jewel-toned indigo, violet & cyan glass', accent: '#22d3ee', bg: '#11123a' },
+  sunset_commons: { desc: 'Warm coral, plum & amber golden hour', accent: '#ff8f6b', bg: '#2b1830' },
 };
 const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9a', bg: '#1a1a28' };
 
@@ -35,10 +36,11 @@ export class SettingsModal {
   private scene?: Phaser.Scene;
   private confirmNewGame = false;
   private catalog: ThemeCatalogEntry[] = [
-    { id: 'solarpunk', title: 'Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
+    { id: 'solarpunk', title: 'Neon Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
     { id: 'retro_gb', title: 'Retro GB', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/retro_gb/skin.manifest.json' },
     { id: 'labor_woodcut', title: '1930s Labor Woodcut', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/labor_woodcut/skin.manifest.json' },
-    { id: 'aurora', title: 'Aurora Glass', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/aurora/skin.manifest.json' },
+    { id: 'aurora', title: 'Aurora Prime', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/aurora/skin.manifest.json' },
+    { id: 'sunset_commons', title: 'Sunset Commons', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/sunset_commons/skin.manifest.json' },
   ];
 
   constructor(root: HTMLElement, scene?: Phaser.Scene, onClose?: () => void) {

@@ -34,17 +34,16 @@ export class TopHUD implements HudSink {
   private actionHandler: (() => void) | null = null;
   private endDayBtn: HTMLButtonElement;
   private walletChipEl: HTMLElement;
+  private iconToolbarEl!: HTMLElement;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private civicTicker: CivicTickerWidget;
   private scene?: Phaser.Scene;
-  private readonly root: HTMLElement;
 
   /** Icon buttons registered via `registerButton()` — TopHUD's own built-ins plus anything a kernel plugin adds later. */
   private buttons: HudButtonEntry[] = [];
 
   constructor(root: HTMLElement, kernel: Kernel, scene?: Phaser.Scene) {
-    this.root = root;
     this.scene = scene;
     // Main HUD strip (top)
     this.el = document.createElement('div');
@@ -69,6 +68,16 @@ export class TopHUD implements HudSink {
     this.pulseBadgeEl.setAttribute('title', 'District Solidarity Index');
     this.pulseBadgeEl.hidden = true;
     this.el.appendChild(this.pulseBadgeEl);
+
+    // M28 — every icon button used to be individually `position: absolute`
+    // with a hand-picked `right` offset (see style.css history); several
+    // buttons (settings/share/mute/work/builder, plus the mistyped
+    // `plugins-open-btn`) never got one at all, and the ones that did had
+    // drifted into overlapping at the current 2.75rem touch-target size.
+    // Buttons now flow inside this single flex row instead.
+    this.iconToolbarEl = document.createElement('div');
+    this.iconToolbarEl.id = 'hud-icon-toolbar';
+    root.appendChild(this.iconToolbarEl);
 
     // Broadsheet + radio instances (persistent, opened on demand)
     this.broadsheet = new BroadsheetModal(root);
@@ -168,7 +177,7 @@ export class TopHUD implements HudSink {
     btn.setAttribute('aria-label', descriptor.label);
     btn.hidden = useGameStore.getState().meta.phase === 'select';
     btn.addEventListener('click', () => descriptor.onClick());
-    this.root.appendChild(btn);
+    this.iconToolbarEl.appendChild(btn);
     this.buttons.push({ descriptor, el: btn });
     return btn;
   }
@@ -256,6 +265,11 @@ export class TopHUD implements HudSink {
     }, () => advanceDay());
   }
 
+  /** M28 — every context action is triggered by the same [E] key
+   *  (`WorldScene`'s `actionKey`/`spaceKey`), but call sites used to embed
+   *  "[E]" in their label string inconsistently (some did, most didn't).
+   *  The keybind badge is now built here once, so every action gets one
+   *  automatically with zero per-call-site duplication. */
   public setAction(label: string, handler: () => void): void {
     if (!this.actionButton) {
       this.actionButton = document.createElement('button');
@@ -264,7 +278,14 @@ export class TopHUD implements HudSink {
       document.getElementById('ui-root')?.appendChild(this.actionButton);
     }
     this.actionHandler = handler;
-    this.actionButton.textContent = label;
+    this.actionButton.innerHTML = '';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'action-label';
+    labelEl.textContent = label;
+    const keyHint = document.createElement('kbd');
+    keyHint.className = 'key-hint';
+    keyHint.textContent = 'E';
+    this.actionButton.append(labelEl, keyHint);
     this.actionButton.hidden = false;
     this.actionButton.onclick = () => this.actionHandler?.();
   }

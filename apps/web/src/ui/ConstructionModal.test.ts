@@ -21,7 +21,7 @@ import { useGameStore } from '../core/state/useGameStore';
 function resetStore(overrides: { progress?: number; cash?: number; energy?: number } = {}) {
   const { progress = 0, cash = 0, energy = 0 } = overrides;
   useGameStore.setState({
-    meta: { day: 1, tick: 0, activeSkin: 'default', phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+    meta: { day: 1, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: {
       classRole: 'pip', cash, energy, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,

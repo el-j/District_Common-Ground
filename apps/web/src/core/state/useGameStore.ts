@@ -31,6 +31,15 @@ export interface GameState {
     day: number;
     tick: number;
     activeSkin: string;
+    /** M28 — bumped once every time a skin manifest's real data is actually
+     *  applied (both on the initial boot-time default and on every later
+     *  `switchSkin()`), independent of whether `activeSkin`'s id itself
+     *  changed. `WorldScene` keys its tileset-rebuild off this instead of
+     *  `activeSkin`, because on first boot the id never changes (the store's
+     *  initial value already matches the default skin) even though its real
+     *  palette data only becomes available later, once the manifest fetch
+     *  resolves. */
+    skinRevision: number;
     phase: GamePhase;
     lastAssemblyDay: number;
     /** Coarse, user-chosen region bucket (e.g. "GENERIC", "US-WEST") used to
@@ -71,7 +80,7 @@ export interface GameState {
 }
 
 export const INITIAL_STATE: GameState = {
-  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', skinRevision: 0, phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
   player: {
     classRole: null,
     cash: 0,

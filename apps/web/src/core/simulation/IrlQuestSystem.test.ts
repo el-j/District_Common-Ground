@@ -4,7 +4,7 @@ import { isQuestAvailable, completeQuest, getQuestsForToday } from './IrlQuestSy
 
 function resetStore(day = 1) {
   useGameStore.setState({
-    meta: { day, tick: 0, activeSkin: 'default', phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+    meta: { day, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: {
       classRole: 'pip', cash: 50, energy: 80, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,

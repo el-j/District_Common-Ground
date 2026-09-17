@@ -1,24 +1,24 @@
 {
   "skinId": "solarpunk",
   "version": "1.0.0",
-  "displayName": "Solarpunk",
+  "displayName": "Neon Solarpunk",
   "palette": {
-    "background": "#1a2c18",
-    "surface": "#243d22",
-    "accent": "#66dd88",
-    "text": "#ddf8dd",
-    "hudBg": "rgba(12,22,10,0.92)",
-    "hudBorder": "#2a4a28",
-    "hudText": "#aaddaa",
-    "worldFloor": "#e2d7c5",
-    "worldWall": "#fff3df",
-    "worldWallShadow": "#3c7a89",
-    "worldGrass": "#7fa655",
-    "worldRoad": "#c46d4e",
-    "worldRoadBorder": "#a85a3e",
-    "worldPlaza": "#d8c7a4",
-    "worldDoor": "#d35400",
-    "worldHighlight": "#ffeaa7"
+    "background": "#10261c",
+    "surface": "rgba(20,80,52,0.55)",
+    "accent": "#3ee07a",
+    "text": "#f3ffef",
+    "hudBg": "rgba(10,30,20,0.75)",
+    "hudBorder": "rgba(62,224,122,0.35)",
+    "hudText": "#dfffe9",
+    "worldFloor": "#fff3d9",
+    "worldWall": "#12b76a",
+    "worldWallShadow": "#076e45",
+    "worldGrass": "#3ee07a",
+    "worldRoad": "#f2a93b",
+    "worldRoadBorder": "#c97f1f",
+    "worldPlaza": "#ffe1a0",
+    "worldDoor": "#ff5a3c",
+    "worldHighlight": "#ffd93d"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/solarpunk/tiles.webp",         "tileSize": [16, 16] },
@@ -39,5 +39,18 @@
   "audioProfile": {
     "sfxType": "nature_chimes",
     "bgmType": "warm_ambient"
+  },
+  "uiKit": {
+    "fontFamily": "'Inter', system-ui, sans-serif",
+    "fontFamilyDisplay": "'Inter', system-ui, sans-serif",
+    "radiusSm": "10px",
+    "radiusMd": "18px",
+    "radiusLg": "28px",
+    "shadowPanel": "0 10px 30px rgba(0,0,0,0.35)",
+    "shadowGlow": "0 0 26px rgba(62,224,122,0.55)",
+    "gradientPanel": "linear-gradient(160deg, rgba(18,80,55,0.82), rgba(8,40,28,0.9))",
+    "gradientAccent": "linear-gradient(135deg, #3ee07a, #ffd93d)",
+    "blur": "16px",
+    "pixelArt": false
   }
 }

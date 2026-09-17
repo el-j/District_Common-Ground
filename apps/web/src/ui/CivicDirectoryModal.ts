@@ -4,6 +4,7 @@ import { inputManager } from '../world/InputManager';
 import { playUIClick, playSolidarityChime } from '../core/audio/SoundSynth';
 import { buildSimplePdf, downloadPdf } from '../core/util/PdfGenerator';
 import type { LocalChapter, CivicAction, LocalChapterType } from '@district-cg/shared-types';
+import { bindEscapeClose } from './modalDismiss';
 
 const TYPE_LABELS: Record<LocalChapterType, string> = {
   tool_library: '🛠️ Tool Library',
@@ -18,6 +19,7 @@ function escapeHtml(s: string): string {
 /** Searchable directory of nearby mutual-aid chapters, plus an in-browser PDF starter kit generator. */
 export class CivicDirectoryModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
   private chapters: LocalChapter[] = [];
   private actions: CivicAction[] = [];
   private query = '';
@@ -39,6 +41,8 @@ export class CivicDirectoryModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close();
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close());
 
     void this.load();
   }
@@ -152,6 +156,7 @@ export class CivicDirectoryModal {
   private close(): void {
     this.el.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => {
       this.el.remove();
       this.onClose?.();

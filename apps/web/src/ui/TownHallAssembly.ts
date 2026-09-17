@@ -98,6 +98,7 @@ export class TownHallAssembly {
 
     this.el.innerHTML = `
       <div class="assembly-panel">
+        <span class="assembly-esc-hint">Esc to dismiss</span>
         <h2 id="assembly-title" class="assembly-title">🏛 Town Hall Assembly — Day ${day}</h2>
         <p class="assembly-progress">Vote ${this.voteIndex + 1} of ${total}</p>
         <p class="assembly-question">${vote.question}</p>

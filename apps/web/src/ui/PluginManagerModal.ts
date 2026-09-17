@@ -16,9 +16,11 @@ import {
   type VerificationRequestRecord,
 } from '../api/endpoints/plugins';
 import { getToken } from '../core/state/persistence';
+import { bindEscapeClose } from './modalDismiss';
 
 export class PluginManagerModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
   private manifestInput: HTMLInputElement | null = null;
   private uploadInput: HTMLInputElement | null = null;
   private statusEl: HTMLElement | null = null;
@@ -38,6 +40,8 @@ export class PluginManagerModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close();
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close());
 
     void this.renderCatalog().catch(err => this.setStatus(err instanceof Error ? err.message : 'Unable to load plugins', 'error'));
     void this.renderOwnerQueue();
@@ -338,6 +342,7 @@ export class PluginManagerModal {
   private close(): void {
     this.el.classList.remove('plugin-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => this.el.remove(), 200);
   }
 }

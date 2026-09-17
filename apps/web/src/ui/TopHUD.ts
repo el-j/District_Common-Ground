@@ -296,6 +296,16 @@ export class TopHUD implements HudSink {
     this.actionHandler = null;
   }
 
+  /** M28 — lets a clickable world object (the NPC/node "bounce bubble",
+   *  InteractionPrompt.ts) fire whatever context action is currently
+   *  active, without duplicating handleInteractions()'s proximity/priority
+   *  logic. A no-op when no action is currently set (e.g. a modal is open,
+   *  or the bubble that was clicked is no longer the nearest interactable). */
+  public triggerAction(): void {
+    if (this.actionButton?.hidden) return;
+    this.actionHandler?.();
+  }
+
   public setZone(zone: string): void {
     this.zoneEl.textContent = zone;
   }

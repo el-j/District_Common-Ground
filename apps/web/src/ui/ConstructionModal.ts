@@ -2,6 +2,7 @@ import { spendCash, spendEnergy, updateCommonsProgress } from '../core/state/act
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 import { TactileEffects } from '../builder/TactileEffects';
+import { bindEscapeClose } from './modalDismiss';
 
 export type BuildProgressKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress' | 'toolLibraryProgress' | 'landTrustProgress';
 
@@ -16,6 +17,7 @@ export class ConstructionModal {
   private readonly el: HTMLElement;
   private readonly progressKey: BuildProgressKey;
   private readonly onClose?: () => void;
+  private readonly disposeEscape: () => void;
 
   constructor(root: HTMLElement, progressKey: BuildProgressKey, onClose?: () => void) {
     this.progressKey = progressKey;
@@ -62,15 +64,13 @@ export class ConstructionModal {
 
     root.appendChild(this.el);
     inputManager.setLocked(true);
+    this.disposeEscape = bindEscapeClose(() => this.close());
     this.bindEvents();
   }
 
   private bindEvents(): void {
     const closeButton = this.el.querySelector<HTMLButtonElement>('.construction-close');
     closeButton?.addEventListener('click', () => this.close());
-
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { this.close(); document.removeEventListener('keydown', onKey); } };
-    document.addEventListener('keydown', onKey);
 
     const form = this.el.querySelector<HTMLFormElement>('.construction-form');
     if (!form) return;
@@ -132,6 +132,7 @@ export class ConstructionModal {
 
   private close(): void {
     inputManager.setLocked(false);
+    this.disposeEscape();
     this.el.remove();
     this.onClose?.();
   }

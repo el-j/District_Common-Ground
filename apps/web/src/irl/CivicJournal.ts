@@ -4,6 +4,7 @@ import { getDeedHistory } from '../api/endpoints/irl';
 import { awardForDeed, flushOutbox, getOutboxCount } from './BadgeRegistry';
 import { generateHandshakeToken, verifyHandshakeToken, secondsRemaining, type HandshakeToken } from './PeerVerification';
 import type { IrlDeedCategory, IrlDeed } from '@district-cg/shared-types';
+import { bindEscapeClose } from '../ui/modalDismiss';
 
 const CATEGORY_LABELS: Record<IrlDeedCategory, string> = {
 	food_sharing: '🍞 Food Sharing',
@@ -27,6 +28,7 @@ type Step = 'form' | 'handshake' | 'result';
  */
 export class CivicJournal {
 	private readonly el: HTMLElement;
+	private readonly disposeEscape: () => void;
 	private step: Step = 'form';
 	private category: IrlDeedCategory = 'food_sharing';
 	private note = '';
@@ -53,6 +55,8 @@ export class CivicJournal {
 		this.el.addEventListener('click', e => {
 			if (e.target === this.el) this.close();
 		});
+
+		this.disposeEscape = bindEscapeClose(() => this.close());
 
 		void this.loadHistory();
 	}
@@ -241,6 +245,7 @@ export class CivicJournal {
 		this.stopHandshakeTicker();
 		this.el.classList.remove('settings-overlay--visible');
 		inputManager.setLocked(false);
+		this.disposeEscape();
 		setTimeout(() => {
 			this.el.remove();
 			this.onClose?.();

@@ -3,6 +3,7 @@ import { ApiError } from '../api/client';
 import type { ShopItem, ShopItemCategory } from '@district-cg/shared-types';
 import { inputManager } from '../world/InputManager';
 import { playUIClick, playSolidarityChime } from '../core/audio/SoundSynth';
+import { bindEscapeClose } from './modalDismiss';
 
 const TAB_LABELS: Record<'all' | ShopItemCategory, string> = {
   all: 'All',
@@ -13,6 +14,7 @@ const TAB_LABELS: Record<'all' | ShopItemCategory, string> = {
 
 export class ShopModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
   private catalog: ShopItem[] = [];
   private owned = new Set<string>();
   private balanceST = 0;
@@ -35,6 +37,8 @@ export class ShopModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close();
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close());
 
     void this.load();
   }
@@ -187,6 +191,7 @@ export class ShopModal {
   private close(): void {
     this.el.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => {
       this.el.remove();
       this.onClose?.();

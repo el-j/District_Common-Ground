@@ -21,6 +21,7 @@ import { useGameStore } from '../core/state/useGameStore';
 import { gainCash, spendCash, regenEnergy, spendEnergy } from '../core/state/actions';
 import { saveToDB } from '../core/state/persistence';
 import { FriendDistrictViewer } from './FriendDistrictViewer';
+import { bindEscapeClose } from './modalDismiss';
 
 const TAB_LABELS = { friends: 'Friends', caravans: 'Caravans', trade: 'Trade' } as const;
 type Tab = keyof typeof TAB_LABELS;
@@ -34,6 +35,7 @@ const RESOURCE_LABELS: Record<CaravanResourceType, string> = {
 export class SocialHubModal {
 	private readonly el: HTMLElement;
 	private readonly root: HTMLElement;
+	private readonly disposeEscape: () => void;
 	private me: MyProfile | null = null;
 	private friends: FriendProfile[] = [];
 	private inbox: SolidarityCaravan[] = [];
@@ -69,6 +71,8 @@ export class SocialHubModal {
 		this.el.addEventListener('click', e => {
 			if (e.target === this.el) this.close();
 		});
+
+		this.disposeEscape = bindEscapeClose(() => this.close());
 
 		void this.load();
 	}
@@ -536,6 +540,7 @@ export class SocialHubModal {
 	private close(): void {
 		this.el.classList.remove('settings-overlay--visible');
 		inputManager.setLocked(false);
+		this.disposeEscape();
 		setTimeout(() => {
 			this.el.remove();
 			this.onClose?.();

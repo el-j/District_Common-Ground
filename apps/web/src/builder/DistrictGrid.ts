@@ -175,13 +175,19 @@ export class DistrictGrid {
 
       const canHarvest = parcel.stage >= 2 && parcel.lastHarvestDay !== currentDay;
 
+      // M28: colors read the active skin's CSS custom properties (with
+      // these original hex values kept as the fallback, so an un-skinned
+      // DEFAULT_UI_KIT game — retro_gb/labor_woodcut — renders identically
+      // to before). This was the visually-dominant hardcoded content inside
+      // DistrictBuilderModal, which never picked up any skin's colors even
+      // though its wrapper chrome (title/close button) already did.
       card.style.cssText = `
         position: relative;
-        background: rgba(30, 41, 59, 0.85);
-        border: 2px solid ${this.selectedPlotId === parcel.plotId ? '#10b981' : 'rgba(255, 255, 255, 0.1)'};
+        background: var(--ui-gradient-panel, rgba(30, 41, 59, 0.85));
+        border: 2px solid ${this.selectedPlotId === parcel.plotId ? 'var(--skin-accent, #10b981)' : 'var(--skin-hud-border, rgba(255, 255, 255, 0.1))'};
         border-radius: 12px;
         padding: 14px;
-        color: #f8fafc;
+        color: var(--skin-hud-text, #f8fafc);
         cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         display: flex;
@@ -229,7 +235,7 @@ export class DistrictGrid {
       progressBar.style.cssText = `
         width: ${parcel.progress}%;
         height: 100%;
-        background: #10b981;
+        background: var(--skin-accent, #10b981);
         transition: width 0.4s ease-out;
       `;
       progressContainer.appendChild(progressBar);

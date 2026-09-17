@@ -5,6 +5,7 @@ import { playUIClick } from '../core/audio/SoundSynth';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { clearSave, saveToDB } from '../core/state/persistence';
 import { setRegionCode } from '../core/state/actions';
+import { bindEscapeClose } from './modalDismiss';
 
 const REGION_OPTIONS: { code: string; label: string }[] = [
   { code: 'GENERIC', label: 'Generic / Unspecified' },
@@ -33,6 +34,7 @@ const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9
 
 export class SettingsModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
   private scene?: Phaser.Scene;
   private confirmNewGame = false;
   private catalog: ThemeCatalogEntry[] = [
@@ -58,6 +60,8 @@ export class SettingsModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close(onClose);
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close(onClose));
 
     void getThemeCatalog().then(catalog => {
       this.catalog = catalog;
@@ -194,6 +198,7 @@ export class SettingsModal {
   private close(cb?: () => void): void {
     this.el.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => {
       this.el.remove();
       cb?.();

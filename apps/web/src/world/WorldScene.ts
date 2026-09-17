@@ -372,6 +372,7 @@ export class WorldScene extends Phaser.Scene {
 
   // M21 — camera/palette/dressing/juice state
   private lastSkinRevision = -1;
+  private lastResilienceScore = -1;
   private currentInteriorId: string | null = null;
   private nodePrompts: Map<string, InteractionPrompt> = new Map();
   private npcPrompts: Map<string, InteractionPrompt> = new Map();
@@ -459,7 +460,7 @@ export class WorldScene extends Phaser.Scene {
       // M21 §7 — bobbing bounce-bubble proximity prompt, layered above the
       // always-visible location ring so the ring still helps navigation
       // from a distance while the bubble signals "you can act here now".
-      this.nodePrompts.set(node.id, new InteractionPrompt(this, node.position.x, node.position.y, '🔨'));
+      this.nodePrompts.set(node.id, new InteractionPrompt(this, node.position.x, node.position.y, '🔨', () => WorldScene.hud?.triggerAction()));
     });
 
     // NPCs
@@ -484,7 +485,7 @@ export class WorldScene extends Phaser.Scene {
       const shadow = this.add.ellipse(npc.position.x, npc.position.y + 6, 12, 5, 0x000000, 0.3).setDepth(4.5);
       this.npcShadows.set(npc.id, shadow);
       // M21 §7 — proximity bounce-bubble
-      this.npcPrompts.set(npc.id, new InteractionPrompt(this, npc.position.x, npc.position.y, '💬'));
+      this.npcPrompts.set(npc.id, new InteractionPrompt(this, npc.position.x, npc.position.y, '💬', () => WorldScene.hud?.triggerAction()));
     });
 
     // Fetch daily gossip and inject into NPC dialogue trees
@@ -516,7 +517,7 @@ export class WorldScene extends Phaser.Scene {
       backgroundColor: 'rgba(15,23,42,0.7)',
       padding: { x: 3, y: 1 },
     }).setOrigin(0.5, 1).setDepth(4);
-    this.bikePrompt = new InteractionPrompt(this, this.bikePortal.x, this.bikePortal.y, '🚲');
+    this.bikePrompt = new InteractionPrompt(this, this.bikePortal.x, this.bikePortal.y, '🚲', () => WorldScene.hud?.triggerAction());
 
     // M27 — the 4 new minigame portals, same glowing-circle + label + bounce
     // prompt treatment as the Courier Rush bike portal above.
@@ -534,7 +535,7 @@ export class WorldScene extends Phaser.Scene {
         backgroundColor: 'rgba(15,23,42,0.7)',
         padding: { x: 3, y: 1 },
       }).setOrigin(0.5, 1).setDepth(4);
-      this.minigamePortalPrompts.set(portal.id, new InteractionPrompt(this, portal.position.x, portal.position.y, portal.emoji));
+      this.minigamePortalPrompts.set(portal.id, new InteractionPrompt(this, portal.position.x, portal.position.y, portal.emoji, () => WorldScene.hud?.triggerAction()));
     });
 
     // Subscribe to crisis state to spawn/remove division flyers
@@ -598,9 +599,18 @@ export class WorldScene extends Phaser.Scene {
     // M21 §4: also swap the small set of street-front world-dressing props
     // (boarded shopfronts / market stalls / flower planters), layered
     // independently from these CSS filter classes, which stay exactly as-is.
-    this.applyResilienceTier(useGameStore.getState().commons.resilienceScore);
-    this.updateWorldDressing(useGameStore.getState().commons.resilienceScore);
+    this.lastResilienceScore = useGameStore.getState().commons.resilienceScore;
+    this.applyResilienceTier(this.lastResilienceScore);
+    this.updateWorldDressing(this.lastResilienceScore);
     useGameStore.subscribe((state) => {
+      // M28: guarded on the score actually changing — this subscription has
+      // no selector, so without the guard applyResilienceTier()'s
+      // classList.remove/add reran on every unrelated store mutation (day
+      // tick, quest, spend, ...), which could restart the resilience-tier
+      // CSS filter/animation and read as flicker even when the tier itself
+      // never changed.
+      if (state.commons.resilienceScore === this.lastResilienceScore) return;
+      this.lastResilienceScore = state.commons.resilienceScore;
       this.applyResilienceTier(state.commons.resilienceScore);
       this.updateWorldDressing(state.commons.resilienceScore);
     });
@@ -694,7 +704,13 @@ export class WorldScene extends Phaser.Scene {
     this.updateInteriorFraming();
     this.updateShadowsAndLight();
 
-    // Scraps
+    // M28: computed exactly once per frame and threaded through to
+    // handleInteractions() below — Phaser's JustDown() clears its internal
+    // flag the first time it's read, so calling it a second time later in
+    // the same frame (as handleInteractions() used to, independently) would
+    // always see it as already-consumed. That silently made the [E] key
+    // dead for every world interaction (Talk/Build/Town Hall/flyers/bike/
+    // minigame portals) — only Space ever worked.
     const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
     this.scraps.update(this.player.x, this.player.y, ePressed, delta);
 
@@ -705,7 +721,7 @@ export class WorldScene extends Phaser.Scene {
     this.checkCrisis();
     this.checkAssembly();
     this.checkSafeHaven();
-    this.handleInteractions();
+    this.handleInteractions(ePressed);
     this.drawThumbstick();
   }
 
@@ -841,7 +857,7 @@ export class WorldScene extends Phaser.Scene {
     WorldScene.hud?.setZone(zone);
   }
 
-  private handleInteractions(): void {
+  private handleInteractions(ePressed: boolean): void {
     if (this.crisisOpen) { WorldScene.hud?.hideAction(); return; }
 
     // M21 §7 — bounce-bubble proximity prompts (Test 21.6): appear as soon as
@@ -895,7 +911,7 @@ export class WorldScene extends Phaser.Scene {
     );
 
     if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen && !this.assemblyOpen && !this.minigameOpen) {
-      const pressed = Phaser.Input.Keyboard.JustDown(this.actionKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
+      const pressed = ePressed || Phaser.Input.Keyboard.JustDown(this.spaceKey);
       if (pressed) {
         if (nearbyFlyer) {
           this.tearDownFlyer(nearbyFlyer);

@@ -1,10 +1,12 @@
 import { useGameStore, type CrisisLogEntry } from '../core/state/useGameStore';
 import { getScenario } from '../core/simulation/CrisisEngine';
 import { inputManager } from '../world/InputManager';
+import { bindEscapeClose } from './modalDismiss';
 
 export class HistoryModal {
   private readonly el: HTMLElement;
   private readonly onClose: () => void;
+  private readonly disposeEscape: () => void;
 
   constructor(root: HTMLElement, onClose: () => void) {
     this.onClose = onClose;
@@ -22,8 +24,7 @@ export class HistoryModal {
     this.el.querySelector<HTMLButtonElement>('.history-close')
       ?.addEventListener('click', () => this.close());
 
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { this.close(); document.removeEventListener('keydown', onKey); } };
-    document.addEventListener('keydown', onKey);
+    this.disposeEscape = bindEscapeClose(() => this.close());
   }
 
   private buildHTML(log: CrisisLogEntry[]): string {
@@ -65,6 +66,7 @@ export class HistoryModal {
   private close(): void {
     this.el.classList.remove('history-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => {
       this.el.remove();
       this.onClose();

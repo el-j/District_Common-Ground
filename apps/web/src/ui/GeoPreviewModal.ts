@@ -4,6 +4,7 @@ import { fetchNeighborhood, type SampleNeighborhood } from '../geo/OverpassClien
 import { rasterize, GeoTile } from '../geo/GeoJsonToTilemap';
 import { classifyAmenities, type AmenityMarker } from '../geo/AmenityClassifier';
 import { neighborhoodCacheKey, cacheNeighborhood, loadCachedNeighborhood } from '../geo/GeoCache';
+import { bindEscapeClose } from './modalDismiss';
 
 const NEIGHBORHOODS: { id: SampleNeighborhood; label: string; lat: number; lon: number }[] = [
 	{ id: 'berlin-neukolln', label: 'Berlin-Neukölln', lat: 52.4796, lon: 13.4359 },
@@ -29,6 +30,7 @@ const TILE_COLORS: Record<GeoTile, string> = {
  */
 export class GeoPreviewModal {
 	private readonly el: HTMLElement;
+	private readonly disposeEscape: () => void;
 	private loading = false;
 	private source: 'live' | 'offline-sample' | null = null;
 	private amenities: AmenityMarker[] = [];
@@ -37,24 +39,31 @@ export class GeoPreviewModal {
 
 	constructor(root: HTMLElement, private readonly onClose?: () => void) {
 		this.el = document.createElement('div');
-		this.el.className = 'settings-overlay';
+		// M28: its own class, not settings-overlay/-panel — this is opened
+		// straight from the pre-game Character Select screen, and reusing the
+		// exact in-game Settings dialog's classes made a main-menu preview
+		// look pixel-identical to an in-game modal ("main menu mixed with
+		// in-game menu"). See .menu-preview-* in style.css.
+		this.el.className = 'menu-preview-overlay';
 		this.el.setAttribute('role', 'dialog');
 		this.el.setAttribute('aria-modal', 'true');
 		this.el.setAttribute('aria-labelledby', 'geo-preview-title');
 		root.appendChild(this.el);
 
 		inputManager.setLocked(true);
-		requestAnimationFrame(() => this.el.classList.add('settings-overlay--visible'));
+		requestAnimationFrame(() => this.el.classList.add('menu-preview-overlay--visible'));
 
 		this.render();
 		this.el.addEventListener('click', e => {
 			if (e.target === this.el) this.close();
 		});
+
+		this.disposeEscape = bindEscapeClose(() => this.close());
 	}
 
 	private render(): void {
 		this.el.innerHTML = `
-			<div class="settings-panel geo-preview-panel interactive">
+			<div class="menu-preview-panel geo-preview-panel interactive">
 				<div class="settings-header">
 					<span class="settings-title" id="geo-preview-title">🗺️ Real-World Geo-Mode — Neighborhood Preview (PoC)</span>
 					<button class="settings-close" type="button" aria-label="Close">×</button>
@@ -141,8 +150,9 @@ export class GeoPreviewModal {
 	}
 
 	private close(): void {
-		this.el.classList.remove('settings-overlay--visible');
+		this.el.classList.remove('menu-preview-overlay--visible');
 		inputManager.setLocked(false);
+		this.disposeEscape();
 		setTimeout(() => {
 			this.el.remove();
 			this.onClose?.();

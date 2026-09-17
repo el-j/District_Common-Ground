@@ -2,9 +2,11 @@ import { getWorkForToday, performWork, type WorkStatus } from '../core/simulatio
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { TactileEffects } from '../builder/TactileEffects';
+import { bindEscapeClose } from './modalDismiss';
 
 export class WorkModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
 
   constructor(root: HTMLElement) {
     this.el = document.createElement('div');
@@ -19,6 +21,8 @@ export class WorkModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close();
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close());
   }
 
   private render(): void {
@@ -81,6 +85,7 @@ export class WorkModal {
   private close(): void {
     this.el.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => this.el.remove(), 200);
   }
 }

@@ -12,7 +12,15 @@ const THUMBSTICK_MAX_RADIUS = 40;
 class InputManager {
   private direction: Direction = { dx: 0, dy: 0 };
   private _facing: Facing = 'down';
-  private locked = false;
+  // M28: a refcount, not a single overwritten boolean. ~10 modals each call
+  // setLocked(true) on open / setLocked(false) on close with no stacking
+  // awareness — if modal B opens on top of already-open modal A, B's close()
+  // used to unconditionally set the shared boolean to false and silently
+  // unlock movement while A was still visibly open. Counting locks/unlocks
+  // (floored at 0) makes nested open/close pairs commute correctly with zero
+  // call-site changes, since every existing call site already calls
+  // setLocked(true) and setLocked(false) exactly once per open/close.
+  private lockCount = 0;
 
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   private wasd: Record<'up' | 'down' | 'left' | 'right', Phaser.Input.Keyboard.Key> | null = null;
@@ -75,7 +83,7 @@ class InputManager {
   }
 
   update(): void {
-    if (this.locked) {
+    if (this.isLocked()) {
       this.direction = { dx: 0, dy: 0 };
       return;
     }
@@ -134,14 +142,14 @@ class InputManager {
   }
 
   setLocked(next: boolean): void {
-    this.locked = next;
+    this.lockCount = next ? this.lockCount + 1 : Math.max(0, this.lockCount - 1);
     if (next) {
       this.direction = { dx: 0, dy: 0 };
     }
   }
 
   isLocked(): boolean {
-    return this.locked;
+    return this.lockCount > 0;
   }
 }
 

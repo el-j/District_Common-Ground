@@ -93,7 +93,10 @@ export const INITIAL_STATE: GameState = {
     lastWorkedDay: null,
   },
   commons: {
-    resilienceScore: 0,
+    // Starts mid-"crisis" tier (ResilienceDressing.ts: <15 emergency, <30
+    // crisis), not 0/"emergency" — a fresh game should open under visible
+    // economic stress, not full-collapse imagery on day one.
+    resilienceScore: 20,
     solarGridProgress: 0,
     kitchenProgress: 0,
     legalFundProgress: 0,

@@ -1,6 +1,7 @@
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
+import { bindEscapeClose } from './modalDismiss';
 
 const ROLE_NAMES: Record<string, string> = {
   pip: 'Precarious Courier',
@@ -80,8 +81,11 @@ export function openShareSheet(root: HTMLElement): void {
   const close = (): void => {
     overlay.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    disposeEscape();
     setTimeout(() => overlay.remove(), 200);
   };
+
+  const disposeEscape = bindEscapeClose(close);
 
   overlay.querySelector('.settings-close')?.addEventListener('click', close);
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });

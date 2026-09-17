@@ -1,8 +1,10 @@
 import { DistrictGrid } from '../builder/DistrictGrid';
+import { bindEscapeClose } from './modalDismiss';
 
 export class DistrictBuilderModal {
   private el: HTMLElement;
   private grid: DistrictGrid;
+  private readonly disposeEscape: () => void;
 
   constructor(root: HTMLElement, onClose?: () => void) {
     this.el = document.createElement('div');
@@ -52,16 +54,11 @@ export class DistrictBuilderModal {
     this.el.appendChild(card);
     root.appendChild(this.el);
 
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        window.removeEventListener('keydown', onKeyDown);
-        this.close(onClose);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
+    this.disposeEscape = bindEscapeClose(() => this.close(onClose));
   }
 
   private close(onClose?: () => void): void {
+    this.disposeEscape();
     if (this.el.parentElement) {
       this.el.parentElement.removeChild(this.el);
     }

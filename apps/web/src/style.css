@@ -252,6 +252,16 @@
   padding: 0.15rem 0.4rem;
 }
 
+/* M28 — a keyboard-shortcut hint is meaningless on a device with no
+   keyboard. `(hover: none) and (pointer: coarse)` targets touchscreens
+   without also hiding it for a touch-capable desktop monitor with a mouse
+   (which still has hover + a fine pointer). */
+@media (hover: none) and (pointer: coarse) {
+  .context-action-button .key-hint {
+    display: none;
+  }
+}
+
 /* ── End Day button (bottom-left) ───────────────────────── */
 
 .end-day-btn {
@@ -718,11 +728,11 @@
 }
 
 .world-emergency {
-  animation: emergency-pulse-legacy 1.5s ease-in-out infinite;
-}
-@keyframes emergency-pulse-legacy {
-  0%, 100% { box-shadow: inset 0 0 0 0 rgba(180, 20, 20, 0); }
-  50%       { box-shadow: inset 0 0 40px 8px rgba(180, 20, 20, 0.25); }
+  /* Static, not an infinite pulse — a perpetually-animating vignette read
+     as constant "flickering" during normal play. The existing
+     `transition: filter 0.8s ease` on #game-container still gives entering
+     this state a smooth one-time fade-in. */
+  box-shadow: inset 0 0 40px 8px rgba(180, 20, 20, 0.25);
 }
 
 /* ── History Modal (Town Hall) ──────────────────────────── */
@@ -894,8 +904,9 @@
   position: absolute;
   right: 9.35rem;
   bottom: 0.85rem;
-  background: rgba(26, 18, 10, 0.9);
-  border: 1px solid #6a4f2e;
+  background: var(--ui-gradient-panel, rgba(26, 18, 10, 0.9));
+  border: 1px solid var(--skin-hud-border, #6a4f2e);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #d8a13a;
   font-size: 1rem;
@@ -908,7 +919,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.shop-open-btn:hover { color: #f0c775; border-color: #8a6b3e; }
+.shop-open-btn:hover { color: #f0c775; border-color: var(--skin-accent, #8a6b3e); }
 
 /* ── Common Grounds Button ──────────────────────────────── */
 
@@ -916,8 +927,9 @@
   position: absolute;
   right: 11.1rem;
   bottom: 0.85rem;
-  background: rgba(12, 22, 16, 0.9);
-  border: 1px solid #2e6a4f;
+  background: var(--ui-gradient-panel, rgba(12, 22, 16, 0.9));
+  border: 1px solid var(--skin-hud-border, #2e6a4f);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #6fd8a1;
   font-size: 1rem;
@@ -930,7 +942,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.social-open-btn:hover { color: #a0f0c4; border-color: #3e8a6b; }
+.social-open-btn:hover { color: #a0f0c4; border-color: var(--skin-accent, #3e8a6b); }
 
 .hud-wallet-chip {
   position: absolute;
@@ -963,18 +975,25 @@
 }
 .settings-overlay--visible { opacity: 1; }
 
+/* M28 — migrated to var(--ui-*)/var(--skin-*) with the original hardcoded
+   values kept as fallbacks (M22's "unset clears the var" design, so
+   retro_gb/labor_woodcut — no uiKit — render pixel-identical to before).
+   This is the shared base for 9 modals (Settings/Shop/Quest/Work/Share/
+   SocialHub/CivicDirectory/FriendDistrictViewer/GeoPreview's chrome
+   classes), so migrating it once re-themes all of them. */
 .settings-panel {
   width: min(480px, calc(100% - 2rem));
   max-height: 80vh;
-  background: #0c0c1c;
-  border: 1px solid #2a2a44;
-  border-radius: 8px;
+  background: var(--ui-gradient-panel, #0c0c1c);
+  border: 1px solid var(--skin-hud-border, #2a2a44);
+  border-radius: var(--ui-radius-lg, 8px);
   display: flex;
   flex-direction: column;
-  font-family: ui-monospace, monospace;
-  color: #ddddf8;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  color: var(--skin-hud-text, #ddddf8);
   overflow: hidden;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  box-shadow: var(--ui-shadow-panel, 0 16px 48px rgba(0,0,0,0.7)), var(--ui-shadow-glow, 0 0 0 rgba(0,0,0,0));
+  backdrop-filter: var(--ui-blur, none);
 }
 
 .settings-header {
@@ -982,7 +1001,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.9rem 1rem 0.6rem;
-  border-bottom: 1px solid #1e1e30;
+  border-bottom: 1px solid var(--skin-hud-border, #1e1e30);
 }
 
 .settings-title {
@@ -990,23 +1009,25 @@
   font-size: 0.72rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #aaaaee;
+  color: var(--skin-accent, #aaaaee);
+  font-family: var(--ui-font-display, inherit);
 }
 
 .settings-close {
   background: transparent;
   border: none;
-  color: #666688;
+  color: var(--skin-hud-text, #666688);
+  opacity: 0.7;
   font-size: 1.2rem;
   cursor: pointer;
   line-height: 1;
-  transition: color 0.12s;
+  transition: color 0.12s, opacity 0.12s;
 }
-.settings-close:hover { color: #aaaacc; }
+.settings-close:hover { color: var(--skin-accent, #aaaacc); opacity: 1; }
 
 .settings-tabs {
   display: flex;
-  border-bottom: 1px solid #1e1e30;
+  border-bottom: 1px solid var(--skin-hud-border, #1e1e30);
 }
 
 .settings-tab {
@@ -1014,18 +1035,20 @@
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #555577;
-  font-family: ui-monospace, monospace;
+  color: var(--skin-hud-text, #555577);
+  opacity: 0.65;
+  font-family: var(--ui-font, ui-monospace, monospace);
   font-size: 0.66rem;
   padding: 0.6rem;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s, opacity 0.15s;
   text-align: center;
 }
-.settings-tab:hover { color: #aaaacc; }
+.settings-tab:hover { color: var(--skin-accent, #aaaacc); opacity: 1; }
 .settings-tab--active {
-  color: #aaaaee;
-  border-bottom-color: #6666cc;
+  color: var(--skin-accent, #aaaaee);
+  opacity: 1;
+  border-bottom-color: var(--skin-accent, #6666cc);
 }
 
 .settings-body {
@@ -1632,8 +1655,9 @@
   position: absolute;
   right: 12.85rem;
   bottom: 0.85rem;
-  background: rgba(20, 16, 26, 0.9);
-  border: 1px solid #6b4f9a;
+  background: var(--ui-gradient-panel, rgba(20, 16, 26, 0.9));
+  border: 1px solid var(--skin-hud-border, #6b4f9a);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #b89ae0;
   font-size: 1rem;
@@ -1646,7 +1670,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.civic-open-btn:hover { color: #d8c4f5; border-color: #8a6bc4; }
+.civic-open-btn:hover { color: #d8c4f5; border-color: var(--skin-accent, #8a6bc4); }
 
 /* ── Civic Action Ticker (bottom marquee) ───────────────────── */
 
@@ -1779,8 +1803,9 @@
   position: absolute;
   right: 14.6rem;
   bottom: 0.85rem;
-  background: rgba(20, 16, 26, 0.9);
-  border: 1px solid #5a8a4f;
+  background: var(--ui-gradient-panel, rgba(20, 16, 26, 0.9));
+  border: 1px solid var(--skin-hud-border, #5a8a4f);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #a8d089;
   font-size: 1rem;
@@ -1793,7 +1818,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.journal-open-btn:hover { color: #c8f0b0; border-color: #7ac46b; }
+.journal-open-btn:hover { color: #c8f0b0; border-color: var(--skin-accent, #7ac46b); }
 
 .civic-journal-panel {
   width: min(520px, calc(100% - 2rem));
@@ -1907,6 +1932,42 @@
 
 /* ── Real-World Geo-Mode Preview (M16 PoC) ────────────────────── */
 
+/* M28: its own overlay/panel classes, not settings-overlay/-panel — this
+   is opened from the pre-game Character Select screen, and reusing the
+   exact in-game Settings dialog classes made a main-menu preview visually
+   indistinguishable from an in-game modal ("main menu mixed with in-game
+   menu"). Same centering/backdrop mechanics as .settings-overlay/-panel,
+   but with its own accent stripe so it reads as menu-level, not in-game. */
+.menu-preview-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 6, 14, 0.7);
+  z-index: 55;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.menu-preview-overlay--visible { opacity: 1; }
+
+.menu-preview-panel {
+  width: min(480px, calc(100% - 2rem));
+  max-height: 80vh;
+  background: var(--ui-gradient-panel, #0c0c1c);
+  border: 1px solid var(--skin-hud-border, #2a2a44);
+  border-top: 3px solid var(--skin-accent, #6666cc);
+  border-radius: var(--ui-radius-lg, 8px);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  color: var(--skin-hud-text, #ddddf8);
+  overflow: hidden;
+  box-shadow: var(--ui-shadow-panel, 0 16px 48px rgba(0,0,0,0.7));
+  backdrop-filter: var(--ui-blur, none);
+}
+
 .geo-preview-panel {
   width: min(400px, calc(100% - 2rem));
 }
@@ -1956,8 +2017,9 @@
   position: absolute;
   right: 17rem;
   bottom: 0.85rem;
-  background: rgba(20, 16, 26, 0.9);
-  border: 1px solid #6b8ac4;
+  background: var(--ui-gradient-panel, rgba(20, 16, 26, 0.9));
+  border: 1px solid var(--skin-hud-border, #6b8ac4);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #a8c0e8;
   font-size: 1rem;
@@ -1970,7 +2032,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.mesh-open-btn:hover { color: #c8dcf0; border-color: #6bacf0; }
+.mesh-open-btn:hover { color: #c8dcf0; border-color: var(--skin-accent, #6bacf0); }
 
 .mesh-chat-panel {
   width: min(560px, calc(100% - 2rem));
@@ -2028,8 +2090,9 @@
   position: absolute;
   right: 19.4rem;
   bottom: 0.85rem;
-  background: rgba(20, 16, 26, 0.9);
-  border: 1px solid #c4a86b;
+  background: var(--ui-gradient-panel, rgba(20, 16, 26, 0.9));
+  border: 1px solid var(--skin-hud-border, #c4a86b);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #e8d0a8;
   font-size: 1rem;
@@ -2042,7 +2105,7 @@
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.credit-open-btn:hover { color: #f0dcb0; border-color: #f0c46b; }
+.credit-open-btn:hover { color: #f0dcb0; border-color: var(--skin-accent, #f0c46b); }
 
 .credit-transfer-panel {
   width: min(480px, calc(100% - 2rem));
@@ -2270,20 +2333,13 @@
 }
 
 #game-container.world--emergency {
-  filter: grayscale(0.8) sepia(0.3) brightness(0.75);
-  animation: emergency-pulse 2s ease-in-out infinite;
-}
-
-@keyframes emergency-pulse {
-  0%, 100% { filter: grayscale(0.8) sepia(0.3) brightness(0.75); }
-  50% { filter: grayscale(0.9) sepia(0.5) brightness(0.65) hue-rotate(330deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #game-container.world--emergency {
-    animation: none;
-    filter: grayscale(0.85) sepia(0.4) brightness(0.7);
-  }
+  /* Static filter, not an infinite pulse — an unconditional `animation:
+     infinite` here made the whole world (and, before #ui-root was moved
+     out of #game-container, the entire HUD) read as constantly flickering
+     from the moment a fresh game starts. #game-container's own
+     `transition: filter 0.8s ease` (style.css:717) still gives
+     entering/leaving this tier a smooth fade instead of a hard cut. */
+  filter: grayscale(0.85) sepia(0.4) brightness(0.7);
 }
 
 /* ── Economic Barometer chip ──────────────────────────────── */
@@ -2315,9 +2371,9 @@
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 50%;
-  border: none;
-  background: rgba(15,25,12,0.85);
-  backdrop-filter: blur(4px);
+  border: 1px solid var(--skin-hud-border, transparent);
+  background: var(--ui-gradient-panel, rgba(15,25,12,0.85));
+  backdrop-filter: var(--ui-blur, blur(4px));
   font-size: 1rem;
   cursor: pointer;
   color: #cce8cc;
@@ -2625,8 +2681,9 @@ input:focus-visible {
   right: 7.6rem;
   bottom: 0.85rem;
   pointer-events: auto;
-  border: 1px solid #2d2d44;
-  background: rgba(12, 12, 22, 0.85);
+  border: 1px solid var(--skin-hud-border, #2d2d44);
+  background: var(--ui-gradient-panel, rgba(12, 12, 22, 0.85));
+  backdrop-filter: var(--ui-blur, none);
   color: #aaaacc;
   border-radius: 999px;
   padding: 0.45rem 0.65rem;
@@ -2636,8 +2693,7 @@ input:focus-visible {
   transition: background 0.12s, border-color 0.12s;
 }
 .quest-open-btn:hover {
-  background: rgba(24, 24, 44, 0.95);
-  border-color: #5555aa;
+  border-color: var(--skin-accent, #5555aa);
 }
 
 /* ── New-game section in Settings ────────────────────────── */
@@ -2694,8 +2750,9 @@ input:focus-visible {
   position: absolute;
   right: 21.8rem;
   bottom: 0.85rem;
-  background: rgba(16, 20, 16, 0.9);
-  border: 1px solid #6bc48a;
+  background: var(--ui-gradient-panel, rgba(16, 20, 16, 0.9));
+  border: 1px solid var(--skin-hud-border, #6bc48a);
+  backdrop-filter: var(--ui-blur, none);
   border-radius: 50%;
   color: #a8e8c0;
   font-size: 1rem;
@@ -2708,7 +2765,7 @@ input:focus-visible {
   transition: color 0.15s, border-color 0.15s;
   z-index: 30;
 }
-.bitchat-open-btn:hover { color: #c8f0d8; border-color: #8bf0ac; }
+.bitchat-open-btn:hover { color: #c8f0d8; border-color: var(--skin-accent, #8bf0ac); }
 
 .bitchat-panel {
   width: min(520px, calc(100% - 2rem));
@@ -2977,6 +3034,7 @@ input:focus-visible {
 }
 
 .assembly-panel {
+  position: relative;
   width: min(520px, 100%);
   background: var(--ui-gradient-panel, linear-gradient(180deg, #14202e, #0c141e));
   border: 1px solid var(--skin-hud-border, #2a4a5a);
@@ -2986,6 +3044,18 @@ input:focus-visible {
   padding: 1.25rem 1.5rem;
   color: var(--skin-hud-text, #ddeeff);
   font-family: var(--ui-font, ui-monospace, monospace);
+}
+
+/* M28 — this dialog only ever handled Escape silently, with no visible
+   close affordance at all (it's a forced-vote dialog with no × — Escape
+   dismissal is intentionally kept, just needs to be discoverable). */
+.assembly-esc-hint {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  font-size: 0.6rem;
+  opacity: 0.55;
+  letter-spacing: 0.03em;
 }
 
 .assembly-title {

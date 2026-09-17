@@ -2,9 +2,11 @@ import { getQuestsForToday, completeQuest, type QuestDefinition } from '../core/
 import { type QuestId } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
+import { bindEscapeClose } from './modalDismiss';
 
 export class QuestModal {
   private readonly el: HTMLElement;
+  private readonly disposeEscape: () => void;
 
   constructor(root: HTMLElement) {
     this.el = document.createElement('div');
@@ -19,6 +21,8 @@ export class QuestModal {
     this.el.addEventListener('click', e => {
       if (e.target === this.el) this.close();
     });
+
+    this.disposeEscape = bindEscapeClose(() => this.close());
   }
 
   private render(): void {
@@ -75,6 +79,7 @@ export class QuestModal {
   private close(): void {
     this.el.classList.remove('settings-overlay--visible');
     inputManager.setLocked(false);
+    this.disposeEscape();
     setTimeout(() => this.el.remove(), 200);
   }
 }

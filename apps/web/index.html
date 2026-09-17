@@ -63,9 +63,17 @@
         image-rendering: auto;
       }
 
-      /* HTML overlay root — HUD, dialogue, modals sit here */
+      /* HTML overlay root — HUD, dialogue, modals sit here.
+         Deliberately a SIBLING of #game-container (see markup below), not a
+         child — #game-container carries world-mood CSS filters
+         (world--crisis/emergency/etc, style.css) which composite over every
+         descendant as one rendered layer. Nesting #ui-root inside it meant
+         those filters desaturated/pulsed the entire HUD and every modal too,
+         not just the Phaser canvas. position:fixed + inset:0 keeps it
+         viewport-aligned exactly as before, since #game-container is itself
+         a borderless 100vw/100vh box at position:relative. */
       #ui-root {
-        position: absolute;
+        position: fixed;
         inset: 0;
         pointer-events: none;
         z-index: 10;
@@ -78,9 +86,8 @@
     </style>
   </head>
   <body>
-    <div id="game-container">
-      <div id="ui-root"></div>
-    </div>
+    <div id="game-container"></div>
+    <div id="ui-root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

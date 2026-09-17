@@ -1,5 +1,6 @@
 import { getFriendDistrict } from '../api/endpoints/social';
 import type { DistrictSnapshot } from '@district-cg/shared-types';
+import { bindEscapeClose } from './modalDismiss';
 
 const PROGRESS_LABELS: { key: keyof DistrictSnapshot['commons']; label: string }[] = [
 	{ key: 'solarGridProgress', label: 'Rooftop Solar Co-op' },
@@ -16,6 +17,7 @@ const PROGRESS_LABELS: { key: keyof DistrictSnapshot['commons']; label: string }
  */
 export class FriendDistrictViewer {
 	private readonly el: HTMLElement;
+	private readonly disposeEscape: () => void;
 	private snapshot: DistrictSnapshot | null = null;
 	private error = '';
 
@@ -31,6 +33,8 @@ export class FriendDistrictViewer {
 		this.el.addEventListener('click', e => {
 			if (e.target === this.el) this.close();
 		});
+
+		this.disposeEscape = bindEscapeClose(() => this.close());
 
 		void this.load();
 	}
@@ -82,6 +86,7 @@ export class FriendDistrictViewer {
 
 	private close(): void {
 		this.el.classList.remove('settings-overlay--visible');
+		this.disposeEscape();
 		setTimeout(() => this.el.remove(), 200);
 	}
 }

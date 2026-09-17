@@ -79,12 +79,11 @@ export function runSolvencySweep(
 export const PERMANENT_INFLATION_MULTIPLIERS: EconomicMultipliers = {
   ...DEFAULT_MULTIPLIERS,
   food: 1.5,
-  // Grounding note: the planning doc also specifies "energy +75%", but
-  // applyDailyTick() never reads multipliers.energy — energy upkeep/regen is
-  // a fixed per-archetype table (EconomyMath.ts's ENERGY_REGEN + the
-  // Tool-Library-gated 8/10 upkeep constant), independent of the economic
-  // multipliers entirely. Setting it here would be a silent no-op, so it's
-  // left at the default and this is called out instead of faked.
+  // M24 §1 — energy upkeep now genuinely scales with this multiplier
+  // (EconomyMath.ts's applyDailyTick multiplies the Tool-Library-gated 8/10
+  // base upkeep by multipliers.energy), so this is no longer a no-op: at
+  // 1.75x, base upkeep of 10 becomes 18, pushing every archetype's energy
+  // trajectory further negative than the baseline sweep.
   energy: 1.75,
 };
 

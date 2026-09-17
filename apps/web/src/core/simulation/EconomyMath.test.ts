@@ -92,6 +92,17 @@ describe('applyDailyTick', () => {
     expect(result.energyDelta).toBe(5);
   });
 
+  // M24 Test 24.1 — energy upkeep now scales with multipliers.energy
+  // (previously a documented no-op — see BalanceSimulator.ts).
+  it('energy multiplier 1.75 increases upkeep and costs more energy than default', () => {
+    const defaultResult = applyDailyTick('pip', baseCommons, 0);
+    const multipliers = { food: 1.0, energy: 1.75, wage: 1.0, transit: 1.0, heat: 1.0, migrant: 1.0 };
+    const inflatedResult = applyDailyTick('pip', baseCommons, 0, multipliers);
+    // upkeep 10 * 1.75 = 17.5 → round 18; regen 15 → energyDelta = -3
+    expect(inflatedResult.energyDelta).toBe(-3);
+    expect(inflatedResult.energyDelta).toBeLessThan(defaultResult.energyDelta);
+  });
+
   it('stress decreases with high trust and all commons built', () => {
     const fullCommons = { kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100 };
     const result = applyDailyTick('pip', fullCommons, 80);

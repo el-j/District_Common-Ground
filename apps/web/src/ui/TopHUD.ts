@@ -2,6 +2,7 @@ import { useGameStore, type GameState } from '../core/state/useGameStore';
 import { advanceDay } from '../core/state/actions';
 import { SettingsModal } from './SettingsModal';
 import { QuestModal } from './QuestModal';
+import { WorkModal } from './WorkModal';
 import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
 import { RadioWidget } from './RadioWidget';
@@ -110,6 +111,10 @@ export class TopHUD implements HudSink {
     this.registerButton({
       id: 'quest', icon: '📋', label: 'Daily Quests',
       onClick: () => new QuestModal(root),
+    });
+    this.registerButton({
+      id: 'work', icon: '💼', label: 'Work — trade energy for cash',
+      onClick: () => new WorkModal(root),
     });
     this.registerButton({
       id: 'builder', icon: '🏗️', label: 'Open Living District Builder',

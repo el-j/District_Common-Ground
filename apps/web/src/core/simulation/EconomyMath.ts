@@ -30,7 +30,11 @@ export function applyDailyTick(
   const regen = ENERGY_REGEN[classRole ?? ''] ?? 8;
   // Tool Library at 100% reduces upkeep by 20% (covers shared repair tools)
   const toolLibraryBuilt = (commons.toolLibraryProgress ?? 0) >= BUILD_COMPLETION_THRESHOLD;
-  const energyUpkeep = toolLibraryBuilt ? 8 : 10;
+  const baseEnergyUpkeep = toolLibraryBuilt ? 8 : 10;
+  // M24 §1 — energy upkeep now scales with multipliers.energy, mirroring how
+  // foodCost already scales with multipliers.food. Previously this multiplier
+  // was read nowhere in the tick, a documented no-op (see BalanceSimulator.ts).
+  const energyUpkeep = Math.round(baseEnergyUpkeep * multipliers.energy);
   const energyDelta = regen - energyUpkeep;
 
   // Cash: base food upkeep multiplied by food index; kitchen built → free food

@@ -24,7 +24,7 @@ function resetStore(overrides: { progress?: number; cash?: number; energy?: numb
     meta: { day: 1, tick: 0, activeSkin: 'default', phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: {
       classRole: 'pip', cash, energy, maxEnergy: 100,
-      socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down',
+      socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
     },
     commons: {
       resilienceScore: 0,

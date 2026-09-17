@@ -39,6 +39,7 @@ describe('Living District Builder (DistrictGrid)', () => {
         stressLevel: 30,
         position: { x: 0, y: 0 },
         facing: 'down',
+        lastWorkedDay: null,
       },
     });
 

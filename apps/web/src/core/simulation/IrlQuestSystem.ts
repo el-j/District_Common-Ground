@@ -14,7 +14,7 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     title: 'Digital De-escalation',
     description: 'Step away from doom-scrolling for 30 minutes.',
     icon: '📵',
-    reward: 'Energy → 110% (Refreshed Clarity)',
+    reward: 'Energy +25 (Refreshed Clarity)',
   },
   {
     questId: 'community-reconnect',
@@ -70,8 +70,9 @@ export function completeQuest(questId: QuestId): void {
 
     switch (questId) {
       case 'digital-deescalation':
-        // Energy to 110% of max (temporary overflow — refreshed clarity)
-        player.energy = Math.round(player.maxEnergy * 1.1);
+        // M24 §3 — rebalanced from a 110%-of-max overflow (a wild outlier
+        // versus every other energy lever in the game) to a capped +25.
+        player.energy = Math.min(player.maxEnergy, player.energy + 25);
         break;
       case 'community-reconnect':
         player.socialTrust = Math.min(100, player.socialTrust + 15);

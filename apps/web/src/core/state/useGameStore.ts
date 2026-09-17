@@ -46,6 +46,9 @@ export interface GameState {
     stressLevel: number;
     position: { x: number; y: number };
     facing: Facing;
+    /** M24 §2 — the last day the player used the "Work" action; null before
+     *  the first use. Mirrors QuestState.completedOnDay's gating semantics. */
+    lastWorkedDay: number | null;
   };
   commons: {
     resilienceScore: number;
@@ -78,6 +81,7 @@ export const INITIAL_STATE: GameState = {
     stressLevel: 0,
     position: { x: 0, y: 0 },
     facing: 'down',
+    lastWorkedDay: null,
   },
   commons: {
     resilienceScore: 0,

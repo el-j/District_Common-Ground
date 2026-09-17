@@ -45,6 +45,7 @@ describe('Microkernel Minigame Engine', () => {
         stressLevel: 30,
         position: { x: 0, y: 0 },
         facing: 'down',
+        lastWorkedDay: null,
       },
     });
 
@@ -66,7 +67,7 @@ describe('Microkernel Minigame Engine', () => {
     useGameStore.setState({
       player: {
         classRole: 'pip', cash: 10, energy: 50, maxEnergy: 100,
-        socialTrust: 20, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down',
+        socialTrust: 20, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
       },
     });
 

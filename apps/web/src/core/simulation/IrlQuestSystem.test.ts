@@ -7,7 +7,7 @@ function resetStore(day = 1) {
     meta: { day, tick: 0, activeSkin: 'default', phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
     player: {
       classRole: 'pip', cash: 50, energy: 80, maxEnergy: 100,
-      socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down',
+      socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
     },
     commons: {
       resilienceScore: 0,
@@ -45,10 +45,19 @@ describe('IrlQuestSystem', () => {
     expect(isQuestAvailable(q, 6)).toBe(true);
   });
 
-  it('completeQuest digital-deescalation boosts energy to 110%', () => {
+  // M24 Test 24.3 — rebalanced from a 110%-of-max overflow to a capped +25.
+  it('completeQuest digital-deescalation grants +25 energy when not near the cap', () => {
+    useGameStore.setState(state => ({ player: { ...state.player, energy: 50 } }));
     completeQuest('digital-deescalation');
     const { player } = useGameStore.getState();
-    expect(player.energy).toBe(Math.round(player.maxEnergy * 1.1));
+    expect(player.energy).toBe(75); // 50 + 25, well under maxEnergy
+  });
+
+  it('completeQuest digital-deescalation caps at maxEnergy when near full', () => {
+    useGameStore.setState(state => ({ player: { ...state.player, energy: 90 } }));
+    completeQuest('digital-deescalation');
+    const { player } = useGameStore.getState();
+    expect(player.energy).toBe(player.maxEnergy); // 90 + 25 = 115, capped to 100
   });
 
   it('completeQuest community-reconnect adds trust and reduces stress', () => {

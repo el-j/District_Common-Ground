@@ -36,12 +36,18 @@ export class MinigameLoader {
   /**
    * Load a minigame whose code lives outside this bundle, via a real
    * `import()` of `manifest.entrypointUrl`. Trust is enforced upstream, not
-   * here: the only manifests this should ever be called with are ones that
-   * came back from `GET /api/v1/games`, which already merges only the
-   * local-registry's healthy plugins with the Go backend's owner-approved
-   * verified catalog (see `internal/kernel/verification_requests.go`) — there
-   * is no other path that feeds this method a manifest, so remote loading
-   * never bypasses that approval gate.
+   * here — but there are now two upstream sources, not one:
+   *   1. `GET /api/v1/games`, which merges the local-registry's healthy
+   *      plugins with the Go backend's owner-approved verified catalog (see
+   *      `internal/kernel/verification_requests.go`).
+   *   2. (M29) `builtinMinigameCatalog.ts`'s hardcoded fallback list, used
+   *      only when (1) is unreachable — same-origin, same-deploy, first-
+   *      party manifests for the 5 built-in games, pointing at static paths
+   *      that ship with the app itself. This keeps the built-ins working
+   *      offline without regressing to a static compile-time import.
+   * Third-party/arbitrary manifests never reach this method either way —
+   * those only ever go through `PluginRegistry`'s separate hash-verified,
+   * sandboxed install flow.
    */
   static async loadRemoteMinigame(manifest: MinigameManifest): Promise<void> {
     if (this.registeredModules.has(manifest.id)) return;

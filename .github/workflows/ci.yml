@@ -20,6 +20,9 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci
+      - name: Build minigame plugin bundles
+        run: npm run build:minigames
+        working-directory: ${{ github.workspace }}
       - run: npm run check
       - run: npm run test
 

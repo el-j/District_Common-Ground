@@ -8,7 +8,7 @@ export const manifest: MinigameManifest = {
   description: 'A memory-match challenge through two rounds of legal paperwork — pair up lease clauses, code citations, and covenants before the clock runs out.',
   category: 'puzzle',
   thumbnailUrl: '/assets/minigames/tenant-match.png',
-  entrypointUrl: '@district-cg/minigame-tenant-match',
+  entrypointUrl: '/plugins/tenant-match/index.js',
   targetHardware: 'canvas',
   permissions: ['wallet:grant', 'audio:sfx'],
 };

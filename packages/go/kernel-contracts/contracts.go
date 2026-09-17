@@ -19,14 +19,26 @@ type Registrar interface {
 }
 
 // PluginMetadata describes a registered minigame plugin.
+//
+// M29 — the JSON tags on Name/Entrypoint were renamed to title/entrypointUrl
+// (and Description/ThumbnailURL/TargetHardware added) to match the
+// frontend's canonical MinigameManifest/ServerGameManifest shape
+// (packages/shared-types/src/kernel.ts, apps/web/src/api/endpoints/games.ts).
+// Before this fix, every catalog entry — including the pre-existing
+// courier-rush one — rendered with a blank title/entrypoint wherever the
+// frontend read GET /api/v1/games, since the old tags (name/entrypoint)
+// never matched what the frontend was decoding for.
 type PluginMetadata struct {
-	ID          string   `json:"id"`
-	Version     string   `json:"version"`
-	Name        string   `json:"name"`
-	Author      string   `json:"author"`
-	Category    string   `json:"category"`
-	Entrypoint  string   `json:"entrypoint"`
-	Permissions []string `json:"permissions"`
+	ID             string   `json:"id"`
+	Version        string   `json:"version"`
+	Name           string   `json:"title"`
+	Description    string   `json:"description"`
+	Author         string   `json:"author"`
+	Category       string   `json:"category"`
+	ThumbnailURL   string   `json:"thumbnailUrl"`
+	Entrypoint     string   `json:"entrypointUrl"`
+	TargetHardware string   `json:"targetHardware"`
+	Permissions    []string `json:"permissions"`
 }
 
 // SessionConfig carries per-session context from the host to the plugin.

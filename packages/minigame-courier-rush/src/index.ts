@@ -8,7 +8,7 @@ export const manifest: MinigameManifest = {
   description: 'High-speed bike delivery through bustling cobblestone streets. Pick up warm soup rations and deliver them to isolated neighbors before time runs out!',
   category: 'delivery',
   thumbnailUrl: '/assets/minigames/courier-rush.png',
-  entrypointUrl: '@district-cg/minigame-courier-rush',
+  entrypointUrl: '/plugins/courier-rush/index.js',
   targetHardware: 'canvas',
   permissions: ['wallet:grant', 'audio:sfx'],
 };

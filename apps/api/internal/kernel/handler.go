@@ -24,8 +24,13 @@ func NewHandler(registry *Registry, sessions *SessionManager, repo *Repository, 
 }
 
 // ListGames serves GET /api/v1/games — the public catalog of verified, healthy minigames.
+// Merges three sources: the in-process registry (real GamePlugin backends —
+// currently just courier-rush), the metadata-only built-in catalog (M29 —
+// kitchen-rush/solidarity-line/tenant-match/tool-workshop, which have no
+// backend session logic yet), and owner-approved third-party plugins.
 func (h *Handler) ListGames(w http.ResponseWriter, r *http.Request) {
 	games := h.registry.List(r.Context())
+	games = append(games, BuiltinGameManifests()...)
 	verified, err := h.repo.ListVerifiedPlugins(r.Context())
 	if err == nil {
 		games = append(games, verified...)

@@ -8,7 +8,7 @@ export const manifest: MinigameManifest = {
   description: 'Displacement pressure is closing in on three fronts. Place mutual-aid shields along the line to turn eviction notices back before they reach the Land Trust.',
   category: 'defense',
   thumbnailUrl: '/assets/minigames/solidarity-line.png',
-  entrypointUrl: '@district-cg/minigame-solidarity-line',
+  entrypointUrl: '/plugins/solidarity-line/index.js',
   targetHardware: 'canvas',
   permissions: ['wallet:grant', 'audio:sfx'],
 };

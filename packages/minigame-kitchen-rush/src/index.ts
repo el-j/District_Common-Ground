@@ -8,7 +8,7 @@ export const manifest: MinigameManifest = {
   description: "Work the Community Kitchen's stove: click ingredients in the right order to fulfill each ticket before hungry neighbors give up waiting.",
   category: 'cooking',
   thumbnailUrl: '/assets/minigames/kitchen-rush.png',
-  entrypointUrl: '@district-cg/minigame-kitchen-rush',
+  entrypointUrl: '/plugins/kitchen-rush/index.js',
   targetHardware: 'canvas',
   permissions: ['wallet:grant', 'audio:sfx'],
 };

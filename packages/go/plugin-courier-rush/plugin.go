@@ -49,13 +49,16 @@ type Plugin struct{}
 
 func (p *Plugin) Metadata() kc.PluginMetadata {
 	return kc.PluginMetadata{
-		ID:          pluginID,
-		Version:     "1.0.0",
-		Name:        "Cargo Courier Rush",
-		Author:      "District Common Ground",
-		Category:    "arcade",
-		Entrypoint:  "minigames/courier-rush/index.ts",
-		Permissions: []string{"wallet:grant"},
+		ID:             pluginID,
+		Version:        "1.0.0",
+		Name:           "Cargo Courier Rush",
+		Description:    "High-speed bike delivery through bustling cobblestone streets. Pick up warm soup rations and deliver them to isolated neighbors before time runs out!",
+		Author:         "District Common Ground",
+		Category:       "delivery",
+		ThumbnailURL:   "/assets/minigames/courier-rush.png",
+		Entrypoint:     "/plugins/courier-rush/index.js",
+		TargetHardware: "canvas",
+		Permissions:    []string{"wallet:grant", "audio:sfx"},
 	}
 }
 

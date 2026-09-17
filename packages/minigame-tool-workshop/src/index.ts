@@ -8,7 +8,7 @@ export const manifest: MinigameManifest = {
   description: "Marcus's belt is backed up. Sort mechanical, electrical, and bike parts into the right bin — and send anything truly broken to scrap — before the line jams.",
   category: 'assembly',
   thumbnailUrl: '/assets/minigames/tool-workshop.png',
-  entrypointUrl: '@district-cg/minigame-tool-workshop',
+  entrypointUrl: '/plugins/tool-workshop/index.js',
   targetHardware: 'canvas',
   permissions: ['wallet:grant', 'audio:sfx'],
 };

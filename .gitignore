@@ -1,6 +1,7 @@
 node_modules/
 .aider*
 apps/web/dist/
+apps/web/public/plugins/
 apps/api/bin/
 apps/api/vendor/
 *.local

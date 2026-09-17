@@ -47,9 +47,9 @@ describe('scenariosToGossip', () => {
     expect(result.elena).toBe('Every solar panel we install is one less family depending on the grid monopoly.');
   });
 
-  it('defaults to the standard mira/leo/elena roster when npcIds is omitted', () => {
+  it('defaults to the full six-NPC roster when npcIds is omitted', () => {
     const result = scenariosToGossip([]);
-    expect(Object.keys(result).sort()).toEqual(['elena', 'leo', 'mira']);
+    expect(Object.keys(result).sort()).toEqual(['elena', 'higgins', 'leo', 'marcus', 'mira', 'sal']);
   });
 });
 

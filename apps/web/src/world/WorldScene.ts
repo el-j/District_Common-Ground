@@ -300,7 +300,7 @@ function createPlayerTexture(scene: Phaser.Scene): void {
 // ── NPC spritesheet (3 characters × 16px = 48×16) ────────────────────────────
 
 function createNPCTextures(scene: Phaser.Scene): void {
-  const tex = scene.textures.createCanvas('npcs', TS * 3, TS);
+  const tex = scene.textures.createCanvas('npcs', TS * 6, TS);
   if (!tex) throw new Error('npc canvas failed');
   const ctx = tex.getContext();
 
@@ -308,6 +308,9 @@ function createNPCTextures(scene: Phaser.Scene): void {
     { hair: '#b05010', shirt: '#ee8830', pants: '#884422', skin: '#f0b878' }, // Mira: orange
     { hair: '#335588', shirt: '#3388cc', pants: '#224466', skin: '#d8c8b8' }, // Leo: blue
     { hair: '#553311', shirt: '#cc4422', pants: '#772211', skin: '#f8d0a8' }, // Elena: red
+    { hair: '#222222', shirt: '#889933', pants: '#443322', skin: '#e8b898' }, // Sal: olive apron
+    { hair: '#999999', shirt: '#556655', pants: '#333333', skin: '#d0a888' }, // Marcus: grey (workshop coveralls)
+    { hair: '#dddddd', shirt: '#886699', pants: '#554466', skin: '#e0c0a0' }, // Higgins: silver (violet shawl)
   ];
   cfgs.forEach((c, i) => {
     const ox = i * TS;
@@ -321,7 +324,7 @@ function createNPCTextures(scene: Phaser.Scene): void {
     ctx.fillStyle = '#111130'; ctx.fillRect(ox+4,15,3,1); ctx.fillRect(ox+9,15,3,1);
   });
   tex.refresh();
-  for (let i = 0; i < 3; i++) tex.add(i, 0, i * TS, 0, TS, TS);
+  for (let i = 0; i < 6; i++) tex.add(i, 0, i * TS, 0, TS, TS);
 }
 
 // ── WorldScene ─────────────────────────────────────────────────────────────────
@@ -446,11 +449,18 @@ export class WorldScene extends Phaser.Scene {
 
     // NPCs
     this.npcs = [
-      new NPCEntity({ id:'mira',  token:'NPC_NEIGHBOR',  name:'Mira',  position:{ x:27*TS+TS/2, y:53*TS+TS/2 }, proximity:38, dialogueKey:'mira_intro'  }, ()=>undefined),
-      new NPCEntity({ id:'leo',   token:'NPC_NEIGHBOR',  name:'Leo',   position:{ x:26*TS+TS/2, y:31*TS+TS/2 }, proximity:38, dialogueKey:'leo_intro'   }, ()=>undefined),
-      new NPCEntity({ id:'elena', token:'NPC_ORGANIZER', name:'Elena', position:{ x:24*TS+TS/2, y:11*TS+TS/2 }, proximity:38, dialogueKey:'elena_intro' }, ()=>undefined),
+      new NPCEntity({ id:'mira',    token:'NPC_NEIGHBOR',  name:'Mira',         position:{ x:27*TS+TS/2, y:53*TS+TS/2 }, proximity:38, dialogueKey:'mira_intro'    }, ()=>undefined),
+      new NPCEntity({ id:'leo',     token:'NPC_NEIGHBOR',  name:'Leo',          position:{ x:26*TS+TS/2, y:31*TS+TS/2 }, proximity:38, dialogueKey:'leo_intro'     }, ()=>undefined),
+      new NPCEntity({ id:'elena',   token:'NPC_ORGANIZER', name:'Elena',        position:{ x:24*TS+TS/2, y:11*TS+TS/2 }, proximity:38, dialogueKey:'elena_intro'   }, ()=>undefined),
+      // M26 — three new NPCs, each placed near the construction node or
+      // zone their dossier ties to (docs/planning/09-NPC-SOCIAL-NETWORK-
+      // AND-RELATIONSHIPS.md): Sal near the South courtyard/kitchen, Marcus
+      // by the Tool Library node, Higgins by the Land Trust node.
+      new NPCEntity({ id:'sal',     token:'NPC_NEIGHBOR',  name:'Sal',          position:{ x:21*TS+TS/2, y:56*TS+TS/2 }, proximity:38, dialogueKey:'sal_intro'     }, ()=>undefined),
+      new NPCEntity({ id:'marcus',  token:'NPC_ORGANIZER', name:'Marcus',       position:{ x:40*TS+TS/2, y:29*TS+TS/2 }, proximity:38, dialogueKey:'marcus_intro'  }, ()=>undefined),
+      new NPCEntity({ id:'higgins', token:'NPC_NEIGHBOR',  name:'Mrs. Higgins', position:{ x:27*TS+TS/2, y:36*TS+TS/2 }, proximity:38, dialogueKey:'higgins_intro' }, ()=>undefined),
     ];
-    const npcFrame: Record<string, number> = { mira:0, leo:1, elena:2 };
+    const npcFrame: Record<string, number> = { mira:0, leo:1, elena:2, sal:3, marcus:4, higgins:5 };
     this.npcs.forEach(npc => {
       const img = this.add.image(npc.position.x, npc.position.y, 'npcs', npcFrame[npc.id] ?? 0);
       img.setDepth(5);

@@ -27,11 +27,24 @@ describe('pickDialogueKey', () => {
   it('falls back to mira_intro for an unknown npc', () => {
     expect(pickDialogueKey('nobody', 4)).toBe('mira_intro');
   });
+
+  // M26 — three new NPCs (sal, marcus, higgins) follow the same 5-tree rotation.
+  it('resolves the M26 roster (sal, marcus, higgins) through the same 5-day cycle', () => {
+    expect(pickDialogueKey('sal', 1)).toBe('sal_intro');
+    expect(pickDialogueKey('sal', 5)).toBe('sal_day5');
+    expect(pickDialogueKey('sal', 6)).toBe('sal_intro');
+    expect(pickDialogueKey('marcus', 1)).toBe('marcus_intro');
+    expect(pickDialogueKey('marcus', 5)).toBe('marcus_day5');
+    expect(pickDialogueKey('marcus', 6)).toBe('marcus_intro');
+    expect(pickDialogueKey('higgins', 1)).toBe('higgins_intro');
+    expect(pickDialogueKey('higgins', 5)).toBe('higgins_day5');
+    expect(pickDialogueKey('higgins', 6)).toBe('higgins_intro');
+  });
 });
 
 describe('DIALOGUES', () => {
   it('every npc has exactly 5 dialogue trees', () => {
-    for (const npc of ['mira', 'leo', 'elena']) {
+    for (const npc of ['mira', 'leo', 'elena', 'sal', 'marcus', 'higgins']) {
       const keys = [1, 2, 3, 4, 5].map(day => pickDialogueKey(npc, day));
       expect(new Set(keys).size).toBe(5);
       keys.forEach(key => expect(DIALOGUES[key]).toBeDefined());

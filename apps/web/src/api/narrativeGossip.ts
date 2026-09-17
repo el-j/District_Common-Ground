@@ -118,7 +118,115 @@ const FALLBACK_LINES: Record<string, Partial<Record<string, [string, string]>>> 
       "Quiet day on the roofs. Sunny, actually — good for the panels and good for morale.",
     ],
   },
+  // M26 — three new NPCs, same authored-line convention as above.
+  sal: {
+    FOOD_HEALTH: [
+      "Produce distributor jacked up prices again — I'm eating the difference so the shelf price stays the same.",
+      "Started tucking the almost-day-old bread straight into the Community Fridge before the delivery truck even leaves. Nobody needs to ask.",
+    ],
+    HOUSING_SPECULATE: [
+      "Heard the landlord upstairs sold to some holding company. Didn't even get a letter about it — just a new name on the rent stub.",
+      "Half my regulars showed up together to the tenant meeting after that sale. Numbers, not the letter, moved the needle.",
+    ],
+    MIGRATION_SANCT: [
+      "Family that just moved in three doors down is scared to even ask where the clinic is.",
+      "Left a note taped to my register in three languages: 'ask me anything, no charge for advice.' Somebody used it yesterday.",
+    ],
+    CIVIC_DISINFO: [
+      "Some flyer said the assembly got cancelled. Wasn't true — just wanted to keep folks home.",
+      "Started handing out the real meeting time with every receipt this week. Ink's cheap. Trust isn't.",
+    ],
+    LABOR_TRANSIT: [
+      "Delivery driver got his hours cut without warning again. That's twice this year.",
+      "Gave him a standing Tuesday shift stocking shelves. Not much, but it's steady.",
+    ],
+    CLIMATE_EXTREME: [
+      "Fridge compressor's straining in this heat. Praying it holds till the co-op gets us backup power.",
+      "Propped the door open with a fan running all day so anyone can duck in and cool off. Bad for the electric bill, good for the block.",
+    ],
+    DIVISION_AGITATION: [
+      "Somebody scrawled ugly stuff on the mailbox out front. Third time this month.",
+      "Painted right over it before the kids walked to school. Some things you just don't let sit.",
+    ],
+    DEFAULT: [
+      "Pennies make nickels, kid. Some days that's the whole philosophy.",
+      "Quiet morning. Restocked the shelves and watched the block wake up one coffee at a time.",
+    ],
+  },
+  marcus: {
+    FOOD_HEALTH: [
+      "Fridge compressor's rattling again — bring it by, I'll take a look between appointments.",
+      "Rewired the community fridge's old compressor myself. Runs quieter than it did new.",
+    ],
+    HOUSING_SPECULATE: [
+      "Landlord wants to gut the basement workshop for 'storage units.' Convenient timing, right before the sale.",
+      "Got the workshop declared a protected tenant amenity in writing. Paperwork's a tool too, if you know how to use it.",
+    ],
+    MIGRATION_SANCT: [
+      "New engineer down the block has certifications nobody local will recognize. Waste of good hands.",
+      "Vouched for him myself at the union hall. He's rewiring half the courtyard for free out of gratitude.",
+    ],
+    CIVIC_DISINFO: [
+      "Some rumor going around that the tool library charges a hidden membership fee. Never has, never will.",
+      "Printed the real price list — zero — on cardstock and nailed it to the door. Rumors don't survive daylight.",
+    ],
+    LABOR_TRANSIT: [
+      "My knees remind me every winter what forty years on a factory floor costs a body.",
+      "Taught three neighbors basic bike repair this week so they're not stuck paying shop rates. Pass it on.",
+    ],
+    CLIMATE_EXTREME: [
+      "Heat's bad for the lathe motors and worse for old joints like mine.",
+      "Built a shade awning over the workshop entrance out of scrap. Cools the tools and the people both.",
+    ],
+    DIVISION_AGITATION: [
+      "Somebody's trying to turn 'who fixed what first' into a turf war at the workshop. Pettiest thing I've heard all year.",
+      "Made everyone sign a shared tool log instead. Turns out credit's easy when nobody's hiding anything.",
+    ],
+    DEFAULT: [
+      "A tool kept in a private closet is a tool being murdered by rust. Come use the good ones.",
+      "Slow day. Oiled every lathe in the shop out of pure spite against entropy.",
+    ],
+  },
+  higgins: {
+    FOOD_HEALTH: [
+      "Watched three different grocers come and go on this block since '68. Prices always climb, portions always shrink.",
+      "Told the new kid running the corner store exactly which wholesaler won't gouge him. Man listened, too.",
+    ],
+    HOUSING_SPECULATE: [
+      "This building's had four owners since I moved in. Same rent-squeeze, different letterhead every time.",
+      "Pulled my old tenant covenant out of the trunk and made three copies for the block. Paper outlives landlords.",
+    ],
+    MIGRATION_SANCT: [
+      "Watched this block fill with new families in every decade I've been here. Same fear in their eyes every time.",
+      "Sat with the family downstairs and told them exactly which agency actually helps and which just takes numbers. Free advice, seventy-nine years in the making.",
+    ],
+    CIVIC_DISINFO: [
+      "Saw them try this exact 'meeting moved' trick on us in 1974. Still doesn't work.",
+      "Called twelve neighbors myself with the real time. Some tricks age like milk.",
+    ],
+    LABOR_TRANSIT: [
+      "My late husband worked the rail yards for thirty years before they automated his job away in a single afternoon.",
+      "Told his old union stories to the transit workers organizing now. Some fights just get handed down.",
+    ],
+    CLIMATE_EXTREME: [
+      "Summers didn't used to feel like this. My generation built for winters, not for this kind of heat.",
+      "Opened my front room as a cooling stoop for anyone who needs it. Seen worse decades, we'll see through this one too.",
+    ],
+    DIVISION_AGITATION: [
+      "They tried to turn neighbors against each other on this very street in '81. Different names, same old trick.",
+      "Told that whole story on the stoop tonight, loud enough for the flyer crew to hear it too. History's a pretty good weapon.",
+    ],
+    DEFAULT: [
+      "Landlord tactics never change; only the names on the private equity firms rotate.",
+      "Quiet evening on the stoop. Best kind, and the rarest.",
+    ],
+  },
 };
+
+// M26 — full six-NPC roster, used as the default for scenariosToGossip()/
+// fetchDailyGossip() so new NPCs get daily gossip lines exactly like the
+// original three.
+const ALL_NPC_IDS = ['mira', 'leo', 'elena', 'sal', 'marcus', 'higgins'];
 
 const SESSION_KEY = 'dcg-gossip-v1';
 const TTL_MS = 3_600_000;
@@ -141,7 +249,7 @@ export function pickGossipLine(npcId: string, archetype: string, day = 1): strin
 
 export function scenariosToGossip(
   scenarios: DailyScenario[],
-  npcIds: string[] = ['mira', 'leo', 'elena'],
+  npcIds: string[] = ALL_NPC_IDS,
   day = 1,
 ): Record<string, string> {
   const result: Record<string, string> = {};
@@ -203,7 +311,7 @@ export async function fetchDailyGossip(day = 1): Promise<Record<string, string>>
   } catch { /* ignore */ }
 
   const data = await fetchDailyNarrative();
-  const lines = scenariosToGossip(data.scenarios ?? [], ['mira', 'leo', 'elena'], day);
+  const lines = scenariosToGossip(data.scenarios ?? [], ALL_NPC_IDS, day);
   try {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({ lines, ts: Date.now() }));
   } catch { /* ignore */ }

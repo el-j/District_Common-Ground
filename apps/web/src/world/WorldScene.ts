@@ -388,6 +388,21 @@ export class WorldScene extends Phaser.Scene {
   private bikeMarker!: Phaser.GameObjects.Graphics;
   private minigameOpen = false;
 
+  // M27 — the 4 new built-in minigames, one per remaining M14-contract
+  // category, each placed near the construction node or NPC its theme ties
+  // to: Tenant Rights Match near the Legal Fund/Leo, Kitchen Rush near the
+  // Community Kitchen/Mira & Sal, Solidarity Line near the Land Trust/Higgins,
+  // Tool Workshop inside the Tool Library near Marcus.
+  private readonly minigamePortals: {
+    id: string; label: string; emoji: string; color: number; position: { x: number; y: number };
+  }[] = [
+    { id: 'tenant-match',    label: 'Tenant Rights Match', emoji: '📜', color: 0x60a5fa, position: { x: 30 * TS + TS / 2, y: 31 * TS + TS / 2 } },
+    { id: 'kitchen-rush',    label: 'Kitchen Rush',        emoji: '🍲', color: 0xf59e0b, position: { x: 24 * TS + TS / 2, y: 58 * TS + TS / 2 } },
+    { id: 'solidarity-line', label: 'Solidarity Line',     emoji: '🛡️', color: 0x5eead4, position: { x: 32 * TS + TS / 2, y: 37 * TS + TS / 2 } },
+    { id: 'tool-workshop',   label: 'Tool Workshop',       emoji: '🛠️', color: 0xfacc15, position: { x: 44 * TS + TS / 2, y: 32 * TS + TS / 2 } },
+  ];
+  private minigamePortalPrompts: Map<string, InteractionPrompt> = new Map();
+
   // Town Hall interaction point (door at col 5, row 35)
   private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
 
@@ -502,6 +517,25 @@ export class WorldScene extends Phaser.Scene {
       padding: { x: 3, y: 1 },
     }).setOrigin(0.5, 1).setDepth(4);
     this.bikePrompt = new InteractionPrompt(this, this.bikePortal.x, this.bikePortal.y, '🚲');
+
+    // M27 — the 4 new minigame portals, same glowing-circle + label + bounce
+    // prompt treatment as the Courier Rush bike portal above.
+    this.minigamePortals.forEach(portal => {
+      const marker = this.add.graphics();
+      marker.fillStyle(portal.color, 0.35);
+      marker.fillCircle(portal.position.x, portal.position.y, 14);
+      marker.lineStyle(2, portal.color, 0.85);
+      marker.strokeCircle(portal.position.x, portal.position.y, 14);
+      marker.setDepth(4);
+      const colorHex = `#${portal.color.toString(16).padStart(6, '0')}`;
+      this.add.text(portal.position.x, portal.position.y - 18, `${portal.emoji} ${portal.label}`, {
+        fontSize: '8px',
+        color: colorHex,
+        backgroundColor: 'rgba(15,23,42,0.7)',
+        padding: { x: 3, y: 1 },
+      }).setOrigin(0.5, 1).setDepth(4);
+      this.minigamePortalPrompts.set(portal.id, new InteractionPrompt(this, portal.position.x, portal.position.y, portal.emoji));
+    });
 
     // Subscribe to crisis state to spawn/remove division flyers
     useGameStore.subscribe((state) => {
@@ -824,6 +858,12 @@ export class WorldScene extends Phaser.Scene {
       const dx = this.player.x - this.bikePortal.x, dy = this.player.y - this.bikePortal.y;
       if (Math.hypot(dx, dy) <= 38) this.bikePrompt.show(); else this.bikePrompt.hide();
     }
+    this.minigamePortals.forEach(portal => {
+      const prompt = this.minigamePortalPrompts.get(portal.id);
+      if (!prompt) return;
+      const dx = this.player.x - portal.position.x, dy = this.player.y - portal.position.y;
+      if (Math.hypot(dx, dy) <= 38) prompt.show(); else prompt.hide();
+    });
 
     const nearbyNpc = this.npcs.find(npc => npc.isActive);
     const nearbyBuild = this.constructionNodes.find(node => {
@@ -845,6 +885,10 @@ export class WorldScene extends Phaser.Scene {
 
     // Courier Rush bike portal interaction
     const nearBike = Math.hypot(this.player.x - this.bikePortal.x, this.player.y - this.bikePortal.y) <= 38;
+    // M27 — nearest of the 4 new minigame portals, same radius as the bike
+    const nearMinigamePortal = this.minigamePortals.find(portal =>
+      Math.hypot(this.player.x - portal.position.x, this.player.y - portal.position.y) <= 38,
+    );
 
     if (!this.dialogueOpen && !this.buildOpen && !this.historyOpen && !this.assemblyOpen && !this.minigameOpen) {
       const pressed = Phaser.Input.Keyboard.JustDown(this.actionKey) || Phaser.Input.Keyboard.JustDown(this.spaceKey);
@@ -853,6 +897,8 @@ export class WorldScene extends Phaser.Scene {
           this.tearDownFlyer(nearbyFlyer);
         } else if (nearBike) {
           this.launchCourierRush();
+        } else if (nearMinigamePortal) {
+          this.launchWorldMinigame(nearMinigamePortal.id);
         } else if (scrapsInRange && hasCash) {
           this.feedScraps();
         } else if (nearTownHall) {
@@ -871,6 +917,8 @@ export class WorldScene extends Phaser.Scene {
       WorldScene.hud?.setAction('Tear down flyer [E] ✊', () => this.tearDownFlyer(nearbyFlyer));
     } else if (nearBike) {
       WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲 [E]', () => this.launchCourierRush());
+    } else if (nearMinigamePortal) {
+      WorldScene.hud?.setAction(`${nearMinigamePortal.label} ${nearMinigamePortal.emoji} [E]`, () => this.launchWorldMinigame(nearMinigamePortal.id));
     } else if (scrapsInRange && hasCash) {
       WorldScene.hud?.setAction('[E] Feed Scraps 🐟', () => this.feedScraps());
     } else if (nearTownHall) {
@@ -890,6 +938,20 @@ export class WorldScene extends Phaser.Scene {
     WorldScene.hud?.hideAction();
 
     void MinigameLoader.launchMinigame('courier-rush', {
+      onClose: () => {
+        this.minigameOpen = false;
+      },
+    });
+  }
+
+  /** M27 — shared launcher for the 4 new minigame portals (courier-rush keeps
+   * its own dedicated method above since it predates this generic one). */
+  private launchWorldMinigame(id: string): void {
+    if (this.minigameOpen) return;
+    this.minigameOpen = true;
+    WorldScene.hud?.hideAction();
+
+    void MinigameLoader.launchMinigame(id, {
       onClose: () => {
         this.minigameOpen = false;
       },

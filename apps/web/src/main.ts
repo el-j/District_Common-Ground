@@ -15,6 +15,10 @@ import { inputManager } from './world/InputManager';
 import { skinsPlugin } from './skins/plugin';
 import { worldPlugin } from './world/plugin';
 import { manifest as courierRushManifest } from '@district-cg/minigame-courier-rush';
+import { manifest as tenantMatchManifest } from '@district-cg/minigame-tenant-match';
+import { manifest as kitchenRushManifest } from '@district-cg/minigame-kitchen-rush';
+import { manifest as solidarityLineManifest } from '@district-cg/minigame-solidarity-line';
+import { manifest as toolWorkshopManifest } from '@district-cg/minigame-tool-workshop';
 import { geoWeatherPlugin } from '@district-cg/plugin-geo-weather';
 import { meshCommsPlugin } from '@district-cg/plugin-mesh-comms';
 import { mutualCreditPlugin } from '@district-cg/plugin-mutual-credit';
@@ -26,6 +30,29 @@ MinigameLoader.registerLocalMinigame(
   'courier-rush',
   courierRushManifest,
   async () => import('@district-cg/minigame-courier-rush'),
+);
+// M27 — four new built-in minigames, one per remaining category in the M14
+// contract (delivery already covered by courier-rush above): puzzle,
+// cooking, defense, assembly.
+MinigameLoader.registerLocalMinigame(
+  'tenant-match',
+  tenantMatchManifest,
+  async () => import('@district-cg/minigame-tenant-match'),
+);
+MinigameLoader.registerLocalMinigame(
+  'kitchen-rush',
+  kitchenRushManifest,
+  async () => import('@district-cg/minigame-kitchen-rush'),
+);
+MinigameLoader.registerLocalMinigame(
+  'solidarity-line',
+  solidarityLineManifest,
+  async () => import('@district-cg/minigame-solidarity-line'),
+);
+MinigameLoader.registerLocalMinigame(
+  'tool-workshop',
+  toolWorkshopManifest,
+  async () => import('@district-cg/minigame-tool-workshop'),
 );
 
 function getViewportSize(): { width: number; height: number } {

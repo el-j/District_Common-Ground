@@ -25,6 +25,10 @@
   },
   "dependencies": {
     "@district-cg/minigame-courier-rush": "*",
+    "@district-cg/minigame-kitchen-rush": "*",
+    "@district-cg/minigame-solidarity-line": "*",
+    "@district-cg/minigame-tenant-match": "*",
+    "@district-cg/minigame-tool-workshop": "*",
     "@district-cg/plugin-geo-weather": "*",
     "@district-cg/plugin-mesh-comms": "*",
     "@district-cg/plugin-mutual-credit": "*",

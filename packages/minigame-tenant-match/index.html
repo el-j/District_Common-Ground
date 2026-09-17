@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tenant Rights Match — Dev Harness</title>
+</head>
+<body>
+  <!--
+    Standalone dev harness (matches minigame-courier-rush's convention).
+    Confirms this package's src/index.ts loads on its own via `vite`,
+    independent of apps/web. Not shipped, not used by any bundled app build.
+  -->
+  <p>Tenant Rights Match — Dev Harness — package loaded standalone. Check the console for errors.</p>
+  <script type="module">
+    import * as pkg from './src/index.ts';
+    console.log('Loaded package exports:', Object.keys(pkg));
+  </script>
+</body>
+</html>

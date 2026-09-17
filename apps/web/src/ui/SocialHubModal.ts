@@ -5,9 +5,16 @@ import {
 	dispatchCaravan,
 	getCaravanInbox,
 	claimCaravan,
+	proposeTrade,
+	getTradeInbox,
+	getTradeOutbox,
+	acceptTrade,
+	declineTrade,
+	cancelTrade,
+	settleTrade,
 } from '../api/endpoints/social';
 import { ApiError } from '../api/client';
-import type { FriendProfile, SolidarityCaravan, CaravanResourceType, MyProfile } from '@district-cg/shared-types';
+import type { FriendProfile, SolidarityCaravan, CaravanResourceType, MyProfile, TradeOffer } from '@district-cg/shared-types';
 import { inputManager } from '../world/InputManager';
 import { playUIClick, playSolidarityChime } from '../core/audio/SoundSynth';
 import { useGameStore } from '../core/state/useGameStore';
@@ -15,7 +22,7 @@ import { gainCash, spendCash, regenEnergy, spendEnergy } from '../core/state/act
 import { saveToDB } from '../core/state/persistence';
 import { FriendDistrictViewer } from './FriendDistrictViewer';
 
-const TAB_LABELS = { friends: 'Friends', caravans: 'Caravans' } as const;
+const TAB_LABELS = { friends: 'Friends', caravans: 'Caravans', trade: 'Trade' } as const;
 type Tab = keyof typeof TAB_LABELS;
 
 const RESOURCE_LABELS: Record<CaravanResourceType, string> = {
@@ -30,6 +37,8 @@ export class SocialHubModal {
 	private me: MyProfile | null = null;
 	private friends: FriendProfile[] = [];
 	private inbox: SolidarityCaravan[] = [];
+	private tradeInbox: TradeOffer[] = [];
+	private tradeOutbox: TradeOffer[] = [];
 	private activeTab: Tab = 'friends';
 	private signedIn = true;
 	private statusMessage = '';
@@ -39,6 +48,12 @@ export class SocialHubModal {
 	private dispatchAmount = 10;
 	private dispatchResource: CaravanResourceType = 'energy';
 	private dispatchNote = '';
+	private tradeTarget = '';
+	private tradeOfferResource: CaravanResourceType = 'cash';
+	private tradeOfferAmount = 10;
+	private tradeRequestResource: CaravanResourceType = 'energy';
+	private tradeRequestAmount = 10;
+	private tradeNote = '';
 
 	constructor(root: HTMLElement, private readonly onClose?: () => void) {
 		this.root = root;
@@ -60,10 +75,14 @@ export class SocialHubModal {
 
 	private async load(): Promise<void> {
 		try {
-			const [me, friends, inbox] = await Promise.all([getMe(), getFriends(), getCaravanInbox()]);
+			const [me, friends, inbox, tradeInbox, tradeOutbox] = await Promise.all([
+				getMe(), getFriends(), getCaravanInbox(), getTradeInbox(), getTradeOutbox(),
+			]);
 			this.me = me;
 			this.friends = friends;
 			this.inbox = inbox;
+			this.tradeInbox = tradeInbox;
+			this.tradeOutbox = tradeOutbox;
 			this.signedIn = true;
 		} catch (err) {
 			this.signedIn = !(err instanceof ApiError && err.status === 401);
@@ -71,6 +90,38 @@ export class SocialHubModal {
 		}
 		this.loading = false;
 		this.render();
+		if (this.signedIn) void this.autoSettleOutbox();
+	}
+
+	// Resolved-but-uncollected offers (accepted/declined) settle themselves the
+	// moment the Trade tab's data loads, so a proposer never has to remember
+	// to come back and claim the outcome — they just see it happen with a
+	// status message and a chime, same "small positive beat" convention M23
+	// established for delight moments.
+	private async autoSettleOutbox(): Promise<void> {
+		const resolved = this.tradeOutbox.filter(o => o.status !== 'pending');
+		if (resolved.length === 0) return;
+
+		const settledMessages: string[] = [];
+		for (const offer of resolved) {
+			try {
+				const result = await settleTrade(offer.id);
+				this.grantLocalResource(result.resourceType, result.amount);
+				settledMessages.push(
+					result.status === 'accepted'
+						? `${offer.recipientHandle} accepted your trade — +${result.amount} ${RESOURCE_LABELS[result.resourceType]}!`
+						: `${offer.recipientHandle} declined your trade — ${result.amount} ${RESOURCE_LABELS[result.resourceType]} refunded.`,
+				);
+			} catch {
+				// Already settled or no longer reachable — leave it for the next load.
+			}
+		}
+		this.tradeOutbox = this.tradeOutbox.filter(o => o.status === 'pending');
+		if (settledMessages.length > 0) {
+			this.statusMessage = settledMessages.join(' ');
+			playSolidarityChime();
+			this.render();
+		}
 	}
 
 	private render(): void {
@@ -98,7 +149,9 @@ export class SocialHubModal {
 	}
 
 	private renderTab(): string {
-		return this.activeTab === 'friends' ? this.renderFriendsTab() : this.renderCaravansTab();
+		if (this.activeTab === 'friends') return this.renderFriendsTab();
+		if (this.activeTab === 'caravans') return this.renderCaravansTab();
+		return this.renderTradeTab();
 	}
 
 	private renderFriendsTab(): string {
@@ -161,6 +214,62 @@ export class SocialHubModal {
 		`;
 	}
 
+	private renderTradeTab(): string {
+		const pendingSent = this.tradeOutbox.filter(o => o.status === 'pending');
+		return `
+			<div class="social-trade-form">
+				<select class="social-trade-target">
+					<option value="">Trade with...</option>
+					${this.friends.map(f => `<option value="${f.handle}" ${f.handle === this.tradeTarget ? 'selected' : ''}>${f.handle}</option>`).join('')}
+				</select>
+				<div class="social-trade-row-inputs">
+					<span>Offer</span>
+					<input class="social-trade-offer-amount" type="number" min="1" value="${this.tradeOfferAmount}" />
+					<select class="social-trade-offer-resource">
+						${(Object.keys(RESOURCE_LABELS) as CaravanResourceType[]).map(r => `<option value="${r}" ${r === this.tradeOfferResource ? 'selected' : ''}>${RESOURCE_LABELS[r]}</option>`).join('')}
+					</select>
+				</div>
+				<div class="social-trade-row-inputs">
+					<span>For</span>
+					<input class="social-trade-request-amount" type="number" min="1" value="${this.tradeRequestAmount}" />
+					<select class="social-trade-request-resource">
+						${(Object.keys(RESOURCE_LABELS) as CaravanResourceType[]).map(r => `<option value="${r}" ${r === this.tradeRequestResource ? 'selected' : ''}>${RESOURCE_LABELS[r]}</option>`).join('')}
+					</select>
+				</div>
+				<input class="social-trade-note" type="text" placeholder="Note (optional)" value="${this.tradeNote}" />
+				<button class="social-trade-propose-btn interactive" type="button" ${this.friends.length === 0 ? 'disabled' : ''}>Propose Trade</button>
+			</div>
+			${this.tradeInbox.length > 0 ? `
+				<p class="shop-status">Offers waiting on you</p>
+				<div class="social-trade-list">
+					${this.tradeInbox.map(o => `
+						<div class="social-trade-row">
+							<span><strong>${o.proposerHandle}</strong> offers ${RESOURCE_LABELS[o.offerResourceType]} ×${o.offerAmount} for your ${RESOURCE_LABELS[o.requestResourceType]} ×${o.requestAmount}${o.note ? ` — "${o.note}"` : ''}</span>
+							<div class="social-trade-actions">
+								<button class="social-trade-accept-btn interactive" data-accept="${o.id}" type="button">Accept</button>
+								<button class="social-trade-decline-btn interactive" data-decline="${o.id}" type="button">Decline</button>
+							</div>
+						</div>
+					`).join('')}
+				</div>
+			` : ''}
+			${pendingSent.length > 0 ? `
+				<p class="shop-status">Offers you sent, still waiting</p>
+				<div class="social-trade-list">
+					${pendingSent.map(o => `
+						<div class="social-trade-row">
+							<span>You offered ${o.recipientHandle} ${RESOURCE_LABELS[o.offerResourceType]} ×${o.offerAmount} for their ${RESOURCE_LABELS[o.requestResourceType]} ×${o.requestAmount}</span>
+							<button class="social-trade-cancel-btn interactive" data-cancel="${o.id}" type="button">Cancel</button>
+						</div>
+					`).join('')}
+				</div>
+			` : ''}
+			${this.tradeInbox.length === 0 && pendingSent.length === 0
+				? '<p class="shop-status">No trade offers right now — propose one above.</p>'
+				: ''}
+		`;
+	}
+
 	private bindEvents(): void {
 		this.el.querySelector<HTMLButtonElement>('.settings-close')
 			?.addEventListener('click', () => this.close());
@@ -207,6 +316,45 @@ export class SocialHubModal {
 			btn.addEventListener('click', () => {
 				const caravanId = btn.dataset['claim'];
 				if (caravanId) void this.handleClaim(caravanId);
+			});
+		});
+
+		this.el.querySelector<HTMLSelectElement>('.social-trade-target')?.addEventListener('change', e => {
+			this.tradeTarget = (e.target as HTMLSelectElement).value;
+		});
+		this.el.querySelector<HTMLInputElement>('.social-trade-offer-amount')?.addEventListener('input', e => {
+			this.tradeOfferAmount = Math.max(1, Number((e.target as HTMLInputElement).value) || 1);
+		});
+		this.el.querySelector<HTMLSelectElement>('.social-trade-offer-resource')?.addEventListener('change', e => {
+			this.tradeOfferResource = (e.target as HTMLSelectElement).value as CaravanResourceType;
+		});
+		this.el.querySelector<HTMLInputElement>('.social-trade-request-amount')?.addEventListener('input', e => {
+			this.tradeRequestAmount = Math.max(1, Number((e.target as HTMLInputElement).value) || 1);
+		});
+		this.el.querySelector<HTMLSelectElement>('.social-trade-request-resource')?.addEventListener('change', e => {
+			this.tradeRequestResource = (e.target as HTMLSelectElement).value as CaravanResourceType;
+		});
+		this.el.querySelector<HTMLInputElement>('.social-trade-note')?.addEventListener('input', e => {
+			this.tradeNote = (e.target as HTMLInputElement).value;
+		});
+		this.el.querySelector<HTMLButtonElement>('.social-trade-propose-btn')?.addEventListener('click', () => void this.handleProposeTrade());
+
+		this.el.querySelectorAll<HTMLButtonElement>('[data-accept]').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const tradeId = btn.dataset['accept'];
+				if (tradeId) void this.handleTradeAccept(tradeId);
+			});
+		});
+		this.el.querySelectorAll<HTMLButtonElement>('[data-decline]').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const tradeId = btn.dataset['decline'];
+				if (tradeId) void this.handleTradeDecline(tradeId);
+			});
+		});
+		this.el.querySelectorAll<HTMLButtonElement>('[data-cancel]').forEach(btn => {
+			btn.addEventListener('click', () => {
+				const tradeId = btn.dataset['cancel'];
+				if (tradeId) void this.handleTradeCancel(tradeId);
 			});
 		});
 	}
@@ -285,6 +433,88 @@ export class SocialHubModal {
 				: 'Could not claim that caravan.';
 		}
 		this.render();
+	}
+
+	private async handleProposeTrade(): Promise<void> {
+		if (!this.tradeTarget) {
+			this.statusMessage = 'Pick a friend to trade with.';
+			this.render();
+			return;
+		}
+		const available = this.availableResource(this.tradeOfferResource);
+		if (this.tradeOfferAmount > available) {
+			this.statusMessage = `You only have ${available} ${RESOURCE_LABELS[this.tradeOfferResource]} to offer.`;
+			this.render();
+			return;
+		}
+		this.statusMessage = '';
+		try {
+			const offer = await proposeTrade(
+				this.tradeTarget, this.tradeOfferResource, this.tradeOfferAmount,
+				this.tradeRequestResource, this.tradeRequestAmount, this.tradeNote,
+			);
+			this.spendLocalResource(this.tradeOfferResource, this.tradeOfferAmount);
+			this.tradeOutbox.push(offer);
+			this.tradeNote = '';
+			this.statusMessage = 'Trade offer sent.';
+			playSolidarityChime();
+		} catch (err) {
+			this.statusMessage = err instanceof ApiError && err.status === 400
+				? "You can't propose a trade to yourself."
+				: 'Could not send that trade offer. Try again later.';
+		}
+		this.render();
+	}
+
+	private async handleTradeAccept(tradeId: string): Promise<void> {
+		const offer = this.tradeInbox.find(o => o.id === tradeId);
+		if (!offer) return;
+		const available = this.availableResource(offer.requestResourceType);
+		if (offer.requestAmount > available) {
+			this.statusMessage = `You only have ${available} ${RESOURCE_LABELS[offer.requestResourceType]} — not enough to accept that trade.`;
+			this.render();
+			return;
+		}
+		this.statusMessage = '';
+		try {
+			await acceptTrade(tradeId);
+			this.spendLocalResource(offer.requestResourceType, offer.requestAmount);
+			this.grantLocalResource(offer.offerResourceType, offer.offerAmount);
+			this.tradeInbox = this.tradeInbox.filter(o => o.id !== tradeId);
+			this.statusMessage = `Trade accepted — +${offer.offerAmount} ${RESOURCE_LABELS[offer.offerResourceType]}!`;
+			playSolidarityChime();
+		} catch {
+			this.statusMessage = 'That trade offer is no longer available.';
+		}
+		this.render();
+	}
+
+	private async handleTradeDecline(tradeId: string): Promise<void> {
+		this.statusMessage = '';
+		try {
+			await declineTrade(tradeId);
+			this.tradeInbox = this.tradeInbox.filter(o => o.id !== tradeId);
+		} catch {
+			this.statusMessage = 'That trade offer is no longer available.';
+		}
+		this.render();
+	}
+
+	private async handleTradeCancel(tradeId: string): Promise<void> {
+		this.statusMessage = '';
+		try {
+			const result = await cancelTrade(tradeId);
+			this.grantLocalResource(result.resourceType, result.amount);
+			this.tradeOutbox = this.tradeOutbox.filter(o => o.id !== tradeId);
+			this.statusMessage = 'Trade offer cancelled and refunded.';
+		} catch {
+			this.statusMessage = 'Could not cancel that trade offer.';
+		}
+		this.render();
+	}
+
+	private availableResource(resourceType: CaravanResourceType): number {
+		return resourceType === 'cash' ? useGameStore.getState().player.cash : useGameStore.getState().player.energy;
 	}
 
 	// Applies the resource delta through the same actions the rest of the

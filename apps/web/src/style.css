@@ -1483,6 +1483,85 @@
   grid-column: 1 / -1;
 }
 
+.social-trade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.social-trade-target,
+.social-trade-offer-amount,
+.social-trade-offer-resource,
+.social-trade-request-amount,
+.social-trade-request-resource,
+.social-trade-note {
+  background: rgba(20, 30, 25, 0.8);
+  border: 1px solid #2e6a4f;
+  border-radius: 6px;
+  color: #cbe8d6;
+  font-size: 0.66rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.social-trade-row-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.64rem;
+  color: #8fb8a2;
+}
+.social-trade-row-inputs input,
+.social-trade-row-inputs select { flex: 1; }
+
+.social-trade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.social-trade-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: rgba(20, 30, 25, 0.6);
+  border: 1px solid #2e4a3a;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.64rem;
+  color: #cbe8d6;
+}
+
+.social-trade-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.social-trade-accept-btn,
+.social-trade-decline-btn,
+.social-trade-cancel-btn,
+.social-trade-propose-btn {
+  background: #2e6a4f;
+  border: 1px solid #3e8a6b;
+  border-radius: 6px;
+  color: #d6f5e4;
+  font-size: 0.64rem;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.social-trade-accept-btn:hover,
+.social-trade-decline-btn:hover,
+.social-trade-cancel-btn:hover,
+.social-trade-propose-btn:hover:not(:disabled) { background: #3e8a6b; }
+.social-trade-propose-btn:disabled { opacity: 0.4; cursor: default; }
+.social-trade-decline-btn { background: #6a3a2e; border-color: #8a4e3e; }
+.social-trade-decline-btn:hover { background: #8a4e3e; }
+
 .district-viewer-crisis {
   color: #e0a04a;
   font-size: 0.62rem;

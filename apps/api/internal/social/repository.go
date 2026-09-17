@@ -18,6 +18,12 @@ var (
 	ErrCaravanNotFound = errors.New("caravan not found")
 	ErrNotRecipient    = errors.New("not the recipient of that caravan")
 	ErrAlreadyClaimed  = errors.New("caravan already claimed")
+
+	ErrTradeNotFound       = errors.New("trade offer not found")
+	ErrNotTradeRecipient   = errors.New("not the recipient of that trade offer")
+	ErrNotTradeProposer    = errors.New("not the proposer of that trade offer")
+	ErrTradeNotPending     = errors.New("trade offer is no longer pending")
+	ErrTradeAlreadySettled = errors.New("trade offer already settled")
 )
 
 // FriendProfile mirrors packages/shared-types/src/social.ts's FriendProfile,
@@ -54,6 +60,29 @@ type Caravan struct {
 	Amount       int64  `json:"amount"`
 	Note         string `json:"note"`
 	Claimed      bool   `json:"claimed"`
+}
+
+// TradeOffer mirrors packages/shared-types/src/social.ts's TradeOffer.
+type TradeOffer struct {
+	ID                  string `json:"id"`
+	ProposerHandle      string `json:"proposerHandle"`
+	RecipientHandle     string `json:"recipientHandle"`
+	OfferResourceType   string `json:"offerResourceType"`
+	OfferAmount         int64  `json:"offerAmount"`
+	RequestResourceType string `json:"requestResourceType"`
+	RequestAmount       int64  `json:"requestAmount"`
+	Note                string `json:"note"`
+	Status              string `json:"status"`
+}
+
+// TradeSettleResult carries what the proposer should apply locally after
+// collecting a resolved trade: on 'accepted' it's the request side (what
+// they asked for and now receive); on 'declined' it's their own offer side
+// refunded back to them.
+type TradeSettleResult struct {
+	Status       string `json:"status"`
+	ResourceType string `json:"resourceType"`
+	Amount       int64  `json:"amount"`
 }
 
 type Repository struct {
@@ -380,4 +409,255 @@ func (r *Repository) ClaimCaravan(ctx context.Context, userID, caravanID string)
 		return "", 0, fmt.Errorf("commit claim: %w", err)
 	}
 	return resourceType, amount, nil
+}
+
+const tradeOfferSelectCols = `
+	t.id, p.handle, r.handle, t.offer_resource_type, t.offer_amount,
+	t.request_resource_type, t.request_amount, t.note, t.status`
+
+func scanTradeOffer(row pgx.Row) (TradeOffer, error) {
+	var o TradeOffer
+	err := row.Scan(
+		&o.ID, &o.ProposerHandle, &o.RecipientHandle, &o.OfferResourceType, &o.OfferAmount,
+		&o.RequestResourceType, &o.RequestAmount, &o.Note, &o.Status,
+	)
+	return o, err
+}
+
+func isValidResourceType(t string) bool {
+	return t == "energy" || t == "food" || t == "cash"
+}
+
+// ProposeTrade creates a pending trade offer from proposerID to the friend
+// identified by handle or invite code. Mirrors DispatchCaravan's shape: the
+// proposer's offered resource is escrowed client-side by the caller before
+// (or after, on success) this returns — this call is only the server-side
+// record and the recipient's future gate.
+func (r *Repository) ProposeTrade(
+	ctx context.Context, proposerID, identifier string,
+	offerResourceType string, offerAmount int64,
+	requestResourceType string, requestAmount int64,
+	note string,
+) (TradeOffer, error) {
+	recipientID, _, err := r.resolveUser(ctx, identifier)
+	if err != nil {
+		return TradeOffer{}, err
+	}
+	if recipientID == proposerID {
+		return TradeOffer{}, ErrSelfFriend
+	}
+	ok, err := r.areFriends(ctx, proposerID, recipientID)
+	if err != nil {
+		return TradeOffer{}, err
+	}
+	if !ok {
+		return TradeOffer{}, ErrNotFriends
+	}
+
+	var id string
+	if err := r.db.QueryRow(ctx,
+		`INSERT INTO trade_offers (proposer_id, recipient_id, offer_resource_type, offer_amount, request_resource_type, request_amount, note)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+		proposerID, recipientID, offerResourceType, offerAmount, requestResourceType, requestAmount, note,
+	).Scan(&id); err != nil {
+		return TradeOffer{}, fmt.Errorf("propose trade: %w", err)
+	}
+	return r.getTradeOffer(ctx, id)
+}
+
+func (r *Repository) getTradeOffer(ctx context.Context, id string) (TradeOffer, error) {
+	row := r.db.QueryRow(ctx, fmt.Sprintf(`
+		SELECT %s FROM trade_offers t
+		JOIN users p ON p.id = t.proposer_id
+		JOIN users r ON r.id = t.recipient_id
+		WHERE t.id = $1`, tradeOfferSelectCols), id)
+	o, err := scanTradeOffer(row)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return TradeOffer{}, ErrTradeNotFound
+	}
+	if err != nil {
+		return TradeOffer{}, fmt.Errorf("get trade offer: %w", err)
+	}
+	return o, nil
+}
+
+// ListTradeInbox returns pending trade offers addressed to userID, awaiting
+// their accept/decline.
+func (r *Repository) ListTradeInbox(ctx context.Context, userID string) ([]TradeOffer, error) {
+	rows, err := r.db.Query(ctx, fmt.Sprintf(`
+		SELECT %s FROM trade_offers t
+		JOIN users p ON p.id = t.proposer_id
+		JOIN users r ON r.id = t.recipient_id
+		WHERE t.recipient_id = $1 AND t.status = 'pending'
+		ORDER BY t.created_at`, tradeOfferSelectCols), userID)
+	if err != nil {
+		return nil, fmt.Errorf("list trade inbox: %w", err)
+	}
+	defer rows.Close()
+	return collectTradeOffers(rows)
+}
+
+// ListTradeOutbox returns every trade offer userID proposed that isn't fully
+// settled yet — still-pending ones (waiting on the recipient) and
+// resolved-but-uncollected ones (accepted/declined, refund or receipt not
+// yet applied). The caller auto-settles the resolved ones and offers a
+// Cancel action on the still-pending ones.
+func (r *Repository) ListTradeOutbox(ctx context.Context, userID string) ([]TradeOffer, error) {
+	rows, err := r.db.Query(ctx, fmt.Sprintf(`
+		SELECT %s FROM trade_offers t
+		JOIN users p ON p.id = t.proposer_id
+		JOIN users r ON r.id = t.recipient_id
+		WHERE t.proposer_id = $1 AND t.proposer_settled = FALSE
+		ORDER BY t.created_at`, tradeOfferSelectCols), userID)
+	if err != nil {
+		return nil, fmt.Errorf("list trade outbox: %w", err)
+	}
+	defer rows.Close()
+	return collectTradeOffers(rows)
+}
+
+func collectTradeOffers(rows pgx.Rows) ([]TradeOffer, error) {
+	offers := []TradeOffer{}
+	for rows.Next() {
+		o, err := scanTradeOffer(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scan trade offer row: %w", err)
+		}
+		offers = append(offers, o)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate trade offers: %w", err)
+	}
+	return offers, nil
+}
+
+// RespondTrade accepts or declines a pending offer on behalf of its
+// recipient. Row-locked so a double-click can't respond twice.
+func (r *Repository) RespondTrade(ctx context.Context, recipientID, tradeID string, accept bool) (TradeOffer, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return TradeOffer{}, fmt.Errorf("begin respond trade: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var actualRecipientID, status string
+	err = tx.QueryRow(ctx, `SELECT recipient_id, status FROM trade_offers WHERE id = $1 FOR UPDATE`, tradeID).
+		Scan(&actualRecipientID, &status)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return TradeOffer{}, ErrTradeNotFound
+	}
+	if err != nil {
+		return TradeOffer{}, fmt.Errorf("lock trade offer: %w", err)
+	}
+	if actualRecipientID != recipientID {
+		return TradeOffer{}, ErrNotTradeRecipient
+	}
+	if status != "pending" {
+		return TradeOffer{}, ErrTradeNotPending
+	}
+
+	newStatus := "declined"
+	if accept {
+		newStatus = "accepted"
+	}
+	if _, err := tx.Exec(ctx,
+		`UPDATE trade_offers SET status = $1, resolved_at = NOW() WHERE id = $2`,
+		newStatus, tradeID,
+	); err != nil {
+		return TradeOffer{}, fmt.Errorf("respond trade: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return TradeOffer{}, fmt.Errorf("commit respond trade: %w", err)
+	}
+	return r.getTradeOffer(ctx, tradeID)
+}
+
+// CancelTrade withdraws a still-pending offer on behalf of its proposer,
+// settling synchronously (the proposer is present for this call, unlike the
+// accept/decline case where they might not be).
+func (r *Repository) CancelTrade(ctx context.Context, proposerID, tradeID string) (TradeSettleResult, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return TradeSettleResult{}, fmt.Errorf("begin cancel trade: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var actualProposerID, status, offerResourceType string
+	var offerAmount int64
+	err = tx.QueryRow(ctx,
+		`SELECT proposer_id, status, offer_resource_type, offer_amount FROM trade_offers WHERE id = $1 FOR UPDATE`,
+		tradeID,
+	).Scan(&actualProposerID, &status, &offerResourceType, &offerAmount)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return TradeSettleResult{}, ErrTradeNotFound
+	}
+	if err != nil {
+		return TradeSettleResult{}, fmt.Errorf("lock trade offer: %w", err)
+	}
+	if actualProposerID != proposerID {
+		return TradeSettleResult{}, ErrNotTradeProposer
+	}
+	if status != "pending" {
+		return TradeSettleResult{}, ErrTradeNotPending
+	}
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE trade_offers SET status = 'cancelled', resolved_at = NOW(), proposer_settled = TRUE WHERE id = $1`,
+		tradeID,
+	); err != nil {
+		return TradeSettleResult{}, fmt.Errorf("cancel trade: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return TradeSettleResult{}, fmt.Errorf("commit cancel trade: %w", err)
+	}
+	return TradeSettleResult{Status: "cancelled", ResourceType: offerResourceType, Amount: offerAmount}, nil
+}
+
+// SettleTrade lets a proposer collect the outcome of a resolved offer: on
+// 'accepted' they receive the request side; on 'declined' their own offer
+// side is refunded. Idempotent — a second settle attempt fails with
+// ErrTradeAlreadySettled rather than double-crediting.
+func (r *Repository) SettleTrade(ctx context.Context, proposerID, tradeID string) (TradeSettleResult, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return TradeSettleResult{}, fmt.Errorf("begin settle trade: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	var actualProposerID, status string
+	var settled bool
+	var offerResourceType, requestResourceType string
+	var offerAmount, requestAmount int64
+	err = tx.QueryRow(ctx,
+		`SELECT proposer_id, status, proposer_settled, offer_resource_type, offer_amount, request_resource_type, request_amount
+		 FROM trade_offers WHERE id = $1 FOR UPDATE`,
+		tradeID,
+	).Scan(&actualProposerID, &status, &settled, &offerResourceType, &offerAmount, &requestResourceType, &requestAmount)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return TradeSettleResult{}, ErrTradeNotFound
+	}
+	if err != nil {
+		return TradeSettleResult{}, fmt.Errorf("lock trade offer: %w", err)
+	}
+	if actualProposerID != proposerID {
+		return TradeSettleResult{}, ErrNotTradeProposer
+	}
+	if status == "pending" {
+		return TradeSettleResult{}, ErrTradeNotPending
+	}
+	if settled {
+		return TradeSettleResult{}, ErrTradeAlreadySettled
+	}
+
+	if _, err := tx.Exec(ctx, `UPDATE trade_offers SET proposer_settled = TRUE WHERE id = $1`, tradeID); err != nil {
+		return TradeSettleResult{}, fmt.Errorf("settle trade: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return TradeSettleResult{}, fmt.Errorf("commit settle trade: %w", err)
+	}
+
+	if status == "accepted" {
+		return TradeSettleResult{Status: status, ResourceType: requestResourceType, Amount: requestAmount}, nil
+	}
+	return TradeSettleResult{Status: status, ResourceType: offerResourceType, Amount: offerAmount}, nil
 }

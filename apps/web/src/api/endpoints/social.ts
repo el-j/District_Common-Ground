@@ -6,6 +6,8 @@ import type {
 	CaravanResourceType,
 	CaravanClaimResult,
 	MyProfile,
+	TradeOffer,
+	TradeSettleResult,
 } from '@district-cg/shared-types';
 
 export function getMe(): Promise<MyProfile> {
@@ -44,6 +46,46 @@ export function getCaravanInbox(): Promise<SolidarityCaravan[]> {
 
 export function claimCaravan(caravanId: string): Promise<CaravanClaimResult> {
 	return request<CaravanClaimResult>('POST', `/api/v1/social/caravan/${encodeURIComponent(caravanId)}/claim`, undefined, getAuthToken());
+}
+
+export function proposeTrade(
+	identifier: string,
+	offerResourceType: CaravanResourceType,
+	offerAmount: number,
+	requestResourceType: CaravanResourceType,
+	requestAmount: number,
+	note: string,
+): Promise<TradeOffer> {
+	return request<TradeOffer>(
+		'POST',
+		'/api/v1/social/trade/propose',
+		{ identifier, offerResourceType, offerAmount, requestResourceType, requestAmount, note },
+		getAuthToken(),
+	);
+}
+
+export function getTradeInbox(): Promise<TradeOffer[]> {
+	return request<TradeOffer[]>('GET', '/api/v1/social/trade/inbox', undefined, getAuthToken());
+}
+
+export function getTradeOutbox(): Promise<TradeOffer[]> {
+	return request<TradeOffer[]>('GET', '/api/v1/social/trade/outbox', undefined, getAuthToken());
+}
+
+export function acceptTrade(tradeId: string): Promise<TradeOffer> {
+	return request<TradeOffer>('POST', `/api/v1/social/trade/${encodeURIComponent(tradeId)}/accept`, undefined, getAuthToken());
+}
+
+export function declineTrade(tradeId: string): Promise<TradeOffer> {
+	return request<TradeOffer>('POST', `/api/v1/social/trade/${encodeURIComponent(tradeId)}/decline`, undefined, getAuthToken());
+}
+
+export function cancelTrade(tradeId: string): Promise<TradeSettleResult> {
+	return request<TradeSettleResult>('POST', `/api/v1/social/trade/${encodeURIComponent(tradeId)}/cancel`, undefined, getAuthToken());
+}
+
+export function settleTrade(tradeId: string): Promise<TradeSettleResult> {
+	return request<TradeSettleResult>('POST', `/api/v1/social/trade/${encodeURIComponent(tradeId)}/settle`, undefined, getAuthToken());
 }
 
 function getAuthToken(): string | undefined {

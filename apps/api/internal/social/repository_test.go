@@ -191,6 +191,192 @@ func TestDistrictSnapshot_RequiresFriendship(t *testing.T) {
 	}
 }
 
+func TestTrade_ProposeAcceptGrantsBothSides(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+
+	proposerID, _ := seedUser(t, ctx, pool, "ivy@example.com")
+	recipientID, recipientHandle := seedUser(t, ctx, pool, "jack@example.com")
+	if _, err := repo.AddFriend(ctx, proposerID, recipientHandle); err != nil {
+		t.Fatalf("AddFriend: %v", err)
+	}
+
+	offer, err := repo.ProposeTrade(ctx, proposerID, recipientHandle, "cash", 20, "energy", 15, "for the co-op")
+	if err != nil {
+		t.Fatalf("ProposeTrade: %v", err)
+	}
+	if offer.Status != "pending" {
+		t.Errorf("got status %q, want pending", offer.Status)
+	}
+
+	inbox, err := repo.ListTradeInbox(ctx, recipientID)
+	if err != nil {
+		t.Fatalf("ListTradeInbox: %v", err)
+	}
+	if len(inbox) != 1 || inbox[0].ID != offer.ID {
+		t.Errorf("got inbox %+v, want [%s]", inbox, offer.ID)
+	}
+
+	accepted, err := repo.RespondTrade(ctx, recipientID, offer.ID, true)
+	if err != nil {
+		t.Fatalf("RespondTrade(accept): %v", err)
+	}
+	if accepted.Status != "accepted" {
+		t.Errorf("got status %q, want accepted", accepted.Status)
+	}
+
+	// Recipient's pending inbox no longer shows it.
+	inboxAfter, err := repo.ListTradeInbox(ctx, recipientID)
+	if err != nil {
+		t.Fatalf("ListTradeInbox after respond: %v", err)
+	}
+	if len(inboxAfter) != 0 {
+		t.Errorf("accepted offer should leave the inbox, got %+v", inboxAfter)
+	}
+
+	// A second response to the same offer is rejected.
+	if _, err := repo.RespondTrade(ctx, recipientID, offer.ID, false); !errors.Is(err, social.ErrTradeNotPending) {
+		t.Errorf("got %v, want ErrTradeNotPending", err)
+	}
+
+	// Proposer collects the outcome from their outbox.
+	outbox, err := repo.ListTradeOutbox(ctx, proposerID)
+	if err != nil {
+		t.Fatalf("ListTradeOutbox: %v", err)
+	}
+	if len(outbox) != 1 || outbox[0].ID != offer.ID {
+		t.Errorf("got outbox %+v, want [%s]", outbox, offer.ID)
+	}
+
+	settled, err := repo.SettleTrade(ctx, proposerID, offer.ID)
+	if err != nil {
+		t.Fatalf("SettleTrade: %v", err)
+	}
+	if settled.Status != "accepted" || settled.ResourceType != "energy" || settled.Amount != 15 {
+		t.Errorf("got %+v, want {accepted energy 15}", settled)
+	}
+
+	// Settling twice does not double-credit.
+	if _, err := repo.SettleTrade(ctx, proposerID, offer.ID); !errors.Is(err, social.ErrTradeAlreadySettled) {
+		t.Errorf("got %v, want ErrTradeAlreadySettled", err)
+	}
+
+	outboxAfterSettle, err := repo.ListTradeOutbox(ctx, proposerID)
+	if err != nil {
+		t.Fatalf("ListTradeOutbox after settle: %v", err)
+	}
+	if len(outboxAfterSettle) != 0 {
+		t.Errorf("settled offer should leave the outbox, got %+v", outboxAfterSettle)
+	}
+}
+
+func TestTrade_DeclineRefundsProposerOnly(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+
+	proposerID, _ := seedUser(t, ctx, pool, "kim@example.com")
+	_, recipientHandle := seedUser(t, ctx, pool, "leo2@example.com")
+	if _, err := repo.AddFriend(ctx, proposerID, recipientHandle); err != nil {
+		t.Fatalf("AddFriend: %v", err)
+	}
+
+	offer, err := repo.ProposeTrade(ctx, proposerID, recipientHandle, "food", 10, "cash", 5, "")
+	if err != nil {
+		t.Fatalf("ProposeTrade: %v", err)
+	}
+
+	recipientID, _, err := repoResolve(ctx, pool, recipientHandle)
+	if err != nil {
+		t.Fatalf("resolve recipient: %v", err)
+	}
+	declined, err := repo.RespondTrade(ctx, recipientID, offer.ID, false)
+	if err != nil {
+		t.Fatalf("RespondTrade(decline): %v", err)
+	}
+	if declined.Status != "declined" {
+		t.Errorf("got status %q, want declined", declined.Status)
+	}
+
+	settled, err := repo.SettleTrade(ctx, proposerID, offer.ID)
+	if err != nil {
+		t.Fatalf("SettleTrade: %v", err)
+	}
+	if settled.Status != "declined" || settled.ResourceType != "food" || settled.Amount != 10 {
+		t.Errorf("got %+v, want {declined food 10} (proposer's own offer refunded)", settled)
+	}
+}
+
+func TestTrade_CancelRefundsSynchronouslyAndBlocksLateResponse(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+
+	proposerID, _ := seedUser(t, ctx, pool, "mona@example.com")
+	recipientID, recipientHandle := seedUser(t, ctx, pool, "nate@example.com")
+	strangerID, _ := seedUser(t, ctx, pool, "olive@example.com")
+	if _, err := repo.AddFriend(ctx, proposerID, recipientHandle); err != nil {
+		t.Fatalf("AddFriend: %v", err)
+	}
+
+	offer, err := repo.ProposeTrade(ctx, proposerID, recipientHandle, "energy", 8, "cash", 12, "")
+	if err != nil {
+		t.Fatalf("ProposeTrade: %v", err)
+	}
+
+	// A stranger cannot cancel someone else's offer.
+	if _, err := repo.CancelTrade(ctx, strangerID, offer.ID); !errors.Is(err, social.ErrNotTradeProposer) {
+		t.Errorf("got %v, want ErrNotTradeProposer", err)
+	}
+
+	result, err := repo.CancelTrade(ctx, proposerID, offer.ID)
+	if err != nil {
+		t.Fatalf("CancelTrade: %v", err)
+	}
+	if result.Status != "cancelled" || result.ResourceType != "energy" || result.Amount != 8 {
+		t.Errorf("got %+v, want {cancelled energy 8}", result)
+	}
+
+	// The recipient can no longer respond to a cancelled offer.
+	if _, err := repo.RespondTrade(ctx, recipientID, offer.ID, true); !errors.Is(err, social.ErrTradeNotPending) {
+		t.Errorf("got %v, want ErrTradeNotPending", err)
+	}
+
+	// Cancel already settles synchronously, so a later settle attempt fails.
+	if _, err := repo.SettleTrade(ctx, proposerID, offer.ID); !errors.Is(err, social.ErrTradeAlreadySettled) {
+		t.Errorf("got %v, want ErrTradeAlreadySettled", err)
+	}
+}
+
+func TestTrade_ProposeRequiresFriendshipAndRejectsSelf(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+
+	proposerID, proposerHandle := seedUser(t, ctx, pool, "pat@example.com")
+	_, strangerHandle := seedUser(t, ctx, pool, "quinn@example.com")
+
+	if _, err := repo.ProposeTrade(ctx, proposerID, strangerHandle, "cash", 5, "energy", 5, ""); !errors.Is(err, social.ErrNotFriends) {
+		t.Errorf("got %v, want ErrNotFriends", err)
+	}
+	if _, err := repo.ProposeTrade(ctx, proposerID, proposerHandle, "cash", 5, "energy", 5, ""); !errors.Is(err, social.ErrSelfFriend) {
+		t.Errorf("got %v, want ErrSelfFriend", err)
+	}
+}
+
 // repoResolve is a small test-only helper mirroring Repository.resolveUser,
 // which is unexported and only needed here to look up a seeded user's id
 // from their handle for assertions.

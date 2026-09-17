@@ -45,3 +45,27 @@ export interface CaravanClaimResult {
   resourceType: CaravanResourceType;
   amount: number;
 }
+
+export type TradeStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
+
+export interface TradeOffer {
+  id: string;
+  proposerHandle: string;
+  recipientHandle: string;
+  offerResourceType: CaravanResourceType;
+  offerAmount: number;
+  requestResourceType: CaravanResourceType;
+  requestAmount: number;
+  note: string;
+  status: TradeStatus;
+}
+
+// Returned by cancel (synchronous, proposer-only) and settle (proposer
+// collecting the outcome of an accept/decline): 'accepted' → resourceType/
+// amount is the request side the proposer now receives; 'declined' or
+// 'cancelled' → it's the proposer's own offer side, refunded.
+export interface TradeSettleResult {
+  status: 'accepted' | 'declined' | 'cancelled';
+  resourceType: CaravanResourceType;
+  amount: number;
+}

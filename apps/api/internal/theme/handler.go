@@ -22,6 +22,13 @@ var builtInThemes = []kernel.PluginMetadata{
 	{ID: "labor_woodcut", Version: "1.0.0", Name: "1930s Labor Woodcut", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/labor_woodcut/skin.manifest.json"},
 	{ID: "aurora", Version: "1.0.0", Name: "Aurora Prime", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/aurora/skin.manifest.json"},
 	{ID: "sunset_commons", Version: "1.0.0", Name: "Sunset Commons", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/sunset_commons/skin.manifest.json"},
+	// M30 — 3 hi-fi skins, each shipping its own dynamically-loaded
+	// SkinRenderer bundle (via the manifest's rendererUrl field, not a Go
+	// struct change — Entrypoint stays pointed at the manifest, exactly
+	// like every skin above).
+	{ID: "diorama_glow", Version: "1.0.0", Name: "Diorama Glow", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/diorama_glow/skin.manifest.json"},
+	{ID: "flat_vector", Version: "1.0.0", Name: "Flat Vector Minimal", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/flat_vector/skin.manifest.json"},
+	{ID: "neon_city", Version: "1.0.0", Name: "Neon Night-City", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/neon_city/skin.manifest.json"},
 }
 
 type Handler struct {

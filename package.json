@@ -7,8 +7,9 @@
   ],
   "scripts": {
     "dev": "npm -w apps/web run dev",
-    "build": "npm run build:minigames && npm -w apps/web run build",
+    "build": "npm run build:minigames && npm run build:skins && npm -w apps/web run build",
     "build:minigames": "bash scripts/build-minigames.sh",
+    "build:skins": "bash scripts/build-skins.sh",
     "check": "npm -w apps/web run check",
     "lint": "npm -w apps/web run lint",
     "test": "npm -w apps/web run test"

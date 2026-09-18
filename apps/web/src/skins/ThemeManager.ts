@@ -231,6 +231,16 @@ export function getActiveSkinId(): string {
   return useGameStore.getState().meta.activeSkin;
 }
 
+/** M30 — synchronous manifest read for the active skin, used by WorldScene's
+ * skinRevision subscriber to check for a `rendererUrl`. Safe to call
+ * synchronously here (unlike a fresh fetch) because by the time that
+ * subscriber fires, switchSkin()/activateDefaultSkin() has already awaited
+ * fetchManifest() and populated MANIFEST_CACHE before bumping skinRevision. */
+export function getActiveManifest(): SkinManifest | undefined {
+  const { activeSkin } = useGameStore.getState().meta;
+  return MANIFEST_CACHE.get(activeSkin);
+}
+
 /** Map abstract EntityToken strings to the Phaser texture key used in WorldScene. */
 function tokenToTextureKey(token: string): string | null {
   const map: Record<string, string> = {

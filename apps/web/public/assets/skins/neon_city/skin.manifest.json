@@ -1,0 +1,57 @@
+{
+  "skinId": "neon_city",
+  "version": "1.0.0",
+  "displayName": "Neon Night-City",
+  "palette": {
+    "background": "#05050a",
+    "surface": "rgba(10,10,20,0.6)",
+    "accent": "#39ffd6",
+    "text": "#eafffa",
+    "hudBg": "rgba(5,5,12,0.8)",
+    "hudBorder": "rgba(57,255,214,0.4)",
+    "hudText": "#eafffa",
+    "worldFloor": "#0c0c14",
+    "worldWall": "#ff3d6a",
+    "worldWallShadow": "#7a0f2c",
+    "worldGrass": "#8aff4a",
+    "worldRoad": "#1a1a26",
+    "worldRoadBorder": "#39a0ff",
+    "worldPlaza": "#12121e",
+    "worldDoor": "#c04aff",
+    "worldHighlight": "#39ffd6"
+  },
+  "assetMap": {
+    "TILES_ATLAS":        { "textureUrl": "assets/skins/neon_city/tiles.webp",         "tileSize": [16, 16] },
+    "HERO_ATLAS":         { "textureUrl": "assets/skins/neon_city/hero.webp",           "frameRate": 6 },
+    "NPC_MIRA_ATLAS":     { "textureUrl": "assets/skins/neon_city/npc_mira.webp",       "frameRate": 4 },
+    "NPC_LEO_ATLAS":      { "textureUrl": "assets/skins/neon_city/npc_leo.webp",        "frameRate": 4 },
+    "NPC_ELENA_ATLAS":    { "textureUrl": "assets/skins/neon_city/npc_elena.webp",      "frameRate": 4 },
+    "NPC_SAL_ATLAS":      { "textureUrl": "assets/skins/neon_city/npc_sal.webp",        "frameRate": 4 },
+    "NPC_MARCUS_ATLAS":   { "textureUrl": "assets/skins/neon_city/npc_marcus.webp",     "frameRate": 4 },
+    "NPC_HIGGINS_ATLAS":  { "textureUrl": "assets/skins/neon_city/npc_higgins.webp",    "frameRate": 4 },
+    "BUILD_KITCHEN_IDLE": { "textureUrl": "assets/skins/neon_city/kitchen_idle.webp",   "footprint": [32, 32] },
+    "BUILD_KITCHEN_BUILT":{ "textureUrl": "assets/skins/neon_city/kitchen_built.webp",  "footprint": [32, 32] },
+    "BUILD_SOLAR_IDLE":   { "textureUrl": "assets/skins/neon_city/solar_idle.webp",     "footprint": [32, 32] },
+    "BUILD_SOLAR_BUILT":  { "textureUrl": "assets/skins/neon_city/solar_built.webp",    "footprint": [32, 32] },
+    "BUILD_LEGAL_IDLE":   { "textureUrl": "assets/skins/neon_city/legal_idle.webp",     "footprint": [16, 16] },
+    "BUILD_LEGAL_BUILT":  { "textureUrl": "assets/skins/neon_city/legal_built.webp",    "footprint": [16, 16] }
+  },
+  "audioProfile": {
+    "sfxType": "neon_synth_blip",
+    "bgmType": "synthwave_pulse"
+  },
+  "uiKit": {
+    "fontFamily": "'Orbitron', ui-monospace, monospace",
+    "fontFamilyDisplay": "'Orbitron', ui-monospace, monospace",
+    "radiusSm": "2px",
+    "radiusMd": "4px",
+    "radiusLg": "6px",
+    "shadowPanel": "0 10px 30px rgba(0,0,0,0.6)",
+    "shadowGlow": "0 0 30px rgba(57,255,214,0.65)",
+    "gradientPanel": "linear-gradient(160deg, rgba(20,10,30,0.9), rgba(5,5,12,0.95))",
+    "gradientAccent": "linear-gradient(135deg, #c04aff, #39ffd6)",
+    "blur": "6px",
+    "pixelArt": false
+  },
+  "rendererUrl": "/plugins/skins/neon_city/index.js"
+}

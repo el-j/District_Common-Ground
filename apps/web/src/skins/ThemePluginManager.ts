@@ -12,7 +12,11 @@ export interface ThemeCatalogEntry {
   entrypoint: string;
 }
 
-const BUILT_IN_IDS = new Set(['solarpunk', 'retro_gb', 'labor_woodcut', 'aurora']);
+const BUILT_IN_IDS = new Set([
+  'solarpunk', 'retro_gb', 'labor_woodcut', 'aurora', 'sunset_commons',
+  // M30 — 3 hi-fi skins, each with its own dynamically-loaded SkinRenderer bundle.
+  'diorama_glow', 'flat_vector', 'neon_city',
+]);
 
 function toCatalogEntry(theme: ServerThemeManifest): ThemeCatalogEntry {
   return {
@@ -36,6 +40,11 @@ export async function getThemeCatalog(): Promise<ThemeCatalogEntry[]> {
       { id: 'retro_gb', title: 'Retro GB', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/retro_gb/skin.manifest.json' },
       { id: 'labor_woodcut', title: '1930s Labor Woodcut', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/labor_woodcut/skin.manifest.json' },
       { id: 'aurora', title: 'Aurora Glass', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/aurora/skin.manifest.json' },
+      { id: 'sunset_commons', title: 'Sunset Commons', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/sunset_commons/skin.manifest.json' },
+      // M30 — 3 hi-fi skins, each with its own dynamically-loaded SkinRenderer bundle.
+      { id: 'diorama_glow', title: 'Diorama Glow', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/diorama_glow/skin.manifest.json' },
+      { id: 'flat_vector', title: 'Flat Vector Minimal', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/flat_vector/skin.manifest.json' },
+      { id: 'neon_city', title: 'Neon Night-City', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/neon_city/skin.manifest.json' },
     ];
   }
 }

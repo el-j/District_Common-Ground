@@ -66,7 +66,7 @@ install: ## Install dependencies across monorepo workspaces and Go modules
 # ==============================================================================
 
 .PHONY: dev
-dev: env-init build-minigames ## Start local dev stack with hot-reloading (Vite HMR + Go live sync)
+dev: env-init build-minigames build-skins ## Start local dev stack with hot-reloading (Vite HMR + Go live sync)
 	@echo -e "$(CYAN)Starting District: Common Ground (Development Stack)...$(RESET)"
 	@echo -e "$(YELLOW)Web frontend will be available at: http://localhost:9300$(RESET)"
 	@echo -e "$(YELLOW)Go API will be available at:       http://localhost:8080$(RESET)"
@@ -74,7 +74,7 @@ dev: env-init build-minigames ## Start local dev stack with hot-reloading (Vite 
 	$(COMPOSE_DEV) up --build
 
 .PHONY: dev-d
-dev-d: env-init build-minigames ## Start local dev stack in detached background mode
+dev-d: env-init build-minigames build-skins ## Start local dev stack in detached background mode
 	@echo -e "$(CYAN)Starting development stack in background...$(RESET)"
 	$(COMPOSE_DEV) up --build -d
 	@echo -e "$(GREEN)✔ Dev stack running!$(RESET) Access at $(CYAN)http://localhost:9300$(RESET)"
@@ -182,8 +182,14 @@ build-minigames: ## Build the 5 built-in minigame packages into apps/web/public/
 	npm run build:minigames
 	@echo -e "$(GREEN)✔ Minigame plugin bundles ready$(RESET)"
 
+.PHONY: build-skins
+build-skins: ## Build the 3 hi-fi skin renderer packages into apps/web/public/plugins/skins/<id>/
+	@echo -e "$(CYAN)Building hi-fi skin renderer bundles (Vite lib mode)...$(RESET)"
+	npm run build:skins
+	@echo -e "$(GREEN)✔ Hi-fi skin renderer bundles ready$(RESET)"
+
 .PHONY: build
-build: build-minigames ## Build production bundles (Vite dist + Go binary)
+build: build-minigames build-skins ## Build production bundles (Vite dist + Go binary)
 	@echo -e "$(CYAN)Building web frontend bundle (Vite/Rolldown)...$(RESET)"
 	npm -w apps/web run build
 	@echo -e "$(CYAN)Building Go API static binary...$(RESET)"
@@ -191,7 +197,7 @@ build: build-minigames ## Build production bundles (Vite dist + Go binary)
 	@echo -e "$(GREEN)✔ Build outputs ready$(RESET)"
 
 .PHONY: build-offline-pwa
-build-offline-pwa: build-minigames ## Build the zero-network PWA bundle (M18) — installable, offline-first via vite-plugin-pwa
+build-offline-pwa: build-minigames build-skins ## Build the zero-network PWA bundle (M18) — installable, offline-first via vite-plugin-pwa
 	@echo -e "$(CYAN)Building offline-first PWA bundle (Vite/Rolldown + Workbox precache)...$(RESET)"
 	npm -w apps/web run build
 	@echo -e "$(GREEN)✔ Offline PWA build ready at apps/web/dist$(RESET)"

@@ -20,7 +20,9 @@ import { weatherTier, type WeatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
 import { MinigameLoader } from '../core/kernel/MinigameLoader';
 import { computeViewportZoom } from './CameraViewport';
-import { getActiveWorldPalette, type ResolvedWorldPalette } from '../skins/ThemeManager';
+import { getActiveWorldPalette, getActiveSkinId, getActiveManifest, type ResolvedWorldPalette } from '../skins/ThemeManager';
+import { SkinRendererLoader } from '../skins/SkinRendererLoader';
+import type { SkinRenderer } from '../skins/SkinRendererInterface';
 import { INTERIORS, findInteriorAtTile, type PropToken } from './InteriorProps';
 import { resilienceTier, dressingTierFor, dressingPropsForTier, type DressingTier, type DressingPropToken } from './ResilienceDressing';
 import { InteractionPrompt } from './InteractionPrompt';
@@ -243,9 +245,16 @@ function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette
 // ── Player spritesheet (8 frames × 16px = 128×16) ────────────────────────────
 
 function createPlayerTexture(scene: Phaser.Scene): void {
-  const tex = scene.textures.createCanvas('player', TS * 8, TS);
+  // M30 — guarded the same way createTilesetTexture() already is: reuse the
+  // existing canvas texture on a re-render (skin switch) instead of always
+  // creating fresh, since Phaser's TextureManager rejects a second
+  // createCanvas() call for a key that already exists.
+  const tex = scene.textures.exists('player')
+    ? (scene.textures.get('player') as Phaser.Textures.CanvasTexture)
+    : scene.textures.createCanvas('player', TS * 8, TS);
   if (!tex) throw new Error('player canvas failed');
   const ctx = tex.getContext();
+  ctx.clearRect(0, 0, TS * 8, TS);
 
   const C = { hair: '#6644bb', skin: '#f0c090', shirt: '#4477dd', pants: '#2a44bb', shoe: '#111130', eye: '#180e08', shirtSh: '#3360cc' };
 
@@ -300,9 +309,13 @@ function createPlayerTexture(scene: Phaser.Scene): void {
 // ── NPC spritesheet (3 characters × 16px = 48×16) ────────────────────────────
 
 function createNPCTextures(scene: Phaser.Scene): void {
-  const tex = scene.textures.createCanvas('npcs', TS * 6, TS);
+  // M30 — same reuse-on-re-render guard as createTilesetTexture()/createPlayerTexture().
+  const tex = scene.textures.exists('npcs')
+    ? (scene.textures.get('npcs') as Phaser.Textures.CanvasTexture)
+    : scene.textures.createCanvas('npcs', TS * 6, TS);
   if (!tex) throw new Error('npc canvas failed');
   const ctx = tex.getContext();
+  ctx.clearRect(0, 0, TS * 6, TS);
 
   const cfgs = [
     { hair: '#b05010', shirt: '#ee8830', pants: '#884422', skin: '#f0b878' }, // Mira: orange
@@ -326,6 +339,18 @@ function createNPCTextures(scene: Phaser.Scene): void {
   tex.refresh();
   for (let i = 0; i < 6; i++) tex.add(i, 0, i * TS, 0, TS, TS);
 }
+
+// M30 — the 3 functions above, grouped behind the SkinRenderer contract so
+// WorldScene can call through either this built-in implementation or a
+// dynamically-loaded hi-fi one interchangeably. This is the palette-only
+// look every pre-M30 skin already has and keeps forever; it also doubles as
+// the synchronous fallback used in preload() (which can't await a fetch)
+// and as the safety net a hi-fi renderer's load/import failure degrades to.
+export const DEFAULT_RENDERER: SkinRenderer = {
+  createTilesetTexture,
+  createPlayerTexture,
+  createNPCTextures,
+};
 
 // ── WorldScene ─────────────────────────────────────────────────────────────────
 
@@ -370,6 +395,10 @@ export class WorldScene extends Phaser.Scene {
   private currentWeatherTier: WeatherTier = 'none';
   private lastLampAlpha = -1;
 
+  // M30 — resolved SkinRenderer per skin id, so switching back to an
+  // already-loaded hi-fi skin doesn't re-import() its bundle.
+  private rendererCache: Map<string, SkinRenderer> = new Map();
+
   // M21 — camera/palette/dressing/juice state
   private lastSkinRevision = -1;
   private lastResilienceScore = -1;
@@ -412,9 +441,14 @@ export class WorldScene extends Phaser.Scene {
   constructor() { super({ key: 'WorldScene' }); }
 
   preload(): void {
-    createTilesetTexture(this, getActiveWorldPalette());
-    createPlayerTexture(this);
-    createNPCTextures(this);
+    // Always the built-in renderer here, never a remote one — preload()
+    // can't await a dynamic import, so first paint must never block on a
+    // network fetch even when the active skin is a hi-fi one. The real
+    // renderer (if any) resolves shortly after, via the skinRevision
+    // subscription in create() below.
+    DEFAULT_RENDERER.createTilesetTexture(this, getActiveWorldPalette());
+    DEFAULT_RENDERER.createPlayerTexture(this);
+    DEFAULT_RENDERER.createNPCTextures(this);
   }
 
   create(): void {
@@ -582,7 +616,7 @@ export class WorldScene extends Phaser.Scene {
     useGameStore.subscribe((state) => {
       if (state.meta.skinRevision !== this.lastSkinRevision) {
         this.lastSkinRevision = state.meta.skinRevision;
-        createTilesetTexture(this, getActiveWorldPalette());
+        void this.applyActiveRenderer();
       }
     });
 
@@ -681,6 +715,42 @@ export class WorldScene extends Phaser.Scene {
         this.prevDay = state.meta.day;
       }
     });
+  }
+
+  /**
+   * M30 — resolves whichever renderer the active skin's manifest calls for
+   * (DEFAULT_RENDERER for all 5 pre-M30 palette-only skins, a dynamically
+   * loaded SkinRenderer for a hi-fi one) and redraws the tileset/player/NPC
+   * textures with it. Called every time skinRevision bumps (boot + every
+   * switch), same trigger the old palette-only tileset-rebuild used.
+   *
+   * A failed import/load degrades to DEFAULT_RENDERER and logs — a broken
+   * hi-fi renderer never leaves the world blank or crashed, just plain.
+   */
+  private async applyActiveRenderer(): Promise<void> {
+    const skinId = getActiveSkinId();
+    const manifest = getActiveManifest();
+    let renderer: SkinRenderer = DEFAULT_RENDERER;
+
+    if (manifest?.rendererUrl) {
+      const cached = this.rendererCache.get(skinId);
+      if (cached) {
+        renderer = cached;
+      } else {
+        try {
+          renderer = await SkinRendererLoader.loadRemoteSkinRenderer(manifest.rendererUrl);
+          this.rendererCache.set(skinId, renderer);
+        } catch (err) {
+          console.error(`Failed to load hi-fi skin renderer for "${skinId}" — falling back to the default look.`, err);
+          renderer = DEFAULT_RENDERER;
+        }
+      }
+    }
+
+    const palette = getActiveWorldPalette();
+    renderer.createTilesetTexture(this, palette);
+    renderer.createPlayerTexture(this);
+    renderer.createNPCTextures(this);
   }
 
   update(_time: number, delta: number): void {

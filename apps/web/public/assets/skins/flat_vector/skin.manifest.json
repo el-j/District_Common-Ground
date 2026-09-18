@@ -1,0 +1,57 @@
+{
+  "skinId": "flat_vector",
+  "version": "1.0.0",
+  "displayName": "Flat Vector Minimal",
+  "palette": {
+    "background": "#101820",
+    "surface": "rgba(255,255,255,0.04)",
+    "accent": "#ff5a5f",
+    "text": "#eef2f5",
+    "hudBg": "rgba(16,24,32,0.85)",
+    "hudBorder": "rgba(255,90,95,0.3)",
+    "hudText": "#eef2f5",
+    "worldFloor": "#e8ecef",
+    "worldWall": "#22303c",
+    "worldWallShadow": "#101820",
+    "worldGrass": "#3ec9a7",
+    "worldRoad": "#b8c2cc",
+    "worldRoadBorder": "#8a97a3",
+    "worldPlaza": "#f4f6f8",
+    "worldDoor": "#ff5a5f",
+    "worldHighlight": "#ffd166"
+  },
+  "assetMap": {
+    "TILES_ATLAS":        { "textureUrl": "assets/skins/flat_vector/tiles.webp",         "tileSize": [16, 16] },
+    "HERO_ATLAS":         { "textureUrl": "assets/skins/flat_vector/hero.webp",           "frameRate": 6 },
+    "NPC_MIRA_ATLAS":     { "textureUrl": "assets/skins/flat_vector/npc_mira.webp",       "frameRate": 4 },
+    "NPC_LEO_ATLAS":      { "textureUrl": "assets/skins/flat_vector/npc_leo.webp",        "frameRate": 4 },
+    "NPC_ELENA_ATLAS":    { "textureUrl": "assets/skins/flat_vector/npc_elena.webp",      "frameRate": 4 },
+    "NPC_SAL_ATLAS":      { "textureUrl": "assets/skins/flat_vector/npc_sal.webp",        "frameRate": 4 },
+    "NPC_MARCUS_ATLAS":   { "textureUrl": "assets/skins/flat_vector/npc_marcus.webp",     "frameRate": 4 },
+    "NPC_HIGGINS_ATLAS":  { "textureUrl": "assets/skins/flat_vector/npc_higgins.webp",    "frameRate": 4 },
+    "BUILD_KITCHEN_IDLE": { "textureUrl": "assets/skins/flat_vector/kitchen_idle.webp",   "footprint": [32, 32] },
+    "BUILD_KITCHEN_BUILT":{ "textureUrl": "assets/skins/flat_vector/kitchen_built.webp",  "footprint": [32, 32] },
+    "BUILD_SOLAR_IDLE":   { "textureUrl": "assets/skins/flat_vector/solar_idle.webp",     "footprint": [32, 32] },
+    "BUILD_SOLAR_BUILT":  { "textureUrl": "assets/skins/flat_vector/solar_built.webp",    "footprint": [32, 32] },
+    "BUILD_LEGAL_IDLE":   { "textureUrl": "assets/skins/flat_vector/legal_idle.webp",     "footprint": [16, 16] },
+    "BUILD_LEGAL_BUILT":  { "textureUrl": "assets/skins/flat_vector/legal_built.webp",    "footprint": [16, 16] }
+  },
+  "audioProfile": {
+    "sfxType": "clean_pop",
+    "bgmType": "minimal_synth"
+  },
+  "uiKit": {
+    "fontFamily": "'Sora', system-ui, sans-serif",
+    "fontFamilyDisplay": "'Sora', system-ui, sans-serif",
+    "radiusSm": "2px",
+    "radiusMd": "4px",
+    "radiusLg": "6px",
+    "shadowPanel": "0 2px 0 rgba(0,0,0,0.5)",
+    "shadowGlow": "0 0 0 rgba(0,0,0,0)",
+    "gradientPanel": "linear-gradient(180deg, #16202a, #101820)",
+    "gradientAccent": "linear-gradient(90deg, #ff5a5f, #ffd166)",
+    "blur": "none",
+    "pixelArt": false
+  },
+  "rendererUrl": "/plugins/skins/flat_vector/index.js"
+}

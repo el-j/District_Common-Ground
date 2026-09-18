@@ -96,6 +96,13 @@ export interface SkinManifest {
   assetMap: Record<EntityToken, SkinAssetEntry>;
   audioProfile: SkinAudioProfile;
   uiKit?: SkinUIKit;
+  // M30 — a hi-fi skin's standalone renderer bundle (dynamically import()ed
+  // via SkinRendererLoader), replacing WorldScene's 3 hardcoded texture
+  // functions with genuinely different draw code. Optional so every pre-M30
+  // manifest (solarpunk, retro_gb, labor_woodcut, aurora, sunset_commons)
+  // stays valid — WorldScene falls back to its built-in DEFAULT_RENDERER
+  // when this is absent, zero behavior change for them.
+  rendererUrl?: string;
 }
 
 /** Verify a manifest covers all required EntityTokens (throws on violation). */

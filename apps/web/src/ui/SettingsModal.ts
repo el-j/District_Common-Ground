@@ -29,6 +29,11 @@ const KNOWN_PREVIEWS: Record<string, SkinPreview> = {
   labor_woodcut: { desc: '1930s protest-poster woodcut', accent: '#d8a13a', bg: '#1c1712' },
   aurora: { desc: 'Jewel-toned indigo, violet & cyan glass', accent: '#22d3ee', bg: '#11123a' },
   sunset_commons: { desc: 'Warm coral, plum & amber golden hour', accent: '#ff8f6b', bg: '#2b1830' },
+  // M30 — 3 hi-fi procedural renderers, each with genuinely different draw
+  // code (not just different colors) — see EPIC-30/M30.
+  diorama_glow: { desc: 'Hi-Fi — warm lit diorama, soft shadows & glow', accent: '#ffb347', bg: '#2b1c12' },
+  flat_vector: { desc: 'Hi-Fi — bold flat vector shapes, minimal grain', accent: '#ff5a5f', bg: '#101820' },
+  neon_city: { desc: 'Hi-Fi — near-black neon glow, angular silhouettes', accent: '#39ffd6', bg: '#05050a' },
 };
 const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9a', bg: '#1a1a28' };
 
@@ -43,6 +48,9 @@ export class SettingsModal {
     { id: 'labor_woodcut', title: '1930s Labor Woodcut', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/labor_woodcut/skin.manifest.json' },
     { id: 'aurora', title: 'Aurora Prime', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/aurora/skin.manifest.json' },
     { id: 'sunset_commons', title: 'Sunset Commons', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/sunset_commons/skin.manifest.json' },
+    { id: 'diorama_glow', title: 'Diorama Glow', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/diorama_glow/skin.manifest.json' },
+    { id: 'flat_vector', title: 'Flat Vector Minimal', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/flat_vector/skin.manifest.json' },
+    { id: 'neon_city', title: 'Neon Night-City', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/neon_city/skin.manifest.json' },
   ];
 
   constructor(root: HTMLElement, scene?: Phaser.Scene, onClose?: () => void) {
@@ -123,15 +131,6 @@ export class SettingsModal {
           </button>
         `;
         }).join('')}
-        <div class="skin-card skin-card--locked">
-          <div class="skin-preview" style="background:#1a1a28">
-            <span style="color:#444;font-size:1.4rem">🔒</span>
-          </div>
-          <div class="skin-info">
-            <span class="skin-name">Cozy Vector</span>
-            <span class="skin-desc">Coming in a future update</span>
-          </div>
-        </div>
       </div>
     `;
   }

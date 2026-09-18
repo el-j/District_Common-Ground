@@ -16,6 +16,18 @@ services:
       - ./packages/go:/app/packages/go
     environment:
       GO_ENV: development
+    # `go run` never restarts itself on its own, and Compose watch refuses to
+    # `sync`/`sync+restart` any path that's also bind-mounted (see the
+    # volumes above) — it just logs a warning and does nothing. `rebuild`
+    # isn't subject to that restriction, so it's the only action that
+    # actually fires here; it also covers go.mod/go.sum changes needing a
+    # fresh `go mod download`, so no separate rule is needed for those.
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/api
+        - action: rebuild
+          path: ./packages/go
 
   web:
     build:
@@ -37,3 +49,16 @@ services:
       - /app/apps/web/node_modules
     environment:
       VITE_API_URL: http://localhost:8080
+    # Vite's own dev server already HMRs source edits live through the bind
+    # mounts above — no sync action needed for those. The one real gap is a
+    # dependency-manifest change: node_modules is preserved via the anonymous
+    # volumes above, so a new/updated npm dependency needs a full image
+    # rebuild (npm ci), not just a file sync, to actually get installed.
+    develop:
+      watch:
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./package-lock.json
+        - action: rebuild
+          path: ./apps/web/package.json

@@ -6,6 +6,7 @@ import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { clearSave, saveToDB } from '../core/state/persistence';
 import { setRegionCode } from '../core/state/actions';
 import { bindEscapeClose } from './modalDismiss';
+import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
 const REGION_OPTIONS: { code: string; label: string }[] = [
   { code: 'GENERIC', label: 'Generic / Unspecified' },
@@ -88,6 +89,7 @@ export class SettingsModal {
         </div>
         <div class="settings-body">
           ${this.renderSkins(activeSkin)}
+          ${this.renderAudio()}
           ${this.renderRegion()}
           <div class="settings-new-game">
             ${this.confirmNewGame
@@ -135,6 +137,21 @@ export class SettingsModal {
     `;
   }
 
+  // M31 — folded in from a standalone TopHUD icon so mute lives alongside
+  // every other setting instead of as the one exception (see EPIC-31/M31
+  // Section 3). Reuses SoundSynth's existing mute flag, not a second one.
+  private renderAudio(): string {
+    const muted = isBGMMuted();
+    return `
+      <div class="settings-audio">
+        <span class="settings-audio-label">Music</span>
+        <button class="settings-mute-btn interactive" type="button" aria-label="${muted ? 'Unmute music' : 'Mute music'}">
+          ${muted ? '🔇 Muted' : '🔊 Playing'}
+        </button>
+      </div>
+    `;
+  }
+
   private renderRegion(): string {
     const current = useGameStore.getState().meta.regionCode ?? 'GENERIC';
     return `
@@ -162,6 +179,13 @@ export class SettingsModal {
         void applyTheme(theme, this.scene).then(() => this.render());
       });
     });
+
+    this.el.querySelector<HTMLButtonElement>('.settings-mute-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        setBGMMuted(!isBGMMuted());
+        this.render();
+      });
 
     this.el.querySelector<HTMLSelectElement>('.settings-region-select')
       ?.addEventListener('change', e => {

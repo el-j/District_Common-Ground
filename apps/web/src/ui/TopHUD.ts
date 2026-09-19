@@ -15,7 +15,6 @@ import { CivicDirectoryModal } from './CivicDirectoryModal';
 import { CivicJournal } from '../irl/CivicJournal';
 import { getWallet } from '../api/endpoints/shop';
 import { fetchDailyNarrative } from '../api/narrativeGossip';
-import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 import type { Kernel, HudSink } from '../core/kernel/Kernel';
 import type { KernelHudButtonDescriptor } from '@district-cg/shared-types';
 
@@ -35,6 +34,10 @@ export class TopHUD implements HudSink {
   private endDayBtn: HTMLButtonElement;
   private walletChipEl: HTMLElement;
   private iconToolbarEl!: HTMLElement;
+  private menuButtonEl!: HTMLButtonElement;
+  private menuDrawerEl!: HTMLElement;
+  private menuDrawerGridEl!: HTMLElement;
+  private menuOpen = false;
   private broadsheet: BroadsheetModal;
   private radio: RadioWidget;
   private civicTicker: CivicTickerWidget;
@@ -71,13 +74,51 @@ export class TopHUD implements HudSink {
 
     // M28 — every icon button used to be individually `position: absolute`
     // with a hand-picked `right` offset (see style.css history); several
-    // buttons (settings/share/mute/work/builder, plus the mistyped
+    // buttons (settings/share/work/builder, plus the mistyped
     // `plugins-open-btn`) never got one at all, and the ones that did had
     // drifted into overlapping at the current 2.75rem touch-target size.
     // Buttons now flow inside this single flex row instead.
+    //
+    // M31 — that single row still crammed all 12 controls into one
+    // bottom-right cluster with nothing at the top but passive stats. This
+    // toolbar now holds only the short-list of most-used/time-sensitive
+    // controls (Settings, Radio, Quest, Work); everything else registers
+    // into the new top-corner Menu drawer below instead. See
+    // EPIC-31/M31 Section 1.
     this.iconToolbarEl = document.createElement('div');
     this.iconToolbarEl.id = 'hud-icon-toolbar';
     root.appendChild(this.iconToolbarEl);
+
+    // Menu button lives inside #top-hud itself (its existing top-pinned
+    // real estate), absolutely positioned to the top-right corner.
+    this.menuButtonEl = document.createElement('button');
+    this.menuButtonEl.type = 'button';
+    this.menuButtonEl.id = 'hud-menu-btn';
+    this.menuButtonEl.className = 'hud-menu-btn interactive';
+    this.menuButtonEl.textContent = '☰';
+    this.menuButtonEl.setAttribute('aria-label', 'Open menu');
+    this.menuButtonEl.setAttribute('aria-expanded', 'false');
+    this.menuButtonEl.hidden = true; // render() unhides once a game is active
+    this.menuButtonEl.addEventListener('click', () => this.toggleMenu());
+    this.el.appendChild(this.menuButtonEl);
+
+    this.menuDrawerGridEl = document.createElement('div');
+    this.menuDrawerGridEl.className = 'hud-menu-drawer-grid';
+    this.menuDrawerEl = document.createElement('div');
+    this.menuDrawerEl.id = 'hud-menu-drawer';
+    this.menuDrawerEl.hidden = true;
+    this.menuDrawerEl.appendChild(this.menuDrawerGridEl);
+    root.appendChild(this.menuDrawerEl);
+
+    document.addEventListener('click', (e) => {
+      if (!this.menuOpen) return;
+      const target = e.target as Node;
+      if (this.menuDrawerEl.contains(target) || this.menuButtonEl.contains(target)) return;
+      this.closeMenu();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.menuOpen) this.closeMenu();
+    });
 
     // Broadsheet + radio instances (persistent, opened on demand)
     this.broadsheet = new BroadsheetModal(root);
@@ -96,34 +137,28 @@ export class TopHUD implements HudSink {
 
     // Built-in icon-button toolbar — same icons/labels/behavior as before,
     // now going through the same registerButton() path a kernel plugin uses.
+    // M31 — split by frequency: 'primary' stays in the bottom toolbar,
+    // everything else (the default) lands in the Menu drawer. The mute
+    // button is gone entirely — folded into SettingsModal (Section 3).
     this.registerButton({
       id: 'settings', icon: '⚙', label: 'Settings',
       onClick: () => { new SettingsModal(root, this.scene); },
-    });
-    this.registerButton({
-      id: 'share', icon: '📣', label: 'Share progress',
-      onClick: () => openShareSheet(root),
-    });
+    }, 'primary');
     this.registerButton({
       id: 'radio', icon: '📻', label: 'Open Radio Free Commons',
       onClick: () => this.radio.show(),
-    });
-    const muteBtn = this.registerButton({
-      id: 'mute', icon: '🔊', label: 'Toggle music',
-      onClick: () => {
-        const muted = !isBGMMuted();
-        setBGMMuted(muted);
-        muteBtn.textContent = muted ? '🔇' : '🔊';
-        muteBtn.setAttribute('aria-label', muted ? 'Unmute music' : 'Mute music');
-      },
-    });
+    }, 'primary');
     this.registerButton({
       id: 'quest', icon: '📋', label: 'Daily Quests',
       onClick: () => new QuestModal(root),
-    });
+    }, 'primary');
     this.registerButton({
       id: 'work', icon: '💼', label: 'Work — trade energy for cash',
       onClick: () => new WorkModal(root),
+    }, 'primary');
+    this.registerButton({
+      id: 'share', icon: '📣', label: 'Share progress',
+      onClick: () => openShareSheet(root),
     });
     this.registerButton({
       id: 'builder', icon: '🏗️', label: 'Open Living District Builder',
@@ -168,18 +203,47 @@ export class TopHUD implements HudSink {
     this.fetchWalletBalance();
   }
 
-  /** HudSink implementation — used both for TopHUD's own built-ins above and for kernel plugins registering later. */
-  registerButton(descriptor: KernelHudButtonDescriptor): HTMLButtonElement {
+  /**
+   * HudSink implementation — used both for TopHUD's own built-ins above and
+   * for kernel plugins registering later. `group` (M31) routes the button
+   * to the bottom toolbar ('primary') or the Menu drawer (default,
+   * 'secondary') — the single place this decision is made, so no call site
+   * duplicates toolbar-vs-drawer DOM logic. The HudSink interface itself
+   * only ever passes one argument (kernel plugins have no opinion here), so
+   * every plugin-registered button lands in the Menu drawer by default —
+   * a deliberate, sensible bucket (secondary functions), not a leftover.
+   */
+  registerButton(descriptor: KernelHudButtonDescriptor, group: 'primary' | 'secondary' = 'secondary'): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `${descriptor.className ?? `${descriptor.id}-open-btn`} interactive`;
     btn.textContent = descriptor.icon;
     btn.setAttribute('aria-label', descriptor.label);
     btn.hidden = useGameStore.getState().meta.phase === 'select';
-    btn.addEventListener('click', () => descriptor.onClick());
-    this.iconToolbarEl.appendChild(btn);
+    btn.addEventListener('click', () => {
+      descriptor.onClick();
+      if (group === 'secondary') this.closeMenu();
+    });
+    const container = group === 'primary' ? this.iconToolbarEl : this.menuDrawerGridEl;
+    container.appendChild(btn);
     this.buttons.push({ descriptor, el: btn });
     return btn;
+  }
+
+  private toggleMenu(): void {
+    if (this.menuOpen) this.closeMenu(); else this.openMenu();
+  }
+
+  private openMenu(): void {
+    this.menuOpen = true;
+    this.menuDrawerEl.hidden = false;
+    this.menuButtonEl.setAttribute('aria-expanded', 'true');
+  }
+
+  private closeMenu(): void {
+    this.menuOpen = false;
+    this.menuDrawerEl.hidden = true;
+    this.menuButtonEl.setAttribute('aria-expanded', 'false');
   }
 
   private fetchWalletBalance(): void {
@@ -316,6 +380,8 @@ export class TopHUD implements HudSink {
 
     this.el.hidden = isSelect;
     this.endDayBtn.hidden = isSelect;
+    this.menuButtonEl.hidden = isSelect;
+    if (isSelect) this.closeMenu();
     this.civicTicker.setVisible(!isSelect);
     for (const { el } of this.buttons) {
       el.hidden = isSelect;

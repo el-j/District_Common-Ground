@@ -2011,6 +2011,33 @@
   margin: 1rem 0;
 }
 
+/* ── M31 — Settings: Audio (folded in from a standalone HUD icon) ──── */
+
+.settings-audio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.settings-audio-label {
+  font-size: 0.66rem;
+  color: #9aa0b4;
+}
+
+.settings-mute-btn {
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #e0e0f0;
+  font-size: 0.72rem;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.settings-mute-btn:hover { border-color: var(--skin-accent, #6bacf0); }
+
 /* ── Off-Grid Mesh Terminal (M17) ──────────────────────────────── */
 
 .mesh-open-btn {
@@ -3046,17 +3073,23 @@ input:focus-visible {
   font-family: var(--ui-font, ui-monospace, monospace);
 }
 
-/* M28 — this dialog only ever handled Escape silently, with no visible
-   close affordance at all (it's a forced-vote dialog with no × — Escape
-   dismissal is intentionally kept, just needs to be discoverable). */
-.assembly-esc-hint {
+/* M31 — this was Escape-only with a text hint and no visible close
+   affordance, the one real modal-close inconsistency the EPIC-31 audit
+   found (see EPIC-31/M31 Section 4). Now a real × matching .settings-close. */
+.assembly-close {
   position: absolute;
   top: 0.6rem;
   right: 0.75rem;
-  font-size: 0.6rem;
-  opacity: 0.55;
-  letter-spacing: 0.03em;
+  background: transparent;
+  border: none;
+  color: var(--skin-hud-text, #666688);
+  opacity: 0.7;
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.12s, opacity 0.12s;
 }
+.assembly-close:hover { color: var(--skin-accent, #aaaacc); opacity: 1; }
 
 .assembly-title {
   font-size: 1rem;
@@ -3228,7 +3261,6 @@ input:focus-visible {
 
 .settings-open-btn,
 .share-open-btn,
-.mute-open-btn,
 .work-open-btn,
 .builder-open-btn,
 .plugins-open-btn {
@@ -3240,12 +3272,71 @@ input:focus-visible {
 }
 .settings-open-btn:hover,
 .share-open-btn:hover,
-.mute-open-btn:hover,
 .work-open-btn:hover,
 .builder-open-btn:hover,
 .plugins-open-btn:hover {
   border-color: var(--skin-accent, rgba(255,255,255,0.4));
   transform: translateY(-1px);
+}
+
+/* ── M31 — Menu button + drawer ───────────────────────────────
+   Replaces the standalone mute icon's old slot in spirit: a single
+   top-corner affordance opening a grid of the secondary controls that no
+   longer live in the bottom toolbar (Share, Builder, Plugins, Shop,
+   Social, Civic Directory, Journal — plus any kernel-plugin button that
+   doesn't request 'primary'). See EPIC-31/M31 Section 1. */
+
+.hud-menu-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  pointer-events: auto;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ui-gradient-panel, rgba(24, 24, 40, 0.85));
+  border: 1px solid var(--skin-hud-border, rgba(255,255,255,0.15));
+  border-radius: var(--ui-radius-sm, 6px);
+  color: var(--skin-hud-text, #ddddf0);
+  font-size: 1rem;
+  cursor: pointer;
+  backdrop-filter: var(--ui-blur, none);
+  transition: background 0.12s, border-color 0.12s, transform 0.12s;
+  z-index: 40;
+}
+.hud-menu-btn:hover { border-color: var(--skin-accent, rgba(255,255,255,0.4)); transform: translateY(-1px); }
+
+#hud-menu-drawer {
+  position: absolute;
+  top: 3.1rem;
+  right: 0.6rem;
+  max-width: calc(100% - 1.2rem);
+  background: var(--ui-gradient-panel, linear-gradient(180deg, #1a1a2e, #121220));
+  border: 1px solid var(--skin-hud-border, rgba(255,255,255,0.15));
+  border-radius: var(--ui-radius-lg, 10px);
+  box-shadow: var(--ui-shadow-panel, 0 16px 40px rgba(0,0,0,0.6));
+  backdrop-filter: var(--ui-blur, none);
+  padding: 0.6rem;
+  z-index: 39;
+  pointer-events: auto;
+}
+
+.hud-menu-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 2.75rem);
+  gap: 0.5rem;
+}
+@media (max-width: 480px) {
+  .hud-menu-drawer-grid { grid-template-columns: repeat(3, 2.75rem); }
+}
+/* Buttons inside the drawer keep their own `.x-open-btn` color rules —
+   this only takes them out of the bottom-toolbar flex flow. */
+.hud-menu-drawer-grid [class*="-open-btn"] {
+  position: static;
+  right: auto;
+  bottom: auto;
 }
 
 /* ── M28 — Living District Builder ───────────────────────────

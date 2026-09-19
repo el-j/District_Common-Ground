@@ -38,6 +38,10 @@ const ARCHETYPES: ArchetypeCard[] = [
   },
 ];
 
+/** M31 audit note: intentionally non-dismissible (no ×/Escape) — this is
+ *  the initial archetype-choice onboarding gate, not a bug. See
+ *  EPIC-31/M31 Section 4, which also names CrisisWireModal and AuthOverlay
+ *  as the other 2 deliberate forced-choice exceptions. */
 export class CharacterSelect {
   private el: HTMLElement;
   private onComplete: () => void;

@@ -2,6 +2,10 @@ import { register, login } from '../api/endpoints/auth';
 import { setToken } from '../core/state/persistence';
 import { ApiError } from '../api/client';
 
+/** M31 audit note: intentionally non-dismissible (no ×/Escape) — sign-in/
+ *  register blocks boot until resolved by design. See EPIC-31/M31 Section 4,
+ *  which also names CrisisWireModal and CharacterSelect as deliberate
+ *  exceptions. */
 export class AuthOverlay {
   private el: HTMLElement;
   private onDone: () => void;

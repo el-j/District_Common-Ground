@@ -5,7 +5,7 @@
 // canvas capability check (`checkInverseAlpha`) crashes under plain jsdom
 // (no `canvas` npm package installed) — so it's mocked out here rather than
 // pulling the whole Phaser runtime into a DOM-overlay unit test.
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../world/InputManager', () => ({
   inputManager: { setLocked: vi.fn() },
@@ -14,6 +14,17 @@ vi.mock('../world/InputManager', () => ({
 import { DialogueOverlay, type DialogueTree } from './DialogueOverlay';
 
 describe('DialogueOverlay portrait (Test 21.5)', () => {
+  // M31 — DialogueOverlay's typewriter effect self-schedules via a real
+  // window.setTimeout that these tests never let finish or clean up
+  // (no overlay.close() call here). Left as real timers, that pending
+  // recursive timer can fire after this file's jsdom environment has
+  // already torn down for a later test file in the same worker, throwing
+  // "window is not defined" as an unrelated uncaught exception. Fake
+  // timers keep the whole typewriter sequence inert for the test's
+  // lifetime instead.
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it('renders the mood of the starting node on open', () => {
     const root = document.createElement('div');
     const tree: DialogueTree = {

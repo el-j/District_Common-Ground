@@ -1,6 +1,7 @@
 import { useGameStore } from '../core/state/useGameStore';
 import { addTrust, loseTrust, gainCash, spendCash, addStress, reduceStress } from '../core/state/actions';
 import { inputManager } from '../world/InputManager';
+import { bindEscapeClose } from './modalDismiss';
 
 interface PolicyVote {
   id: string;
@@ -60,7 +61,7 @@ export class TownHallAssembly {
   private readonly el: HTMLElement;
   private readonly onClose: () => void;
   private voteIndex = 0;
-  private readonly keyHandler: (e: KeyboardEvent) => void;
+  private readonly disposeEscape: () => void;
   private readonly votes: PolicyVote[];
 
   constructor(root: HTMLElement, onClose: () => void) {
@@ -75,8 +76,10 @@ export class TownHallAssembly {
     root.appendChild(this.el);
 
     inputManager.setLocked(true);
-    this.keyHandler = (e: KeyboardEvent) => { if (e.key === 'Escape') this.close(); };
-    window.addEventListener('keydown', this.keyHandler);
+    // M31 — was a bespoke window keydown listener (same shape as the bug
+    // bindEscapeClose was built to fix elsewhere); switched to the shared
+    // helper as part of also giving this modal a visible × (see renderVote()).
+    this.disposeEscape = bindEscapeClose(() => this.close());
 
     this.renderVote();
   }
@@ -98,7 +101,7 @@ export class TownHallAssembly {
 
     this.el.innerHTML = `
       <div class="assembly-panel">
-        <span class="assembly-esc-hint">Esc to dismiss</span>
+        <button class="assembly-close" type="button" aria-label="Close">×</button>
         <h2 id="assembly-title" class="assembly-title">🏛 Town Hall Assembly — Day ${day}</h2>
         <p class="assembly-progress">Vote ${this.voteIndex + 1} of ${total}</p>
         <p class="assembly-question">${vote.question}</p>
@@ -117,6 +120,7 @@ export class TownHallAssembly {
 
     this.el.querySelector<HTMLButtonElement>('.assembly-btn--a')?.addEventListener('click', () => this.onVote(vote, 'a'));
     this.el.querySelector<HTMLButtonElement>('.assembly-btn--b')?.addEventListener('click', () => this.onVote(vote, 'b'));
+    this.el.querySelector<HTMLButtonElement>('.assembly-close')?.addEventListener('click', () => this.close());
     this.el.querySelector<HTMLButtonElement>('.assembly-btn--a')?.focus();
   }
 
@@ -151,7 +155,7 @@ export class TownHallAssembly {
     useGameStore.setState(s => ({
       meta: { ...s.meta, lastAssemblyDay: s.meta.day } as typeof s.meta,
     }));
-    window.removeEventListener('keydown', this.keyHandler);
+    this.disposeEscape();
     inputManager.setLocked(false);
     this.el.remove();
     this.onClose();

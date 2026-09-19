@@ -120,9 +120,37 @@ async function boot(): Promise<void> {
 
   await kernel.boot();
 
+  // M31 — CharacterSelect used to be instantiated only here, once, at boot.
+  // SettingsModal's "New Game" flow correctly resets meta.phase to 'select'
+  // and TopHUD correctly hides itself, but nothing ever re-mounted
+  // CharacterSelect afterward, leaving a blank screen on restart. It now
+  // mounts reactively off meta.phase (same store-subscribe pattern TopHUD
+  // itself uses), so every 'select' transition — not just the first one —
+  // gets a fresh CharacterSelect, and it tears itself down when a role is
+  // actually chosen so a later reset can't stack duplicate DOM nodes.
+  let characterSelect: CharacterSelect | null = null;
+  const mountCharacterSelect = (): void => {
+    if (characterSelect) return;
+    characterSelect = new CharacterSelect(uiRoot, () => { characterSelect = null; });
+  };
+
   if (useGameStore.getState().meta.phase === 'select') {
-    new CharacterSelect(uiRoot, () => { /* WorldScene already running beneath */ });
+    mountCharacterSelect();
   }
+
+  let previousPhase = useGameStore.getState().meta.phase;
+  useGameStore.subscribe((s) => {
+    const phase = s.meta.phase;
+    if (phase === previousPhase) return;
+    previousPhase = phase;
+    if (phase === 'select') {
+      mountCharacterSelect();
+    } else if (characterSelect) {
+      // Defensive: normally CharacterSelect already dismissed and nulled
+      // itself via its onComplete callback before phase left 'select'.
+      characterSelect = null;
+    }
+  });
 }
 
 void boot();

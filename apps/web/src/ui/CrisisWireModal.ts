@@ -4,6 +4,9 @@ import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { TactileEffects } from '../builder/TactileEffects';
 
+/** M31 audit note: intentionally non-dismissible (no ×/Escape) — a crisis
+ *  demands a real choice, not a shrug via Escape. See EPIC-31/M31 Section 4,
+ *  which also names AuthOverlay and CharacterSelect as deliberate exceptions. */
 export class CrisisWireModal {
   // el assigned in constructor after guard; '!' tells tsc it's always set before use
   private el!: HTMLElement;

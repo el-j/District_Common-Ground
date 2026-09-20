@@ -1,5 +1,7 @@
 # EPIC-32 — Home & Housing System
 
+> **2026-09-19 update:** This epic is **superseded** by the new [EPIC-34](EPIC-34-buildings-as-plugins-and-interiors.md)'s M43, which absorbs this epic's scope in full — see [`docs/planning/21-OPEN-WORLD-CRAFTING-BUILDINGS-AND-IDENTITY-VISION.md`](../planning/21-OPEN-WORLD-CRAFTING-BUILDINGS-AND-IDENTITY-VISION.md). Every decision below (no new `health` stat, recurring rent via `applyDailyTick()`, slot-based furniture placement) carries forward unchanged into M43; the one upgrade is that furniture is sourced from the new crafting/upcycling system ([EPIC-33](EPIC-33-crafting-materials-and-upcycling.md)) instead of a fixed cosmetic catalog. The `M36`/`M37` milestone numbers below are **retired, not reused** — this doc is kept for its audit findings and decisions, not implemented as its own milestones.
+
 ## Origin
 
 The user proposed a new feature (2026-09-19), following on from EPIC-31's planning pass: "a 'home-mode' will be nice where users need to find a new flat or living community to rent in. both brings different positive and negative things for health etc. also then a 'home-mode' to adjust the furniture and what is in the flat should be made." Two sub-features: (A) a housing/rental system where the player chooses among flats/living-communities with tradeoffs, and (B) a furniture/interior-decoration editor for the player's own home.

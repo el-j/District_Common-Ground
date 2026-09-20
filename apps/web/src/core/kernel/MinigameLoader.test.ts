@@ -46,6 +46,7 @@ describe('Microkernel Minigame Engine', () => {
         position: { x: 0, y: 0 },
         facing: 'down',
         lastWorkedDay: null,
+        name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
       },
     });
 
@@ -68,6 +69,7 @@ describe('Microkernel Minigame Engine', () => {
       player: {
         classRole: 'pip', cash: 10, energy: 50, maxEnergy: 100,
         socialTrust: 20, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
+        name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
       },
     });
 

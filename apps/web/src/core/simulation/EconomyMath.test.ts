@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeResilienceScore, getBuildBuffState, applyDailyTick, resilienceTier } from './EconomyMath';
+import { computeResilienceScore, getBuildBuffState, applyDailyTick, resilienceTier, DEFAULT_MULTIPLIERS } from './EconomyMath';
 import { getSeasonalMultipliers } from './SeasonalWave';
 
 describe('computeResilienceScore', () => {
@@ -108,6 +108,21 @@ describe('applyDailyTick', () => {
     const result = applyDailyTick('pip', fullCommons, 80);
     // 5 - 5(solar) - 4(legal) - 3(kitchen) - floor(80/20)=4 = 5-16 = -11 (clamped behavior)
     expect(result.stressDelta).toBeLessThan(0);
+  });
+
+  // M43 §1 — EPIC-34, absorbing EPIC-32's M36 scope.
+  it('folds an optional housingModifier into all 3 deltas', () => {
+    const withoutHousing = applyDailyTick('pip', baseCommons, 0);
+    const withHousing = applyDailyTick('pip', baseCommons, 0, DEFAULT_MULTIPLIERS, { cashDelta: -5, energyDelta: 2, stressDelta: -3 });
+    expect(withHousing.cashDelta).toBe(withoutHousing.cashDelta - 5);
+    expect(withHousing.energyDelta).toBe(withoutHousing.energyDelta + 2);
+    expect(withHousing.stressDelta).toBe(withoutHousing.stressDelta - 3);
+  });
+
+  it('is a no-op when housingModifier is omitted (no fixed home stays a real default)', () => {
+    const a = applyDailyTick('pip', baseCommons, 0);
+    const b = applyDailyTick('pip', baseCommons, 0, DEFAULT_MULTIPLIERS, undefined);
+    expect(b).toEqual(a);
   });
 });
 

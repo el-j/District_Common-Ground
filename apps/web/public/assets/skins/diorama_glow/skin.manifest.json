@@ -18,7 +18,11 @@
     "worldRoadBorder": "#a8834f",
     "worldPlaza": "#e8c99a",
     "worldDoor": "#5a3c14",
-    "worldHighlight": "#ffd27a"
+    "worldHighlight": "#ffd27a",
+    "worldTree": "#4a7a34",
+    "worldWater": "#5a8ab0",
+    "worldDirtPath": "#c9a668",
+    "worldSidewalk": "#b8a888"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/diorama_glow/tiles.webp",         "tileSize": [16, 16] },

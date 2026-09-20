@@ -8,6 +8,20 @@ vi.mock('../world/InputManager', () => ({
   inputManager: { setLocked: vi.fn() },
 }));
 
+// M46 — WorldMapModal.ts (opened from a new TopHUD button) imports
+// WorldScene.ts for its static requestTravel()/getHud() registry.
+// WorldScene.ts does `import Phaser from 'phaser'` at module scope, and
+// merely loading (not even instantiating) that module crashes under plain
+// jsdom the same way InputManager.ts's own Phaser import does (see that
+// mock's comment) — mocked out here rather than pulling the real Phaser
+// runtime into a HUD-button unit test.
+vi.mock('../world/WorldScene', () => ({
+  WorldScene: {
+    getHud: vi.fn(() => null),
+    requestTravel: vi.fn(() => false),
+  },
+}));
+
 vi.mock('../api/endpoints/civic', () => ({
   getCivicTicker: vi.fn(() => Promise.resolve([])),
 }));
@@ -117,5 +131,37 @@ describe('TopHUD Menu/toolbar button grouping', () => {
     const toolbar = root.querySelector('#hud-icon-toolbar')!;
     expect(drawer.querySelector('.geo-open-btn')).not.toBeNull();
     expect(toolbar.querySelector('.geo-open-btn')).toBeNull();
+  });
+});
+
+// M48 — EPIC-36 §1. The HUD badge reflects the player's own chosen name,
+// not the fixed archetype label, once one has been set in the origin flow.
+describe('TopHUD player-name badge', () => {
+  it('shows the chosen name\'s first letter and a full-name tooltip', () => {
+    useGameStore.setState({
+      ...INITIAL_STATE,
+      meta: { ...INITIAL_STATE.meta, phase: 'playing' },
+      player: { ...INITIAL_STATE.player, classRole: 'pip', name: 'Rosa' },
+    });
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+
+    const badge = root.querySelector('.hud-badge')!;
+    expect(badge.textContent).toBe('R');
+    expect(badge.getAttribute('title')).toBe('Rosa');
+  });
+
+  it('falls back to the classRole label when name is somehow empty', () => {
+    useGameStore.setState({
+      ...INITIAL_STATE,
+      meta: { ...INITIAL_STATE.meta, phase: 'playing' },
+      player: { ...INITIAL_STATE.player, classRole: 'morgan', name: '' },
+    });
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+
+    expect(root.querySelector('.hud-badge')!.textContent).toBe('M');
   });
 });

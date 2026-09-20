@@ -9,6 +9,7 @@ function resetStore(overrides: { classRole?: 'pip' | 'morgan' | 'arthur' | null;
     player: {
       classRole, cash: 50, energy, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay,
+      name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
     },
   });
 }

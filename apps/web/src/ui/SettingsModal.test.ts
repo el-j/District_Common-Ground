@@ -23,6 +23,7 @@ vi.mock('../core/state/persistence', () => ({
 
 vi.mock('../core/state/actions', () => ({
   setRegionCode: vi.fn(),
+  setHousingVisitable: vi.fn(),
 }));
 
 const { setBGMMuted, isBGMMuted, playUIClick } = vi.hoisted(() => ({
@@ -33,6 +34,8 @@ const { setBGMMuted, isBGMMuted, playUIClick } = vi.hoisted(() => ({
 vi.mock('../core/audio/SoundSynth', () => ({ setBGMMuted, isBGMMuted, playUIClick }));
 
 import { SettingsModal } from './SettingsModal';
+import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
+import { setHousingVisitable } from '../core/state/actions';
 
 // M31 Section 3 — the standalone mute HUD icon was removed and folded into
 // SettingsModal, reusing SoundSynth's existing mute flag rather than a
@@ -75,5 +78,44 @@ describe('SettingsModal audio control', () => {
 
     const btn = root.querySelector<HTMLButtonElement>('.settings-mute-btn');
     expect(btn!.textContent).toContain('Muted');
+  });
+});
+
+// M54 — EPIC-38 §1.
+describe('SettingsModal proximity visiting toggle', () => {
+  beforeEach(() => {
+    useGameStore.setState(INITIAL_STATE, true);
+    vi.mocked(setHousingVisitable).mockClear();
+  });
+
+  it('shows a hint instead of a toggle when the player has no flat', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+
+    expect(root.querySelector('.settings-proximity-btn')).toBeNull();
+    expect(root.querySelector('.settings-proximity-hint')).not.toBeNull();
+  });
+
+  it('shows the toggle, defaulting to not-visitable, once the player has a flat', () => {
+    useGameStore.setState(state => ({ housing: { ...state.housing, currentFlatId: 'pips-courier-room' } }));
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+
+    const btn = root.querySelector<HTMLButtonElement>('.settings-proximity-btn');
+    expect(btn).not.toBeNull();
+    expect(btn!.textContent).toContain('Not visitable');
+  });
+
+  it('clicking the toggle calls setHousingVisitable with the flipped value', () => {
+    useGameStore.setState(state => ({ housing: { ...state.housing, currentFlatId: 'pips-courier-room', visitable: false } }));
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+
+    root.querySelector<HTMLButtonElement>('.settings-proximity-btn')!.click();
+
+    expect(setHousingVisitable).toHaveBeenCalledWith(true);
   });
 });

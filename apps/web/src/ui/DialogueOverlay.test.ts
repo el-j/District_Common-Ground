@@ -59,3 +59,39 @@ describe('DialogueOverlay portrait (Test 21.5)', () => {
     expect(overlay.getCurrentMood()).toBe('happy');
   });
 });
+
+// M39 §2 — EPIC-33. teachesRecipe/minTrust gating.
+describe('DialogueOverlay teachesRecipe gating', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('fires onTeach when the node is reached and playerTrust meets minTrust', () => {
+    const root = document.createElement('div');
+    const tree: DialogueTree = {
+      start: { text: 'Hey.', responses: [{ label: 'Ok', next: null }], teachesRecipe: 'RECIPE_WIRED_LAMP', minTrust: 20 },
+    };
+    const onTeach = vi.fn();
+    new DialogueOverlay(root, tree, 'start', 'Elena', undefined, 25, onTeach);
+    expect(onTeach).toHaveBeenCalledWith('RECIPE_WIRED_LAMP');
+  });
+
+  it('does not fire onTeach when playerTrust is below minTrust', () => {
+    const root = document.createElement('div');
+    const tree: DialogueTree = {
+      start: { text: 'Hey.', responses: [{ label: 'Ok', next: null }], teachesRecipe: 'RECIPE_WIRED_LAMP', minTrust: 20 },
+    };
+    const onTeach = vi.fn();
+    new DialogueOverlay(root, tree, 'start', 'Elena', undefined, 10, onTeach);
+    expect(onTeach).not.toHaveBeenCalled();
+  });
+
+  it('never fires onTeach for a node with no teachesRecipe', () => {
+    const root = document.createElement('div');
+    const tree: DialogueTree = {
+      start: { text: 'Hey.', responses: [{ label: 'Ok', next: null }] },
+    };
+    const onTeach = vi.fn();
+    new DialogueOverlay(root, tree, 'start', 'Elena', undefined, 100, onTeach);
+    expect(onTeach).not.toHaveBeenCalled();
+  });
+});

@@ -18,7 +18,11 @@
     "worldRoadBorder": "#c97f1f",
     "worldPlaza": "#ffe1a0",
     "worldDoor": "#ff5a3c",
-    "worldHighlight": "#ffd93d"
+    "worldHighlight": "#ffd93d",
+    "worldTree": "#0e8a4a",
+    "worldWater": "#2ec4c6",
+    "worldDirtPath": "#c98a4a",
+    "worldSidewalk": "#d8e8c8"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/solarpunk/tiles.webp",         "tileSize": [16, 16] },

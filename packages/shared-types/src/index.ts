@@ -8,6 +8,7 @@ export * from './civic';
 export * from './irl';
 export * from './offline';
 export * from './mesh';
+export * from './building';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';

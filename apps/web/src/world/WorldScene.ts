@@ -5,6 +5,7 @@ import { PlayerEntity } from './entities/PlayerEntity';
 import { NPCEntity } from './entities/NPCEntity';
 import { ScrapsEntity } from './entities/ScrapsEntity';
 import { PigeonEntity } from './entities/PigeonEntity';
+import { PedestrianEntity } from './entities/PedestrianEntity';
 import { DialogueOverlay } from '../ui/DialogueOverlay';
 import { ConstructionModal, type ConstructionNodeData } from '../ui/ConstructionModal';
 import { CrisisWireModal } from '../ui/CrisisWireModal';
@@ -12,9 +13,9 @@ import { HistoryModal } from '../ui/HistoryModal';
 import { TownHallAssembly } from '../ui/TownHallAssembly';
 import { SafeHavenBanner } from '../ui/SafeHavenBanner';
 import { TopHUD } from '../ui/TopHUD';
-import { useGameStore } from '../core/state/useGameStore';
+import { useGameStore, type AppearanceToken, type WorldQuestId } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
-import { addTrust, spendEnergy, reduceStress } from '../core/state/actions';
+import { addTrust, spendEnergy, reduceStress, collectMaterial, learnRecipe, collectCookbook, travelToRegion, assignWorldQuest, checkZoneWorldQuestProgress, checkTalkWorldQuestProgress } from '../core/state/actions';
 import { startBGMLoop, playRain, stopRain, setBgmPhase } from '../core/audio/SoundSynth';
 import { weatherTier, type WeatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
@@ -23,108 +24,32 @@ import { computeViewportZoom } from './CameraViewport';
 import { getActiveWorldPalette, getActiveSkinId, getActiveManifest, type ResolvedWorldPalette } from '../skins/ThemeManager';
 import { SkinRendererLoader } from '../skins/SkinRendererLoader';
 import type { SkinRenderer } from '../skins/SkinRendererInterface';
-import { INTERIORS, findInteriorAtTile, type PropToken } from './InteriorProps';
+import { INTERIORS, ALL_INTERIOR_IDS, type InteriorDefinition, type InteriorId } from './InteriorProps';
+import type { InteriorSceneData } from './InteriorScene';
 import { resilienceTier, dressingTierFor, dressingPropsForTier, type DressingTier, type DressingPropToken } from './ResilienceDressing';
+import { OUTDOOR_DRESSING_PROPS, type OutdoorPropToken } from './OutdoorDressing';
+import { SCAVENGE_POINTS, type ScavengePointPlacement } from './ScavengePoints';
+import { COOKBOOK_PICKUPS, type CookbookPickupPlacement } from './CookbookPickups';
+import { RECIPES, type RecipeId } from '../core/simulation/Recipes';
 import { InteractionPrompt } from './InteractionPrompt';
 import { AmbientLightLayer } from './AmbientLightLayer';
 import { DIALOGUES, pickDialogueKey } from './NpcDialogues';
+import { COLS, ROWS, T, TILE_FRAME_COUNT, BLOCKING_TILES, DOOR_TILES, buildMap, isWalkableTile } from './MapData';
+import type { RegionSceneData } from './regions/RegionScene';
+import { REGIONS, isRegionUnlocked, type RegionId } from './regions/RegionData';
+
+// M41/M44 — the minimal shape both InteriorScene.ts's and RegionScene.ts's
+// WAKE payloads satisfy — onWakeFromInterior() only ever reads returnX/
+// returnY, so this is deliberately narrower than either scene's own full
+// init-data interface (which also carries interiorId/regionId, neither
+// needed here).
+interface SceneReturnData {
+  returnX: number;
+  returnY: number;
+  returnFacing: import('./InputManager').Facing;
+}
 
 const TS = 16;
-const COLS = 64;
-const ROWS = 80;
-
-const T = { FLOOR: 0, WALL: 1, GRASS: 2, ROAD: 3, PLAZA: 4, DOOR: 5, BUILT: 6 } as const;
-
-// M21 §5 — door tile coordinates (mirrors buildMap()'s drawBuilding doorX args below),
-// used as fixed "lit window" points for AmbientLightLayer's warm-glow pooling.
-const DOOR_TILES: { x: number; y: number }[] = [
-  { x: 31, y: 10 }, { x: 7, y: 17 }, { x: 39, y: 17 },
-  { x: 5, y: 35 }, { x: 42, y: 35 },
-  { x: 7, y: 61 }, { x: 39, y: 61 }, { x: 20, y: 57 },
-  { x: 57, y: 12 }, { x: 57, y: 27 },
-  { x: 11, y: 75 }, { x: 28, y: 75 }, { x: 46, y: 75 },
-];
-
-// ── Map helpers ───────────────────────────────────────────────────────────────
-
-function fillRect(m: number[][], x1: number, y1: number, x2: number, y2: number, t: number): void {
-  for (let y = Math.max(0, y1); y <= Math.min(ROWS - 1, y2); y++)
-    for (let x = Math.max(0, x1); x <= Math.min(COLS - 1, x2); x++)
-      m[y][x] = t;
-}
-
-function drawBuilding(m: number[][], x1: number, y1: number, x2: number, y2: number, doorX: number): void {
-  for (let y = y1; y <= y2; y++)
-    for (let x = x1; x <= x2; x++) {
-      if (x < 0 || x >= COLS || y < 0 || y >= ROWS) continue;
-      m[y][x] = (x === x1 || x === x2 || y === y1 || y === y2) ? T.WALL : T.FLOOR;
-    }
-  if (y2 >= 0 && y2 < ROWS && doorX >= 0 && doorX < COLS) m[y2][doorX] = T.DOOR;
-}
-
-function buildMap(): number[][] {
-  const m: number[][] = Array.from({ length: ROWS }, () =>
-    Array.from<number>({ length: COLS }).fill(T.GRASS),
-  );
-
-  // Border
-  fillRect(m, 0, 0, COLS - 1, 0, T.WALL);
-  fillRect(m, 0, ROWS - 1, COLS - 1, ROWS - 1, T.WALL);
-  fillRect(m, 0, 0, 0, ROWS - 1, T.WALL);
-  fillRect(m, COLS - 1, 0, COLS - 1, ROWS - 1, T.WALL);
-
-  // Roads
-  fillRect(m, 1, 20, COLS - 2, 22, T.ROAD);   // North cross-street
-  fillRect(m, 1, 41, COLS - 2, 43, T.ROAD);   // South cross-street
-  fillRect(m, 1, 63, COLS - 2, 65, T.ROAD);   // Solar Quarter border road
-  fillRect(m, 49, 1, 51, ROWS - 2, T.ROAD);   // East Canal access road
-
-  // Central plaza floor
-  fillRect(m, 9, 23, 38, 40, T.PLAZA);
-
-  // South courtyard
-  fillRect(m, 15, 46, 32, 60, T.PLAZA);
-
-  // ── North Transit Hub (rows 0–15) ──────────────────────────────────────────
-  // Rail platform
-  fillRect(m, 3, 2, 26, 14, T.FLOOR);
-  fillRect(m, 3, 2, 26, 2, T.WALL);    // platform edge north
-  fillRect(m, 3, 14, 26, 14, T.ROAD);  // track strip
-  // Ticket booth
-  drawBuilding(m, 28, 3, 34, 10, 31);
-  // Cargo dock
-  fillRect(m, 36, 3, 46, 13, T.FLOOR);
-  fillRect(m, 36, 3, 46, 3, T.WALL);
-
-  // ── Original north buildings (shifted east) ────────────────────────────────
-  drawBuilding(m, 2, 2, 13, 17, 7);     // High-Rise / Corporate Block
-  drawBuilding(m, 33, 2, 46, 17, 39);   // Utility Station
-
-  // ── Central buildings ──────────────────────────────────────────────────────
-  drawBuilding(m, 2, 24, 8, 35, 5);     // Town Hall
-  drawBuilding(m, 39, 24, 46, 35, 42);  // Tool Library / Old Warehouse
-
-  // ── South buildings (original zone) ───────────────────────────────────────
-  drawBuilding(m, 2, 45, 13, 61, 7);    // Apartment Block A
-  drawBuilding(m, 33, 45, 46, 61, 39);  // Apartment Block B
-  drawBuilding(m, 17, 49, 23, 57, 20);  // Corner Grocer / Community Fridge
-
-  // ── East Canal zone (cols 52–62) ──────────────────────────────────────────
-  fillRect(m, 52, 5, 62, 38, T.PLAZA);   // canal walkway
-  fillRect(m, 53, 15, 62, 17, T.ROAD);   // flood dike strip
-  fillRect(m, 53, 28, 62, 30, T.ROAD);   // second dike
-  drawBuilding(m, 54, 5, 61, 12, 57);    // East Canal community building
-  drawBuilding(m, 54, 20, 61, 27, 57);   // Flood management office
-
-  // ── South Solar Quarter (rows 66–78) ──────────────────────────────────────
-  fillRect(m, 5, 66, 58, 78, T.PLAZA);  // rooftop plaza
-  drawBuilding(m, 5, 66, 18, 75, 11);   // Solar building A
-  drawBuilding(m, 22, 66, 35, 75, 28);  // Greenhouse garden node
-  drawBuilding(m, 40, 66, 53, 75, 46);  // Solar building B
-  fillRect(m, 7, 77, 55, 78, T.BUILT);  // Completed solar field (decorative)
-
-  return m;
-}
 
 // ── Tileset (7 tile types, 112×16 canvas) ─────────────────────────────────────
 
@@ -146,10 +71,10 @@ function shadeColor(hex: string, percent: number): string {
 function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
   let tex = scene.textures.exists('tileset')
     ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('tileset', TS * 7, TS);
+    : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
   if (!tex) throw new Error('tileset canvas failed');
   const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 7, TS);
+  ctx.clearRect(0, 0, TS * TILE_FRAME_COUNT, TS);
 
   // T.FLOOR (0): indoor planks
   (() => {
@@ -239,12 +164,67 @@ function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette
     ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 7, 7, 2, 2);
   })();
 
+  // T.TREE (7): ground + a round canopy blob — blocks movement like WALL
+  (() => {
+    const ox = TS * 7;
+    ctx.fillStyle = palette.worldGrass; ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = shadeColor(palette.worldTree, -20); ctx.fillRect(ox + 6, 10, 4, 6); // trunk
+    ctx.fillStyle = palette.worldTree;
+    ctx.beginPath(); ctx.arc(ox + 8, 7, 6.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shadeColor(palette.worldTree, 18);
+    ctx.beginPath(); ctx.arc(ox + 6, 5, 2.5, 0, Math.PI * 2); ctx.fill();
+  })();
+
+  // T.WATER (8): flat fill + horizontal ripple lines — blocks movement (no bridge tile yet)
+  (() => {
+    const ox = TS * 8;
+    ctx.fillStyle = palette.worldWater; ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = shadeColor(palette.worldWater, 16); ctx.lineWidth = 0.75;
+    [3, 7, 11].forEach((y, i) => {
+      ctx.beginPath();
+      ctx.moveTo(ox + (i % 2 === 0 ? 1 : 3), y);
+      ctx.lineTo(ox + TS - (i % 2 === 0 ? 3 : 1), y);
+      ctx.stroke();
+    });
+    ctx.fillStyle = shadeColor(palette.worldWater, -14); ctx.fillRect(ox, TS - 2, TS, 2);
+  })();
+
+  // T.DIRT_PATH (9): walkable, like FLOOR/ROAD — speckled tan-brown track
+  (() => {
+    const ox = TS * 9;
+    ctx.fillStyle = palette.worldDirtPath; ctx.fillRect(ox, 0, TS, TS);
+    const shades = [shadeColor(palette.worldDirtPath, 10), shadeColor(palette.worldDirtPath, -10)];
+    [[2,3],[6,1],[10,6],[13,3],[4,9],[9,11],[12,13],[1,12]].forEach(([gx, gy], i) => {
+      ctx.fillStyle = shades[i % shades.length];
+      ctx.fillRect(ox + gx, gy, 1, 1);
+    });
+  })();
+
+  // T.SIDEWALK (10): walkable — flat concrete slabs with a thin grid seam
+  (() => {
+    const ox = TS * 10;
+    ctx.fillStyle = palette.worldSidewalk; ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = shadeColor(palette.worldSidewalk, -10); ctx.lineWidth = 0.75;
+    ctx.beginPath(); ctx.moveTo(ox + TS / 2, 0); ctx.lineTo(ox + TS / 2, TS); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, TS / 2); ctx.lineTo(ox + TS, TS / 2); ctx.stroke();
+  })();
+
   tex.refresh();
 }
 
 // ── Player spritesheet (8 frames × 16px = 128×16) ────────────────────────────
 
-function createPlayerTexture(scene: Phaser.Scene): void {
+// M52 — EPIC-37 §2. M48 added `player.appearance` (4 skin-tone tokens) but
+// nothing ever consumed it; TONE_1 matches the pre-M52 hardcoded default
+// exactly so an unset/legacy save renders identically to before.
+const APPEARANCE_SKIN_TONES: Record<AppearanceToken, string> = {
+  APPEARANCE_TONE_1: '#f0c090',
+  APPEARANCE_TONE_2: '#d9a26b',
+  APPEARANCE_TONE_3: '#a86f3f',
+  APPEARANCE_TONE_4: '#6b4526',
+};
+
+function createPlayerTexture(scene: Phaser.Scene, appearance?: AppearanceToken): void {
   // M30 — guarded the same way createTilesetTexture() already is: reuse the
   // existing canvas texture on a re-render (skin switch) instead of always
   // creating fresh, since Phaser's TextureManager rejects a second
@@ -256,7 +236,8 @@ function createPlayerTexture(scene: Phaser.Scene): void {
   const ctx = tex.getContext();
   ctx.clearRect(0, 0, TS * 8, TS);
 
-  const C = { hair: '#6644bb', skin: '#f0c090', shirt: '#4477dd', pants: '#2a44bb', shoe: '#111130', eye: '#180e08', shirtSh: '#3360cc' };
+  const skinTone = APPEARANCE_SKIN_TONES[appearance ?? 'APPEARANCE_TONE_1'];
+  const C = { hair: '#6644bb', skin: skinTone, shirt: '#4477dd', pants: '#2a44bb', shoe: '#111130', eye: '#180e08', shirtSh: '#3360cc' };
 
   function down(ox: number, step: number): void {
     ctx.fillStyle = C.hair; ctx.fillRect(ox+4,1,8,3); ctx.fillRect(ox+3,2,1,2); ctx.fillRect(ox+12,2,1,2);
@@ -361,6 +342,23 @@ interface FlyerObject {
   y: number;
 }
 
+// M38 §2 — a picked-up point is destroyed and removed from this array
+// exactly the way tearDownFlyer() already handles FlyerObject, plus an
+// InteractionPrompt bounce-bubble (flyers never got one).
+interface ScavengePointEntry {
+  data: ScavengePointPlacement;
+  sprite: Phaser.GameObjects.Rectangle;
+  prompt: InteractionPrompt;
+}
+
+// M39 §2 — EPIC-33. Same removable-pickup shape as ScavengePointEntry, one
+// level up (grants a known recipe instead of a material stack).
+interface CookbookPickupEntry {
+  data: CookbookPickupPlacement;
+  sprite: Phaser.GameObjects.Rectangle;
+  prompt: InteractionPrompt;
+}
+
 export class WorldScene extends Phaser.Scene {
   private static hud: TopHUD | null = null;
   private player!: PlayerEntity;
@@ -382,7 +380,16 @@ export class WorldScene extends Phaser.Scene {
   private completedIds = new Set<string>();
   private scraps!: ScrapsEntity;
   private pigeons: PigeonEntity[] = [];
+  // M34 §2 — EPIC-31. Non-interactive background crowd, separate from `npcs`.
+  private pedestrians: PedestrianEntity[] = [];
+  // M34 §1 — EPIC-31. The raw tile grid, kept around (buildMap() previously
+  // only fed the Phaser tilemap and was never retained) so npc/pedestrian
+  // wander can do a lightweight tile-walkability lookup without touching
+  // Arcade physics — see NPCEntity.ts's own doc comment for why.
+  private mapGrid: number[][] = [];
   private flyers: FlyerObject[] = [];
+  private scavengePoints: ScavengePointEntry[] = [];
+  private cookbookPickups: CookbookPickupEntry[] = [];
   private divisionCrisisActive = false;
   private ticksSinceDay = 0;
   private bgmStarted = false;
@@ -402,7 +409,6 @@ export class WorldScene extends Phaser.Scene {
   // M21 — camera/palette/dressing/juice state
   private lastSkinRevision = -1;
   private lastResilienceScore = -1;
-  private currentInteriorId: string | null = null;
   private nodePrompts: Map<string, InteractionPrompt> = new Map();
   private npcPrompts: Map<string, InteractionPrompt> = new Map();
   private bikePrompt!: InteractionPrompt;
@@ -411,7 +417,16 @@ export class WorldScene extends Phaser.Scene {
   private ambientLight: AmbientLightLayer | null = null;
   private playerShadow!: Phaser.GameObjects.Ellipse;
   private npcShadows: Map<string, Phaser.GameObjects.Ellipse> = new Map();
-  private followingPlayer = true;
+  // M41 — EPIC-34 §1. Doors that lead into a real isolated InteriorScene
+  // (see enterInterior()); replaces the old rect-based camera-pan tracked
+  // via currentInteriorId/followingPlayer, both removed.
+  private interiorDoorPrompts: Map<InteriorId, InteractionPrompt> = new Map();
+  // M44 — EPIC-35 §3. The rail platform's travel node — literalizes what
+  // was previously pure decoration (CLAUDE.md's own North Transit Hub
+  // description) into a real interaction, mirroring the door-prompt
+  // pattern exactly, just for one fixed placeholder destination.
+  private travelNodePrompt!: InteractionPrompt;
+  private static readonly TRAVEL_NODE = { x: 14 * TS + TS / 2, y: 8 * TS + TS / 2 };
 
   // Courier Rush Cargo Bike portal (near Sal's Kitchen / Grocer)
   private bikePortal = { x: 18 * TS + TS / 2, y: 55 * TS + TS / 2 };
@@ -437,6 +452,26 @@ export class WorldScene extends Phaser.Scene {
   private static readonly TOWN_HALL = { x: 5 * 16 + 8, y: 35 * 16 + 8 };
 
   public static setHud(hud: TopHUD): void { WorldScene.hud = hud; }
+  /** M41 — EPIC-34 §1. Lets InteriorScene.ts (a sibling scene, not a
+   *  subclass) drive the same shared HUD action-button slot while the
+   *  player is inside an isolated interior. */
+  public static getHud(): TopHUD | null { return WorldScene.hud; }
+
+  /** M46 — EPIC-35 §1. Whichever of WorldScene/RegionScene is currently
+   *  awake registers itself here on create() — the same "static registry a
+   *  sibling scene/DOM component can reach" shape `hud` already
+   *  establishes — so `WorldMapModal.ts` (a plain DOM modal with no scene
+   *  reference of its own) can request travel to any unlocked region
+   *  without needing to know which scene is currently active. Returns
+   *  whether the request actually launched a travel (false for a locked
+   *  region, or a region the active scene can't route to yet). */
+  private static activeTravelHandler: ((targetRegionId: RegionId) => boolean) | null = null;
+  public static setActiveTravelHandler(fn: ((targetRegionId: RegionId) => boolean) | null): void {
+    WorldScene.activeTravelHandler = fn;
+  }
+  public static requestTravel(targetRegionId: RegionId): boolean {
+    return WorldScene.activeTravelHandler?.(targetRegionId) ?? false;
+  }
 
   constructor() { super({ key: 'WorldScene' }); }
 
@@ -447,19 +482,23 @@ export class WorldScene extends Phaser.Scene {
     // renderer (if any) resolves shortly after, via the skinRevision
     // subscription in create() below.
     DEFAULT_RENDERER.createTilesetTexture(this, getActiveWorldPalette());
-    DEFAULT_RENDERER.createPlayerTexture(this);
+    DEFAULT_RENDERER.createPlayerTexture(this, useGameStore.getState().player.appearance);
     DEFAULT_RENDERER.createNPCTextures(this);
   }
 
   create(): void {
     const mapData = buildMap();
+    this.mapGrid = mapData;
     const map = this.make.tilemap({ data: mapData, tileWidth: TS, tileHeight: TS });
     const tileset = map.addTilesetImage('tiles', 'tileset', TS, TS, 0, 0);
     if (!tileset) throw new Error('tileset missing');
     const layer = map.createLayer(0, tileset, 0, 0);
     if (!layer) throw new Error('layer failed');
     this.layer = layer as Phaser.Tilemaps.TilemapLayer;
-    layer.setCollision([T.WALL]);
+    // M32 — BLOCKING_TILES (MapData.ts) is the single source of truth for
+    // which tile types block movement; isWalkableTile() derives from the
+    // same list, so this never silently drifts from what's actually tested.
+    layer.setCollision([...BLOCKING_TILES]);
 
     const worldW = COLS * TS, worldH = ROWS * TS;
     this.physics.world.setBounds(0, 0, worldW, worldH);
@@ -625,6 +664,17 @@ export class WorldScene extends Phaser.Scene {
     this.actionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.spaceKey  = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
+    // M41 — EPIC-34 §1. Fired by InteriorScene.ts's exitInterior() (or, as
+    // of M44, RegionScene.ts's returnHome()) via
+    // this.scene.wake('WorldScene', data) — restores the player at the
+    // exact tile they left from. Both scenes' wake payloads satisfy the
+    // same minimal SceneReturnData shape (see its own comment below).
+    this.events.on(Phaser.Scenes.Events.WAKE, (_sys: unknown, data: SceneReturnData) => this.onWakeFromInterior(data));
+    // M46 — EPIC-35 §1. Registers on create() (fresh every time WorldScene
+    // wakes back up too, since wake doesn't re-run create() — see below).
+    WorldScene.setActiveTravelHandler(id => this.travelToRegionScene(id));
+    this.events.on(Phaser.Scenes.Events.WAKE, () => WorldScene.setActiveTravelHandler(id => this.travelToRegionScene(id)));
+
     this.thumbstickGraphic = this.add.graphics();
     this.thumbstickGraphic.setScrollFactor(0);
     this.thumbstickGraphic.setDepth(100);
@@ -649,9 +699,33 @@ export class WorldScene extends Phaser.Scene {
       this.updateWorldDressing(state.commons.resilienceScore);
     });
 
-    // M21 §3 — Interior Furnishing: named-room props (Pip's Courier Room,
-    // Community Kitchen, Town Assembly Hall)
-    this.renderInteriorProps();
+    // M41 — EPIC-34 §1/§2. Interior props (Pip's Courier Room, Community
+    // Kitchen, Town Assembly Hall) now render inside the real isolated
+    // InteriorScene on entry, not painted onto the shared exterior tilemap
+    // (see InteriorScene.ts's renderProps() — the M21 §3 mechanism this
+    // replaced). Door prompts for every Common Ground interior — M45 added
+    // a second region with its own interior (the Scrapyard Depot), so this
+    // now filters by homeRegion rather than rendering every InteriorId.
+    ALL_INTERIOR_IDS.filter(id => INTERIORS[id].homeRegion === 'REGION_COMMON_GROUND').forEach(id => {
+      const def = INTERIORS[id];
+      const px = def.doorTile.x * TS + TS / 2, py = def.doorTile.y * TS + TS / 2;
+      this.interiorDoorPrompts.set(id, new InteractionPrompt(this, px, py, '🚪', () => WorldScene.hud?.triggerAction()));
+    });
+
+    // M44 — EPIC-35 §3. The rail platform's travel node.
+    this.travelNodePrompt = new InteractionPrompt(
+      this, WorldScene.TRAVEL_NODE.x, WorldScene.TRAVEL_NODE.y, '🚉', () => WorldScene.hud?.triggerAction(),
+    );
+
+    // M32 §3 — outdoor decoration (trees/bushes/benches/fences/parked
+    // vehicles), independent of and additive to updateWorldDressing()'s
+    // resilience-tier swap below — this layer never changes with score.
+    this.renderOutdoorDressing();
+
+    // M38 §2 — deterministic material scavenging pickups, skipping any the
+    // player already collected on a prior visit/session.
+    this.renderScavengePoints();
+    this.renderCookbookPickups();
 
     // M21 §5 — soft drop-shadow ellipse under the player
     this.playerShadow = this.add.ellipse(sprite.x, sprite.y + 6, 12, 5, 0x000000, 0.3).setDepth(4.5);
@@ -667,6 +741,40 @@ export class WorldScene extends Phaser.Scene {
       const py = pigeonBounds.y + Math.random() * pigeonBounds.height;
       this.pigeons.push(new PigeonEntity(this, px, py, pigeonBounds));
     }
+
+    // M34 §2 — EPIC-31. Background pedestrians, spread across 5 outdoor
+    // zones so every zone reads as populated (not just Central Plaza, which
+    // already gets pigeons). 3 per zone = 15 total, well above the 6 named
+    // NPCs per the doc's own "greater numbers" ask, while staying an order
+    // of magnitude below anything that would need real profiling — each is
+    // a single plain Image + Ellipse with no physics body and a cheap O(1)
+    // per-frame tick, the same cost class as the pigeons already proven fine
+    // here since M23.
+    const pedestrianZones: Phaser.Geom.Rectangle[] = [
+      new Phaser.Geom.Rectangle(4 * TS, 3 * TS, 42 * TS, 11 * TS),   // North Transit Hub
+      new Phaser.Geom.Rectangle(9 * TS, 23 * TS, 29 * TS, 17 * TS),  // Central Plaza (shared with pigeons)
+      new Phaser.Geom.Rectangle(15 * TS, 46 * TS, 17 * TS, 14 * TS), // South Quarter courtyard
+      new Phaser.Geom.Rectangle(53 * TS, 6 * TS, 8 * TS, 24 * TS),   // East Canal walkway
+      new Phaser.Geom.Rectangle(6 * TS, 67 * TS, 51 * TS, 8 * TS),   // South Solar Quarter plaza
+    ];
+    pedestrianZones.forEach((bounds, zoneIdx) => {
+      for (let i = 0; i < 3; i++) {
+        let px = 0, py = 0, placed = false;
+        // A handful of retries so a spawn point that lands inside a
+        // building (the rectangles above are zone bounding boxes, not
+        // exact walkable footprints) doesn't get stuck there for the
+        // whole session — falls back to the zone's own bounds if none
+        // land walkable, same "don't loop forever" discipline as
+        // NPCEntity.tick()'s own bounce-back.
+        for (let attempt = 0; attempt < 6 && !placed; attempt++) {
+          px = bounds.x + Math.random() * bounds.width;
+          py = bounds.y + Math.random() * bounds.height;
+          if (this.isWalkableWorldPos(px, py)) placed = true;
+        }
+        const frame = (zoneIdx * 3 + i) % 6;
+        this.pedestrians.push(new PedestrianEntity(this, px, py, frame, bounds));
+      }
+    });
 
     this.spawnStreetlamps();
 
@@ -749,7 +857,7 @@ export class WorldScene extends Phaser.Scene {
 
     const palette = getActiveWorldPalette();
     renderer.createTilesetTexture(this, palette);
-    renderer.createPlayerTexture(this);
+    renderer.createPlayerTexture(this, useGameStore.getState().player.appearance);
     renderer.createNPCTextures(this);
   }
 
@@ -771,8 +879,6 @@ export class WorldScene extends Phaser.Scene {
     this.ticksSinceDay += delta;
     this.updateDayNight();
     this.updateRainDrops(delta);
-    this.updateInteriorFraming();
-    this.updateShadowsAndLight();
 
     // M28: computed exactly once per frame and threaded through to
     // handleInteractions() below — Phaser's JustDown() clears its internal
@@ -784,8 +890,25 @@ export class WorldScene extends Phaser.Scene {
     const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
     this.scraps.update(this.player.x, this.player.y, ePressed, delta);
 
-    this.npcs.forEach(npc => npc.update(this.player.x, this.player.y));
+    // M34 §1 — EPIC-31. tick() advances wander state, update() re-derives
+    // talkability from the (possibly now-moved) live position, then the
+    // Image/shadow/InteractionPrompt this scene owns are synced to match —
+    // updateShadowsAndLight() already reads the sprite's own x/y for the
+    // shadow, so setting the sprite's position here is enough to carry the
+    // shadow along too, no separate shadow-sync call needed.
+    this.npcs.forEach(npc => {
+      npc.tick(delta, (x, y) => this.isWalkableWorldPos(x, y));
+      npc.update(this.player.x, this.player.y);
+      const sprite = this.npcSprites.get(npc.id);
+      if (sprite) sprite.setPosition(npc.x, npc.y);
+      this.npcPrompts.get(npc.id)?.setPosition(npc.x, npc.y);
+    });
     this.pigeons.forEach(p => p.update(this.player.x, this.player.y, delta));
+    this.pedestrians.forEach(p => p.update(delta, (x, y) => this.isWalkableWorldPos(x, y)));
+    // Moved here (was before the npc/pedestrian tick block) so the drop-
+    // shadow sync reads each entity's just-updated position, not last
+    // frame's — see M34 §1's own doc comment above.
+    this.updateShadowsAndLight();
     this.syncCompletedBuilds();
     this.updateZone();
     this.checkCrisis();
@@ -925,6 +1048,10 @@ export class WorldScene extends Phaser.Scene {
       zone = 'Central Plaza';
     }
     WorldScene.hud?.setZone(zone);
+    // M35 — EPIC-31 §1/§2. Real per-frame zone state, not a self-attested
+    // "I visited it" claim — the exact reach-zone verification this
+    // milestone's own doc calls for.
+    checkZoneWorldQuestProgress(zone);
   }
 
   private handleInteractions(ePressed: boolean): void {
@@ -954,6 +1081,29 @@ export class WorldScene extends Phaser.Scene {
       const dx = this.player.x - portal.position.x, dy = this.player.y - portal.position.y;
       if (Math.hypot(dx, dy) <= 38) prompt.show(); else prompt.hide();
     });
+    // M38 §2 — scavenge-point proximity prompts
+    this.scavengePoints.forEach(entry => {
+      const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
+      if (Math.hypot(dx, dy) <= 34) entry.prompt.show(); else entry.prompt.hide();
+    });
+    // M39 §2 — cookbook-pickup proximity prompts
+    this.cookbookPickups.forEach(entry => {
+      const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
+      if (Math.hypot(dx, dy) <= 34) entry.prompt.show(); else entry.prompt.hide();
+    });
+    // M41 — EPIC-34 §1/§2 — interior-door proximity prompts
+    ALL_INTERIOR_IDS.forEach(id => {
+      const def = INTERIORS[id];
+      const prompt = this.interiorDoorPrompts.get(id);
+      if (!prompt) return;
+      const dx = this.player.x - (def.doorTile.x * TS + TS / 2), dy = this.player.y - (def.doorTile.y * TS + TS / 2);
+      if (Math.hypot(dx, dy) <= 24) prompt.show(); else prompt.hide();
+    });
+    // M44 — EPIC-35 §3 — travel-node proximity prompt
+    {
+      const dx = this.player.x - WorldScene.TRAVEL_NODE.x, dy = this.player.y - WorldScene.TRAVEL_NODE.y;
+      if (Math.hypot(dx, dy) <= 32) this.travelNodePrompt.show(); else this.travelNodePrompt.hide();
+    }
 
     const nearbyNpc = this.npcs.find(npc => npc.isActive);
     const nearbyBuild = this.constructionNodes.find(node => {
@@ -973,6 +1123,34 @@ export class WorldScene extends Phaser.Scene {
       Math.hypot(this.player.x - f.x, this.player.y - f.y) <= 32,
     );
 
+    // M38 §2 — nearest uncollected scavenge point
+    const nearScavenge = this.scavengePoints.find(entry => {
+      const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
+      return Math.hypot(dx, dy) <= 34;
+    });
+
+    // M39 §2 — nearest uncollected cookbook pickup
+    const nearCookbook = this.cookbookPickups.find(entry => {
+      const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
+      return Math.hypot(dx, dy) <= 34;
+    });
+
+    // M41 — EPIC-34 §1/§2 — nearest interior door in range. Filtered to
+    // this region (M45) — without it, the Scrapyard Depot's door tile
+    // coordinates (in the Industrial Outskirts' own space) could collide
+    // with an unrelated walkable Common Ground tile at the same numeric
+    // coordinate.
+    const nearInteriorDoor: InteriorDefinition | undefined = ALL_INTERIOR_IDS
+      .map(id => INTERIORS[id])
+      .filter(def => def.homeRegion === 'REGION_COMMON_GROUND')
+      .find(def => {
+        const dx = this.player.x - (def.doorTile.x * TS + TS / 2), dy = this.player.y - (def.doorTile.y * TS + TS / 2);
+        return Math.hypot(dx, dy) <= 24;
+      });
+
+    // M44 — EPIC-35 §3 — travel node in range
+    const nearTravelNode = Math.hypot(this.player.x - WorldScene.TRAVEL_NODE.x, this.player.y - WorldScene.TRAVEL_NODE.y) <= 32;
+
     // Courier Rush bike portal interaction
     const nearBike = Math.hypot(this.player.x - this.bikePortal.x, this.player.y - this.bikePortal.y) <= 38;
     // M27 — nearest of the 4 new minigame portals, same radius as the bike
@@ -985,6 +1163,14 @@ export class WorldScene extends Phaser.Scene {
       if (pressed) {
         if (nearbyFlyer) {
           this.tearDownFlyer(nearbyFlyer);
+        } else if (nearScavenge) {
+          this.collectScavengePoint(nearScavenge);
+        } else if (nearCookbook) {
+          this.collectCookbookPickup(nearCookbook);
+        } else if (nearInteriorDoor) {
+          this.enterInterior(nearInteriorDoor);
+        } else if (nearTravelNode) {
+          this.travelToRegionScene('REGION_INDUSTRIAL_OUTSKIRTS');
         } else if (nearBike) {
           this.launchCourierRush();
         } else if (nearMinigamePortal) {
@@ -1005,6 +1191,22 @@ export class WorldScene extends Phaser.Scene {
       WorldScene.hud?.hideAction();
     } else if (nearbyFlyer) {
       WorldScene.hud?.setAction('Tear down flyer ✊', () => this.tearDownFlyer(nearbyFlyer));
+    } else if (nearScavenge) {
+      WorldScene.hud?.setAction('Collect ♻️', () => this.collectScavengePoint(nearScavenge));
+    } else if (nearCookbook) {
+      WorldScene.hud?.setAction('Read cookbook 📖', () => this.collectCookbookPickup(nearCookbook));
+    } else if (nearInteriorDoor) {
+      WorldScene.hud?.setAction(`Enter ${nearInteriorDoor.label} 🚪`, () => this.enterInterior(nearInteriorDoor));
+    } else if (nearTravelNode) {
+      const unlocked = isRegionUnlocked(REGIONS.REGION_INDUSTRIAL_OUTSKIRTS.unlockRule, {
+        trust: useGameStore.getState().player.socialTrust,
+        resilienceScore: useGameStore.getState().commons.resilienceScore,
+        completedQuestIds: useGameStore.getState().quests.filter(q => q.completedOnDay !== null).map(q => q.questId),
+      });
+      WorldScene.hud?.setAction(
+        unlocked ? 'Take the train 🚉' : 'Locked 🚉 (needs 20 trust)',
+        () => this.travelToRegionScene('REGION_INDUSTRIAL_OUTSKIRTS'),
+      );
     } else if (nearBike) {
       WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲', () => this.launchCourierRush());
     } else if (nearMinigamePortal) {
@@ -1144,7 +1346,21 @@ export class WorldScene extends Phaser.Scene {
       };
     }
 
-    new DialogueOverlay(uiRoot, tree, dialogueKey, npc.name, () => { this.dialogueOpen = false; WorldScene.hud?.hideAction(); });
+    const playerTrust = useGameStore.getState().player.socialTrust;
+    new DialogueOverlay(
+      uiRoot, tree, dialogueKey, npc.name,
+      () => {
+        this.dialogueOpen = false;
+        WorldScene.hud?.hideAction();
+        // M35 — EPIC-31 §2. Fires on close, not open — "talked to this NPC"
+        // means the player actually finished the conversation, not just
+        // triggered the overlay and immediately escaped.
+        checkTalkWorldQuestProgress(npc.id);
+      },
+      playerTrust,
+      (recipeId) => learnRecipe(recipeId as RecipeId),
+      (questId) => assignWorldQuest(questId as WorldQuestId),
+    );
   }
 
   private updateWeather(tier: WeatherTier): void {
@@ -1208,57 +1424,164 @@ export class WorldScene extends Phaser.Scene {
     });
   }
 
-  /** M21 §3 — renders each named interior's furniture props as depth-3 hand-drawn
-   * rectangles, resolved from InteriorProps.ts's abstract PropTokens (same
-   * hand-drawn-primitive technique createTilesetTexture()/spawnFlyers() already use —
-   * no new asset pipeline needed, and the Headless Simulation boundary stays intact
-   * since InteriorProps.ts itself has zero Phaser/rendering knowledge). */
-  private renderInteriorProps(): void {
-    const drawSpec: Record<PropToken, { w: number; h: number; color: number }> = {
-      PROP_BIKE_RACK: { w: 12, h: 6, color: 0x556677 },
-      PROP_COT: { w: 14, h: 8, color: 0x774433 },
-      PROP_BOXES: { w: 10, h: 10, color: 0x996633 },
-      PROP_LAMP: { w: 4, h: 8, color: 0xffdd88 },
-      PROP_TABLE: { w: 20, h: 8, color: 0x8b5a2b },
-      PROP_STOVE: { w: 10, h: 10, color: 0x444444 },
-      PROP_CRATES: { w: 10, h: 8, color: 0xcc8844 },
-      PROP_BENCH: { w: 14, h: 5, color: 0x775533 },
-      PROP_CHALKBOARD: { w: 12, h: 10, color: 0x223322 },
-      PROP_BANNER: { w: 14, h: 4, color: 0xdd4444 },
+  /** M32 §3 — one-shot outdoor decoration pass (trees/bushes/benches/
+   *  fences/parked cars), same hand-drawn-primitive technique as
+   *  InteriorScene.ts's renderProps()/updateWorldDressing(). Fixed for the whole
+   *  session — unlike updateWorldDressing()'s resilience-tier swap, this
+   *  layer doesn't change and so needs no stored/destroyable references. */
+  private renderOutdoorDressing(): void {
+    const drawSpec: Record<OutdoorPropToken, { w: number; h: number; color: number }> = {
+      PROP_ACCENT_TREE: { w: 12, h: 14, color: 0x1c4020 },
+      PROP_BUSH: { w: 10, h: 7, color: 0x2c5a2e },
+      PROP_STREET_BENCH: { w: 14, h: 5, color: 0x6b4a2a },
+      PROP_FENCE: { w: 16, h: 4, color: 0x8a7250 },
+      PROP_PARKED_CAR: { w: 15, h: 9, color: 0x555a66 },
+      PROP_PARKED_BIKE: { w: 10, h: 6, color: 0x445566 },
     };
-    Object.values(INTERIORS).forEach(def => {
-      def.props.forEach(prop => {
-        const spec = drawSpec[prop.token];
-        const px = prop.x * TS + TS / 2, py = prop.y * TS + TS / 2;
-        this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3);
-      });
+    OUTDOOR_DRESSING_PROPS.forEach(placement => {
+      const spec = drawSpec[placement.token];
+      const px = placement.x * TS + TS / 2, py = placement.y * TS + TS / 2;
+      this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3);
     });
   }
 
-  /** M21 §1 — smooth pan-to-center when the player crosses into a named
-   * interior's room boundary, then resumes the normal follow lerp. */
-  private updateInteriorFraming(): void {
-    const tx = Math.floor(this.player.x / TS), ty = Math.floor(this.player.y / TS);
-    const interior = findInteriorAtTile(tx, ty);
-    const id = interior?.id ?? null;
-    if (id === this.currentInteriorId) return;
-    this.currentInteriorId = id;
+  /** M38 §2 — EPIC-33. Deterministic material pickups, same hand-drawn-
+   *  primitive technique as renderOutdoorDressing(), but interactive
+   *  (proximity prompt + [E]/click to collect) and removable, so it's
+   *  tracked in `this.scavengePoints` rather than drawn and forgotten. */
+  private renderScavengePoints(): void {
+    const collected = new Set(useGameStore.getState().inventory.collectedScavengePoints);
+    SCAVENGE_POINTS.forEach(point => {
+      if (collected.has(point.id)) return;
+      const px = point.x * TS + TS / 2, py = point.y * TS + TS / 2;
+      const sprite = this.add.rectangle(px, py, 8, 8, 0x8a9a4a).setDepth(3);
+      const entry: ScavengePointEntry = {
+        data: point,
+        sprite,
+        prompt: new InteractionPrompt(this, px, py, '♻️', () => WorldScene.hud?.triggerAction()),
+      };
+      this.scavengePoints.push(entry);
+    });
+  }
 
-    if (interior) {
-      const cx = ((interior.rect.x1 + interior.rect.x2) / 2) * TS;
-      const cy = ((interior.rect.y1 + interior.rect.y2) / 2) * TS;
-      this.cameras.main.stopFollow();
-      this.followingPlayer = false;
-      this.cameras.main.pan(cx, cy, 350, 'Sine.easeInOut', false, (_cam, progress) => {
-        if (progress === 1) {
-          this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
-          this.followingPlayer = true;
-        }
-      });
-    } else if (!this.followingPlayer) {
-      this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
-      this.followingPlayer = true;
-    }
+  private collectScavengePoint(entry: ScavengePointEntry): void {
+    collectMaterial(entry.data.id, entry.data.material, entry.data.amount);
+    entry.sprite.destroy();
+    entry.prompt.destroy();
+    this.scavengePoints = this.scavengePoints.filter(e => e !== entry);
+
+    const label = entry.data.material.replace('MATERIAL_', '').replace(/_/g, ' ').toLowerCase();
+    const txt = this.add.text(entry.data.x * TS + TS / 2, entry.data.y * TS + TS / 2 - 12, `+${entry.data.amount} ${label}`, {
+      fontSize: '9px', color: '#dfffb0', backgroundColor: '#1a2a1a', padding: { x: 3, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(20);
+    this.tweens.add({
+      targets: txt, y: txt.y - 20, alpha: 0, duration: 900,
+      ease: 'Power2', onComplete: () => txt.destroy(),
+    });
+  }
+
+  /** M39 §2 — EPIC-33. Same technique as renderScavengePoints(), a distinct
+   *  color/icon so the two pickup types read as different things in the
+   *  world (recipe cookbook vs. raw material). */
+  private renderCookbookPickups(): void {
+    const collected = new Set(useGameStore.getState().crafting.collectedCookbookPoints);
+    COOKBOOK_PICKUPS.forEach(point => {
+      if (collected.has(point.id)) return;
+      const px = point.x * TS + TS / 2, py = point.y * TS + TS / 2;
+      const sprite = this.add.rectangle(px, py, 8, 8, 0xd8a13a).setDepth(3);
+      const entry: CookbookPickupEntry = {
+        data: point,
+        sprite,
+        prompt: new InteractionPrompt(this, px, py, '📖', () => WorldScene.hud?.triggerAction()),
+      };
+      this.cookbookPickups.push(entry);
+    });
+  }
+
+  private collectCookbookPickup(entry: CookbookPickupEntry): void {
+    collectCookbook(entry.data.id, entry.data.recipe);
+    entry.sprite.destroy();
+    entry.prompt.destroy();
+    this.cookbookPickups = this.cookbookPickups.filter(e => e !== entry);
+
+    const label = RECIPES[entry.data.recipe]?.label ?? entry.data.recipe;
+    const txt = this.add.text(entry.data.x * TS + TS / 2, entry.data.y * TS + TS / 2 - 12, `📖 Learned: ${label}`, {
+      fontSize: '9px', color: '#ffe9b0', backgroundColor: '#2a2214', padding: { x: 3, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(20);
+    this.tweens.add({
+      targets: txt, y: txt.y - 20, alpha: 0, duration: 1200,
+      ease: 'Power2', onComplete: () => txt.destroy(),
+    });
+  }
+
+  /** M41 — EPIC-34 §1/§2. Walking onto (or near) a DOOR tile that has a
+   *  registered interior launches a real isolated `InteriorScene`, sleeping
+   *  this scene rather than panning the camera over the same shared
+   *  tilemap (the old M21 §1 mechanism this replaces — see
+   *  InteriorProps.ts's `findInteriorByDoorTile()`). The player's exact
+   *  tile position is captured as the return point, restored verbatim by
+   *  `onWakeFromInterior()`. */
+  private enterInterior(def: InteriorDefinition): void {
+    if (this.dialogueOpen || this.buildOpen) return;
+    const returnX = Math.floor(this.player.x / TS);
+    const returnY = Math.floor(this.player.y / TS);
+    const returnFacing = this.player.getFacing();
+    WorldScene.hud?.hideAction();
+    this.scene.sleep();
+    this.scene.launch('InteriorScene', {
+      interiorId: def.id, returnX, returnY, returnFacing, returnSceneKey: 'WorldScene',
+    } satisfies InteriorSceneData);
+  }
+
+  /** M44 — EPIC-35 §2/§3. Literalizes the rail platform's previously-
+   *  decorative flavor into a real travel action, reusing the exact same
+   *  sleep/launch/wake/stop lifecycle `enterInterior()`/`InteriorScene.ts`
+   *  already proved (EPIC-34/M41).
+   *
+   *  M46 — EPIC-35 §1/§2. Generalized from a single hardcoded destination
+   *  (`travelToPlaceholderRegion()`) to any unlocked `RegionId`, so
+   *  `WorldMapModal.ts` can drive it too, not just the rail-platform node.
+   *  Un-unlocked regions are rejected here (the actual enforcement point),
+   *  not just hidden in the UI. */
+  private travelToRegionScene(targetRegionId: RegionId): boolean {
+    if (this.dialogueOpen || this.buildOpen) return false;
+    const state = useGameStore.getState();
+    const target = REGIONS[targetRegionId];
+    const unlocked = isRegionUnlocked(target.unlockRule, {
+      trust: state.player.socialTrust,
+      resilienceScore: state.commons.resilienceScore,
+      completedQuestIds: state.quests.filter(q => q.completedOnDay !== null).map(q => q.questId),
+    });
+    if (!unlocked) return false;
+
+    const returnX = Math.floor(this.player.x / TS);
+    const returnY = Math.floor(this.player.y / TS);
+    const returnFacing = this.player.getFacing();
+    WorldScene.hud?.hideAction();
+    travelToRegion(targetRegionId);
+    this.scene.sleep();
+    this.scene.launch('RegionScene', {
+      regionId: targetRegionId, returnX, returnY, returnFacing,
+    } satisfies RegionSceneData);
+    return true;
+  }
+
+  private onWakeFromInterior(data: SceneReturnData): void {
+    const px = data.returnX * TS + TS / 2, py = data.returnY * TS + TS / 2;
+    this.player.getSprite().setPosition(px, py);
+    this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
+  }
+
+  /** M34 §1/§2 — EPIC-31. The lightweight bounds/wall-avoidance check both
+   *  NPCEntity.tick() and PedestrianEntity.update() take as an injected
+   *  callback, rather than either entity importing MapData/this scene
+   *  directly — keeps NPCEntity Phaser-free and unit-testable, and keeps
+   *  PedestrianEntity from needing to know anything about the tilemap. */
+  private isWalkableWorldPos(px: number, py: number): boolean {
+    const tx = Math.floor(px / TS), ty = Math.floor(py / TS);
+    const row = this.mapGrid[ty];
+    if (!row || row[tx] === undefined) return false;
+    return isWalkableTile(row[tx]);
   }
 
   /** M21 §5 — keeps drop-shadow ellipses under moving entities and redraws the

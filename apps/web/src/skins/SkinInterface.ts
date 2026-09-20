@@ -62,6 +62,14 @@ export interface SkinPalette {
   worldPlaza?: string;
   worldDoor?: string;
   worldHighlight?: string;
+  // M32 — 4 new outdoor tile types (tree/water/dirt path/sidewalk), added
+  // for real biome variety. Optional for the same reason as the block
+  // above: every pre-M32 manifest stays valid, falling back to
+  // ThemeManager.resolveWorldPalette()'s defaults.
+  worldTree?: string;
+  worldWater?: string;
+  worldDirtPath?: string;
+  worldSidewalk?: string;
 }
 
 export interface SkinAudioProfile {

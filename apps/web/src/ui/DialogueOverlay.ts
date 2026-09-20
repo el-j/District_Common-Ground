@@ -14,6 +14,17 @@ export interface DialogueNode {
   text: string;
   responses: DialogueChoice[];
   mood?: DialogueMood;
+  /** M39 §2 — EPIC-33. Recipe id kept as `string` here (not `RecipeId`) so
+   *  this UI-layer module stays decoupled from `core/simulation/` types —
+   *  `WorldScene.ts` (the caller) already knows the real `RecipeId` type on
+   *  both the tree data and the `onTeach` callback it supplies. */
+  teachesRecipe?: string;
+  minTrust?: number;
+  /** M35 — EPIC-31 §4. Kept `string` here for the same reason `teachesRecipe`
+   *  is — this UI-layer module stays decoupled from `core/state/`'s real
+   *  `WorldQuestId` type; `WorldScene.ts` (the caller) knows the real type
+   *  on both the tree data and the `onAssignQuest` callback it supplies. */
+  assignsQuest?: string;
 }
 
 export type DialogueTree = Record<string, DialogueNode>;
@@ -28,15 +39,30 @@ export class DialogueOverlay {
   private readonly el: HTMLElement;
   private readonly tree: DialogueTree;
   private readonly onClose?: () => void;
+  private readonly playerTrust: number;
+  private readonly onTeach?: (recipeId: string) => void;
+  private readonly onAssignQuest?: (questId: string) => void;
   private currentKey: string;
   private typewriterTimer: number | null = null;
   private focusedChoice = 0;
   private readonly keyHandler: (e: KeyboardEvent) => void;
 
-  constructor(root: HTMLElement, tree: DialogueTree, startKey: string, title = 'Town Talk', onClose?: () => void) {
+  constructor(
+    root: HTMLElement,
+    tree: DialogueTree,
+    startKey: string,
+    title = 'Town Talk',
+    onClose?: () => void,
+    playerTrust = 0,
+    onTeach?: (recipeId: string) => void,
+    onAssignQuest?: (questId: string) => void,
+  ) {
     this.tree = tree;
     this.currentKey = startKey;
     this.onClose = onClose;
+    this.playerTrust = playerTrust;
+    this.onTeach = onTeach;
+    this.onAssignQuest = onAssignQuest;
 
     this.el = document.createElement('div');
     this.el.className = 'dialogue-overlay';
@@ -109,6 +135,20 @@ export class DialogueOverlay {
     if (!textEl || !actionsEl) return;
 
     this.renderPortrait(node.mood ?? 'happy');
+
+    // M39 §2 — fires the moment a teaching node renders; `onTeach` itself
+    // (WorldScene's `learnRecipe()` wrapper) is idempotent, so a repeat
+    // visit to this node is harmless, not just tolerated.
+    if (node.teachesRecipe && this.playerTrust >= (node.minTrust ?? 0)) {
+      this.onTeach?.(node.teachesRecipe);
+    }
+    // M35 — EPIC-31 §4. Fires the moment a quest-giving node renders, same
+    // "no trust gate needed here" scope as this milestone's own doc —
+    // `assignWorldQuest()` (WorldScene's callback) is idempotent, so a
+    // repeat visit is harmless, not just tolerated.
+    if (node.assignsQuest) {
+      this.onAssignQuest?.(node.assignsQuest);
+    }
 
     textEl.textContent = '';
     actionsEl.innerHTML = '';

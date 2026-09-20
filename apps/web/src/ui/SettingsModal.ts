@@ -4,7 +4,7 @@ import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { clearSave, saveToDB } from '../core/state/persistence';
-import { setRegionCode } from '../core/state/actions';
+import { setRegionCode, setHousingVisitable } from '../core/state/actions';
 import { bindEscapeClose } from './modalDismiss';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
 
@@ -35,6 +35,10 @@ const KNOWN_PREVIEWS: Record<string, SkinPreview> = {
   diorama_glow: { desc: 'Hi-Fi — warm lit diorama, soft shadows & glow', accent: '#ffb347', bg: '#2b1c12' },
   flat_vector: { desc: 'Hi-Fi — bold flat vector shapes, minimal grain', accent: '#ff5a5f', bg: '#101820' },
   neon_city: { desc: 'Hi-Fi — near-black neon glow, angular silhouettes', accent: '#39ffd6', bg: '#05050a' },
+  // M50 — EPIC-37 §1/§2. The hi-fi renderer feasibility proof — 5-stop
+  // painted gradients, per-tile ambient occlusion, a depth vignette, and
+  // 3-tone rim-lit character shading.
+  painterly_depth: { desc: 'Hi-Fi — painted gradients, soft depth & rim light', accent: '#e8935a', bg: '#1c1410' },
 };
 const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9a', bg: '#1a1a28' };
 
@@ -52,6 +56,7 @@ export class SettingsModal {
     { id: 'diorama_glow', title: 'Diorama Glow', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/diorama_glow/skin.manifest.json' },
     { id: 'flat_vector', title: 'Flat Vector Minimal', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/flat_vector/skin.manifest.json' },
     { id: 'neon_city', title: 'Neon Night-City', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/neon_city/skin.manifest.json' },
+    { id: 'painterly_depth', title: 'Painterly Depth', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/painterly_depth/skin.manifest.json' },
   ];
 
   constructor(root: HTMLElement, scene?: Phaser.Scene, onClose?: () => void) {
@@ -91,6 +96,7 @@ export class SettingsModal {
           ${this.renderSkins(activeSkin)}
           ${this.renderAudio()}
           ${this.renderRegion()}
+          ${this.renderProximityVisiting()}
           <div class="settings-new-game">
             ${this.confirmNewGame
               ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
@@ -152,6 +158,30 @@ export class SettingsModal {
     `;
   }
 
+  // M54 — EPIC-38 §1. Opt-in, defaulting false — never surfaced as "on" for
+  // a player who never touched this toggle. Gated on having a flat at all
+  // (housing.currentFlatId), since there's nothing to make visitable
+  // otherwise; matches HousingModal.ts's own currentFlatId-gating pattern.
+  private renderProximityVisiting(): string {
+    const housing = useGameStore.getState().housing;
+    if (!housing.currentFlatId) {
+      return `
+        <div class="settings-proximity">
+          <span class="settings-proximity-label">Proximity Visiting (mesh)</span>
+          <span class="settings-proximity-hint">Rent a flat to let nearby travelers visit it, read-only.</span>
+        </div>
+      `;
+    }
+    return `
+      <div class="settings-proximity">
+        <span class="settings-proximity-label">Proximity Visiting (mesh)</span>
+        <button class="settings-proximity-btn interactive" type="button" aria-label="${housing.visitable ? 'Stop allowing visits' : 'Allow nearby travelers to visit your home'}">
+          ${housing.visitable ? '🌐 Visitable — nearby travelers can view your home, read-only' : '🔒 Not visitable — enable to let nearby travelers view your home'}
+        </button>
+      </div>
+    `;
+  }
+
   private renderRegion(): string {
     const current = useGameStore.getState().meta.regionCode ?? 'GENERIC';
     return `
@@ -184,6 +214,14 @@ export class SettingsModal {
       ?.addEventListener('click', () => {
         playUIClick();
         setBGMMuted(!isBGMMuted());
+        this.render();
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.settings-proximity-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        const housing = useGameStore.getState().housing;
+        setHousingVisitable(!housing.visitable);
         this.render();
       });
 

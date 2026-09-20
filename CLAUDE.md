@@ -118,6 +118,12 @@ Layers:
 3. **Abstract Skin Interface** — resolves tokens to textures/audio
 4. **Skin Modules** — Solarpunk, Retro Game Boy, Cozy Vector
 
+## Plugin-First Architecture Convention
+
+**Every substantial new system in this project defaults to a `packages/*` plugin docking onto the hub, not code compiled directly into `apps/web`.** `MinigameLoader`, `SkinRendererLoader`, and `BuildingInteriorLoader` (all in `apps/web/src/`) are the 3 existing proofs of this pattern: a small registry class that loads a standalone module via a real `import()` of a manifest-declared URL, with the module itself living in its own `packages/<type>-<name>/` workspace package, built independently, and shipped as a static bundle the loader fetches at runtime. This is what let M30's 3 hi-fi skins and M50's flagship renderer ship without touching or risking any pre-existing skin.
+
+The escape hatch — a small, in-tree, static data-definition file (e.g. `apps/web/src/world/InteriorProps.ts`) instead of a full plugin package — is reserved for genuinely small, one-off content, not a default to reach for out of convenience. When in doubt, prefer the plugin shape; see `docs/planning/23-PLUGIN-LOADER-CONVENTIONS.md` for the canonical loader contract a new plugin type's loader class should follow.
+
 ## Character Archetypes
 
 | Archetype | Name | Cash | Energy | Trust | Stress |
@@ -134,9 +140,13 @@ Every crisis offers two branches:
 
 ## World Zones
 
-- **North:** Utility Station & High-Rise Offices (Solar Co-op target)
-- **Central Plaza:** Bulletin Board, Empty Lot (Garden), Old Warehouse (Tool Library), Town Hall
-- **South:** Player apartment, Corner Grocer & Community Fridge, Courtyard (NPC hub)
+The live map has grown to 5 zones (see `WorldScene.ts`'s zone labels / `updateZone()`); reconciled here as of M32, which also added real tile-level biome variety (trees, water, dirt paths, sidewalks — see `MapData.ts`) on top of the original 7-tile flat map.
+
+- **North — Transit Hub:** Rail platform, ticket booth, cargo dock, Utility Station & High-Rise Offices (Solar Co-op target), plus a small "Greenwood Corner" tree/path park pocket (M32).
+- **Central Plaza:** Bulletin Board, Empty Lot (Garden), Old Warehouse (Tool Library), Town Hall.
+- **South Quarter:** Player apartment, Corner Grocer & Community Fridge, Courtyard (NPC hub).
+- **East Canal:** Flood-management office, community building, a real water channel/lake between the two dike roads (M32), and — further south, still inside this zone's coordinate bounds — the "South Canal Workshop & Retail Row" (M42): Metalwork & Woodworking Workshops (real `BuildingInterior`-framework crafting stations), a Baumarkt & Supermarket (real material retail), and a Library (a real cookbook source).
+- **South Solar Quarter:** Rooftop solar plaza, Greenhouse garden node, completed solar field.
 
 ## Community Build Nodes
 

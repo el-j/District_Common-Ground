@@ -18,7 +18,11 @@
     "worldRoadBorder": "#45213a",
     "worldPlaza": "#ffcb9e",
     "worldDoor": "#a83279",
-    "worldHighlight": "#ffd23f"
+    "worldHighlight": "#ffd23f",
+    "worldTree": "#8a5a2b",
+    "worldWater": "#5a3a5c",
+    "worldDirtPath": "#c9835a",
+    "worldSidewalk": "#d9b8a8"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/sunset_commons/tiles.webp",         "tileSize": [16, 16] },

@@ -18,7 +18,11 @@
     "worldRoadBorder": "#39a0ff",
     "worldPlaza": "#12121e",
     "worldDoor": "#c04aff",
-    "worldHighlight": "#39ffd6"
+    "worldHighlight": "#39ffd6",
+    "worldTree": "#3dff7a",
+    "worldWater": "#39a0ff",
+    "worldDirtPath": "#8a6a2a",
+    "worldSidewalk": "#c0c0ff"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/neon_city/tiles.webp",         "tileSize": [16, 16] },

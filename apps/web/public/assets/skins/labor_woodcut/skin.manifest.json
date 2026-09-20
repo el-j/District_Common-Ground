@@ -18,7 +18,11 @@
     "worldRoadBorder": "#5c4a2e",
     "worldPlaza": "#c9b98a",
     "worldDoor": "#7a2e1d",
-    "worldHighlight": "#d8a13a"
+    "worldHighlight": "#d8a13a",
+    "worldTree": "#3d4a22",
+    "worldWater": "#3a4a52",
+    "worldDirtPath": "#a68a5c",
+    "worldSidewalk": "#9a8f78"
   },
   "assetMap": {
     "TILES_ATLAS": {},

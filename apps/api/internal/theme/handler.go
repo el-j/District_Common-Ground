@@ -29,6 +29,8 @@ var builtInThemes = []kernel.PluginMetadata{
 	{ID: "diorama_glow", Version: "1.0.0", Name: "Diorama Glow", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/diorama_glow/skin.manifest.json"},
 	{ID: "flat_vector", Version: "1.0.0", Name: "Flat Vector Minimal", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/flat_vector/skin.manifest.json"},
 	{ID: "neon_city", Version: "1.0.0", Name: "Neon Night-City", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/neon_city/skin.manifest.json"},
+	// M50 — EPIC-37 §1/§2. The hi-fi renderer feasibility proof.
+	{ID: "painterly_depth", Version: "1.0.0", Name: "Painterly Depth", Author: "District Commons", Category: Category, Entrypoint: "assets/skins/painterly_depth/skin.manifest.json"},
 }
 
 type Handler struct {

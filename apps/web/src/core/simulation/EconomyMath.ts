@@ -14,6 +14,15 @@ export interface DailyTickResult {
   stressDelta: number;
 }
 
+// M43 §1 — EPIC-34, absorbing EPIC-32's M36 scope. See HousingOptions.ts's
+// own doc comment for why this mirrors DailyTickResult's real 3-stat shape
+// (no trustDelta — the daily tick never applies one today).
+export interface HousingDailyModifier {
+  cashDelta: number;
+  energyDelta: number;
+  stressDelta: number;
+}
+
 // Archetype-specific energy regen per day (before upkeep)
 const ENERGY_REGEN: Record<string, number> = {
   pip: 15,    // gig worker recovers quickly; net +5 after 10 upkeep
@@ -26,6 +35,7 @@ export function applyDailyTick(
   commons: { kitchenProgress: number; solarGridProgress: number; legalFundProgress: number; toolLibraryProgress?: number },
   socialTrust: number,
   multipliers: EconomicMultipliers = DEFAULT_MULTIPLIERS,
+  housingModifier?: HousingDailyModifier,
 ): DailyTickResult {
   const regen = ENERGY_REGEN[classRole ?? ''] ?? 8;
   // Tool Library at 100% reduces upkeep by 20% (covers shared repair tools)
@@ -35,7 +45,7 @@ export function applyDailyTick(
   // foodCost already scales with multipliers.food. Previously this multiplier
   // was read nowhere in the tick, a documented no-op (see BalanceSimulator.ts).
   const energyUpkeep = Math.round(baseEnergyUpkeep * multipliers.energy);
-  const energyDelta = regen - energyUpkeep;
+  const energyDelta = regen - energyUpkeep + (housingModifier?.energyDelta ?? 0);
 
   // Cash: base food upkeep multiplied by food index; kitchen built → free food
   const baseFoodCost = 3;
@@ -54,14 +64,16 @@ export function applyDailyTick(
     earning = 12; // rent income unaffected by multipliers
   }
 
-  const cashDelta = earning - foodCost;
+  // M43 §1 — recurring rent/quality-of-life delta from the player's chosen
+  // HousingOption, folded in the same way `commons` already shapes cash.
+  const cashDelta = earning - foodCost + (housingModifier?.cashDelta ?? 0);
 
   // Stress: +5/day baseline, reduced by trust and completed commons
   const solarBonus          = commons.solarGridProgress  >= BUILD_COMPLETION_THRESHOLD ? 5 : 0;
   const legalBonus          = commons.legalFundProgress  >= BUILD_COMPLETION_THRESHOLD ? 4 : 0;
   const kitchenStressBonus  = commons.kitchenProgress    >= BUILD_COMPLETION_THRESHOLD ? 3 : 0;
   const trustRelief = Math.floor(socialTrust / 20);
-  const stressDelta = 5 - solarBonus - legalBonus - kitchenStressBonus - trustRelief;
+  const stressDelta = 5 - solarBonus - legalBonus - kitchenStressBonus - trustRelief + (housingModifier?.stressDelta ?? 0);
 
   return { energyDelta, cashDelta, stressDelta };
 }

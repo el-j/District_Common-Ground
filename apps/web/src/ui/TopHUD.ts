@@ -9,10 +9,14 @@ import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { PluginManagerModal } from './PluginManagerModal';
 import { ShopModal } from './ShopModal';
+import { CraftingModal } from './CraftingModal';
+import { WorldMapModal } from './WorldMapModal';
 import { SocialHubModal } from './SocialHubModal';
 import { CivicTickerWidget } from './CivicTickerWidget';
 import { CivicDirectoryModal } from './CivicDirectoryModal';
 import { CivicJournal } from '../irl/CivicJournal';
+import { ProximityVisitModal } from './ProximityVisitModal';
+import { getWorldQuestDefinition } from '../core/simulation/WorldQuests';
 import { getWallet } from '../api/endpoints/shop';
 import { fetchDailyNarrative } from '../api/narrativeGossip';
 import type { Kernel, HudSink } from '../core/kernel/Kernel';
@@ -27,6 +31,7 @@ export class TopHUD implements HudSink {
   private el: HTMLElement;
   private statsEl: HTMLElement;
   private zoneEl: HTMLElement;
+  private objectiveEl: HTMLElement;
   private barometerEl: HTMLElement;
   private pulseBadgeEl: HTMLElement;
   private actionButton: HTMLButtonElement | null = null;
@@ -61,6 +66,16 @@ export class TopHUD implements HudSink {
     this.zoneEl = document.createElement('div');
     this.zoneEl.id = 'hud-zone';
     this.el.appendChild(this.zoneEl);
+
+    // M35 — EPIC-31 §3. A persistent "current objective" indicator, visible
+    // without opening a modal (distinct from QuestModal's daily-buff list),
+    // in the same passive-readout spirit as zoneEl/barometerEl above.
+    // Degrades to hidden (never an error) when no WorldQuest is active —
+    // see render()'s own null-check.
+    this.objectiveEl = document.createElement('div');
+    this.objectiveEl.id = 'hud-objective';
+    this.objectiveEl.hidden = true;
+    this.el.appendChild(this.objectiveEl);
 
     this.barometerEl = document.createElement('div');
     this.barometerEl.id = 'hud-barometer';
@@ -173,6 +188,14 @@ export class TopHUD implements HudSink {
       onClick: () => new ShopModal(root, () => this.fetchWalletBalance()),
     });
     this.registerButton({
+      id: 'craft', icon: '🛠', label: 'Open Crafting',
+      onClick: () => new CraftingModal(root),
+    });
+    this.registerButton({
+      id: 'worldmap', icon: '🗺', label: 'Open World Map',
+      onClick: () => new WorldMapModal(root),
+    });
+    this.registerButton({
       id: 'social', icon: '🤝', label: 'Open Common Grounds',
       onClick: () => new SocialHubModal(root),
     });
@@ -183,6 +206,10 @@ export class TopHUD implements HudSink {
     this.registerButton({
       id: 'journal', icon: '📓', label: 'Open Civic Journal — log a real-world deed',
       onClick: () => new CivicJournal(root),
+    });
+    this.registerButton({
+      id: 'proximity', icon: '🌐', label: 'Nearby Travelers — visit someone over the mesh',
+      onClick: () => new ProximityVisitModal(root),
     });
 
     // Solidarity Token wallet balance chip (only shown once fetched for a signed-in user)
@@ -390,16 +417,22 @@ export class TopHUD implements HudSink {
 
     if (isSelect) return;
 
+    // M48 — EPIC-36 §1. The HUD badge now reflects the player's own chosen
+    // name (set in the origin flow) instead of the fixed archetype label —
+    // falls back to the classRole label only for a save/state that somehow
+    // predates M48's defensive merge (should never happen in practice,
+    // since CharacterSelect.ts always sets *some* name, custom or default).
     const roleLabel = player.classRole
       ? { pip: 'Pip', morgan: 'Morgan', arthur: 'Arthur' }[player.classRole] ?? '?'
       : '?';
+    const displayName = player.name || roleLabel;
 
     const energyPct = Math.round((player.energy / player.maxEnergy) * 100);
     const stressClass = player.stressLevel > 74 ? ' hud-stat--danger' : player.stressLevel > 49 ? ' hud-stat--warn' : '';
 
     this.statsEl.innerHTML = `
       <div class="hud-row hud-top">
-        <span class="hud-badge">${roleLabel[0]}</span>
+        <span class="hud-badge" title="${displayName}">${displayName[0]}</span>
         <span class="hud-day">Day ${meta.day}</span>
         <div class="hud-res-bar" title="${commons.resilienceScore}% resilience">
           <div class="hud-res-fill" style="width:${commons.resilienceScore}%"></div>
@@ -413,6 +446,20 @@ export class TopHUD implements HudSink {
         <span class="hud-stat${stressClass}">😰 ${player.stressLevel}%</span>
       </div>
     `;
+
+    // M35 — EPIC-31 §3. Reflects `worldQuests.activeId` directly off the
+    // store on every render, same as every other chip here — never a
+    // separately-tracked UI-only copy that could drift from real state.
+    const activeQuest = state.worldQuests.activeId ? getWorldQuestDefinition(state.worldQuests.activeId) : undefined;
+    if (activeQuest) {
+      this.objectiveEl.innerHTML = `
+        <span class="hud-objective-icon">${activeQuest.icon}</span>
+        <span class="hud-objective-title">${activeQuest.title}</span>
+      `;
+      this.objectiveEl.hidden = false;
+    } else {
+      this.objectiveEl.hidden = true;
+    }
 
     // Economic barometer chip
     if (pulseState) {

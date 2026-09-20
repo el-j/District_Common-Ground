@@ -11,6 +11,34 @@ const PROGRESS_LABELS: { key: keyof DistrictSnapshot['commons']; label: string }
 ];
 
 /**
+ * M54 — EPIC-38 §3. Extracted from this class's own private renderer so
+ * `ProximityVisitModal.ts` (a mesh-discovered visit) can share the exact
+ * same read-only rendering as this class (a friend-list visit) rather than
+ * duplicating it — the two visit paths differ only in how the
+ * `DistrictSnapshot` was fetched (HTTP vs. a mesh probe/response), never in
+ * how it's displayed.
+ */
+export function renderDistrictSnapshotHtml(s: DistrictSnapshot): string {
+	return `
+		<div class="district-viewer-summary">
+			<span>Day ${s.day}</span>
+			<span>Resilience ${Math.round(s.resilienceScore)}</span>
+			${s.activeCrisis ? `<span class="district-viewer-crisis">⚠ ${s.activeCrisis}</span>` : ''}
+		</div>
+		<div class="district-viewer-bars">
+			${PROGRESS_LABELS.map(({ key, label }) => `
+				<div class="district-viewer-bar-row">
+					<span class="district-viewer-bar-label">${label}</span>
+					<div class="district-viewer-bar-track">
+						<div class="district-viewer-bar-fill" style="width: ${Math.min(100, Math.max(0, s.commons[key]))}%"></div>
+					</div>
+				</div>
+			`).join('')}
+		</div>
+	`;
+}
+
+/**
  * Read-only overlay rendering a friend's district parcels and status.
  * Always opened on top of an already-locked modal (SocialHubModal), so it
  * does not manage InputManager's lock itself — the parent modal owns that.
@@ -65,23 +93,7 @@ export class FriendDistrictViewer {
 	}
 
 	private renderSnapshot(s: DistrictSnapshot): string {
-		return `
-			<div class="district-viewer-summary">
-				<span>Day ${s.day}</span>
-				<span>Resilience ${Math.round(s.resilienceScore)}</span>
-				${s.activeCrisis ? `<span class="district-viewer-crisis">⚠ ${s.activeCrisis}</span>` : ''}
-			</div>
-			<div class="district-viewer-bars">
-				${PROGRESS_LABELS.map(({ key, label }) => `
-					<div class="district-viewer-bar-row">
-						<span class="district-viewer-bar-label">${label}</span>
-						<div class="district-viewer-bar-track">
-							<div class="district-viewer-bar-fill" style="width: ${Math.min(100, Math.max(0, s.commons[key]))}%"></div>
-						</div>
-					</div>
-				`).join('')}
-			</div>
-		`;
+		return renderDistrictSnapshotHtml(s);
 	}
 
 	private close(): void {

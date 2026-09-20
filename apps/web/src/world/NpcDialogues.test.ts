@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DIALOGUES, pickDialogueKey } from './NpcDialogues';
+import { RECIPES } from '../core/simulation/Recipes';
 
 // M23 Test 23.3a — dialogue rotation widened from 3 to 5 trees per NPC.
 describe('pickDialogueKey', () => {
@@ -61,5 +62,46 @@ describe('DIALOGUES', () => {
         }
       }
     }
+  });
+
+  // M39 §2 — EPIC-33. Every node that teaches a recipe references a real
+  // recipe id and carries a real trust threshold (never an unguarded 0,
+  // which would defeat the point of gating on trust at all).
+  it('every teachesRecipe node references a real recipe and a positive minTrust', () => {
+    let teachingNodesFound = 0;
+    for (const tree of Object.values(DIALOGUES)) {
+      for (const node of Object.values(tree)) {
+        if (!node.teachesRecipe) continue;
+        teachingNodesFound += 1;
+        expect(RECIPES[node.teachesRecipe]).toBeDefined();
+        expect(node.minTrust ?? 0).toBeGreaterThan(0);
+      }
+    }
+    expect(teachingNodesFound).toBe(5); // Elena/Higgins/Marcus (M39) + Priya/Ezra (M42)
+  });
+
+  // M40 §3 — RECIPE_CIRCUIT_BOARD is deliberately found-cookbook-only (see
+  // Recipes.ts's comment), never taught by any NPC. Real assertion against
+  // the actual dialogue data, not a proxy check.
+  it('never teaches RECIPE_CIRCUIT_BOARD from any NPC', () => {
+    for (const tree of Object.values(DIALOGUES)) {
+      for (const node of Object.values(tree)) {
+        expect(node.teachesRecipe).not.toBe('RECIPE_CIRCUIT_BOARD');
+      }
+    }
+  });
+
+  // M49 — EPIC-36 §2. Every family member's dialogueKey resolves to a real
+  // tree, keyed exactly the way NpcDialogues.ts's own convention requires
+  // (the outer DIALOGUES key matches the first inner node's key).
+  it('every FamilyTemplates.ts member dialogueKey resolves to a real DIALOGUES tree', async () => {
+    const { FAMILY_TEMPLATES } = await import('../core/simulation/FamilyTemplates');
+    FAMILY_TEMPLATES.forEach(t => {
+      t.members.forEach(m => {
+        const tree = DIALOGUES[m.dialogueKey];
+        expect(tree).toBeDefined();
+        expect(tree?.[m.dialogueKey]).toBeDefined();
+      });
+    });
   });
 });

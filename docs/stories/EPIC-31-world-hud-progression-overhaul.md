@@ -1,5 +1,7 @@
 # EPIC-31 — World, HUD & Progression Overhaul
 
+> **2026-09-19 update:** M33 (Real Building Interiors) is **superseded** by the new [EPIC-34](EPIC-34-buildings-as-plugins-and-interiors.md)'s M41/M42, which resolves the same interior-isolation question M33's task doc raised but commits to the broader "buildings as plugins" scope from [`docs/planning/21-OPEN-WORLD-CRAFTING-BUILDINGS-AND-IDENTITY-VISION.md`](../planning/21-OPEN-WORLD-CRAFTING-BUILDINGS-AND-IDENTITY-VISION.md) rather than the narrower "add props to the other 11 footprints" scope. `docs/tasks/M33-building-interiors.md` is kept for its audit findings, not implemented as originally scoped. **M31 and M32 are unaffected — implemented, unchanged.** M34 and M35 are unaffected — still planned as originally scoped.
+
 ## Origin
 
 The user gave 8 pieces of direct feedback in one message (2026-09-19): the HUD is strange with every button crammed at the bottom of the screen; the map never changes and has no trees, cars, or anything that reads as "village/town/forest"; buildings are all empty inside; restarting a game removes the whole HUD; color/theme settings and other settings should live in one menu; the game still reads as "Gameboy Zelda" and should move toward a "GTA" direction (people on the street, bikes, cars); there need to be real quests to solve per level so there's a sense of progress; and some overlays aren't closable with an "×". The instruction was to "deeply investigate and make comprehensive planning" — not to implement yet.

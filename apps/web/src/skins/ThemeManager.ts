@@ -9,7 +9,8 @@ const MANIFEST_CACHE = new Map<string, SkinManifest>();
  * populate the new world-tile palette fields yet. */
 export const DEFAULT_WORLD_PALETTE: Required<Pick<SkinPalette,
   'worldFloor' | 'worldWall' | 'worldWallShadow' | 'worldGrass' | 'worldRoad' |
-  'worldRoadBorder' | 'worldPlaza' | 'worldDoor' | 'worldHighlight'
+  'worldRoadBorder' | 'worldPlaza' | 'worldDoor' | 'worldHighlight' |
+  'worldTree' | 'worldWater' | 'worldDirtPath' | 'worldSidewalk'
 >> = {
   worldFloor: '#18182a',
   worldWall: '#1e1e30',
@@ -20,6 +21,11 @@ export const DEFAULT_WORLD_PALETTE: Required<Pick<SkinPalette,
   worldPlaza: '#20202e',
   worldDoor: '#5a3c14',
   worldHighlight: '#44ee88',
+  // M32 — 4 new outdoor tile types; every pre-M32 skin falls back to these.
+  worldTree: '#0f2010',
+  worldWater: '#1a3a5c',
+  worldDirtPath: '#4a3826',
+  worldSidewalk: '#3a3a48',
 };
 
 export type ResolvedWorldPalette = typeof DEFAULT_WORLD_PALETTE;
@@ -37,6 +43,10 @@ export function resolveWorldPalette(palette?: Partial<SkinPalette>): ResolvedWor
     worldPlaza: palette?.worldPlaza ?? DEFAULT_WORLD_PALETTE.worldPlaza,
     worldDoor: palette?.worldDoor ?? DEFAULT_WORLD_PALETTE.worldDoor,
     worldHighlight: palette?.worldHighlight ?? DEFAULT_WORLD_PALETTE.worldHighlight,
+    worldTree: palette?.worldTree ?? DEFAULT_WORLD_PALETTE.worldTree,
+    worldWater: palette?.worldWater ?? DEFAULT_WORLD_PALETTE.worldWater,
+    worldDirtPath: palette?.worldDirtPath ?? DEFAULT_WORLD_PALETTE.worldDirtPath,
+    worldSidewalk: palette?.worldSidewalk ?? DEFAULT_WORLD_PALETTE.worldSidewalk,
   };
 }
 

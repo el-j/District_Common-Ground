@@ -1,0 +1,61 @@
+{
+  "skinId": "painterly_depth",
+  "version": "1.0.0",
+  "displayName": "Painterly Depth",
+  "palette": {
+    "background": "#1c1410",
+    "surface": "rgba(56,40,28,0.55)",
+    "accent": "#e8935a",
+    "text": "#f5e6d3",
+    "hudBg": "rgba(34,24,18,0.78)",
+    "hudBorder": "rgba(232,147,90,0.35)",
+    "hudText": "#f0dcc0",
+    "worldFloor": "#b89268",
+    "worldWall": "#8a5a3c",
+    "worldWallShadow": "#5c3a24",
+    "worldGrass": "#6a9450",
+    "worldRoad": "#c4a578",
+    "worldRoadBorder": "#8a6f4a",
+    "worldPlaza": "#d9bd8e",
+    "worldDoor": "#4a3018",
+    "worldHighlight": "#ffcf8a",
+    "worldTree": "#4a7038",
+    "worldWater": "#4a7a8a",
+    "worldDirtPath": "#b89664",
+    "worldSidewalk": "#a89478"
+  },
+  "assetMap": {
+    "TILES_ATLAS":        { "textureUrl": "assets/skins/painterly_depth/tiles.webp",         "tileSize": [16, 16] },
+    "HERO_ATLAS":         { "textureUrl": "assets/skins/painterly_depth/hero.webp",           "frameRate": 6 },
+    "NPC_MIRA_ATLAS":     { "textureUrl": "assets/skins/painterly_depth/npc_mira.webp",       "frameRate": 4 },
+    "NPC_LEO_ATLAS":      { "textureUrl": "assets/skins/painterly_depth/npc_leo.webp",        "frameRate": 4 },
+    "NPC_ELENA_ATLAS":    { "textureUrl": "assets/skins/painterly_depth/npc_elena.webp",      "frameRate": 4 },
+    "NPC_SAL_ATLAS":      { "textureUrl": "assets/skins/painterly_depth/npc_sal.webp",        "frameRate": 4 },
+    "NPC_MARCUS_ATLAS":   { "textureUrl": "assets/skins/painterly_depth/npc_marcus.webp",     "frameRate": 4 },
+    "NPC_HIGGINS_ATLAS":  { "textureUrl": "assets/skins/painterly_depth/npc_higgins.webp",    "frameRate": 4 },
+    "BUILD_KITCHEN_IDLE": { "textureUrl": "assets/skins/painterly_depth/kitchen_idle.webp",   "footprint": [32, 32] },
+    "BUILD_KITCHEN_BUILT":{ "textureUrl": "assets/skins/painterly_depth/kitchen_built.webp",  "footprint": [32, 32] },
+    "BUILD_SOLAR_IDLE":   { "textureUrl": "assets/skins/painterly_depth/solar_idle.webp",     "footprint": [32, 32] },
+    "BUILD_SOLAR_BUILT":  { "textureUrl": "assets/skins/painterly_depth/solar_built.webp",    "footprint": [32, 32] },
+    "BUILD_LEGAL_IDLE":   { "textureUrl": "assets/skins/painterly_depth/legal_idle.webp",     "footprint": [16, 16] },
+    "BUILD_LEGAL_BUILT":  { "textureUrl": "assets/skins/painterly_depth/legal_built.webp",    "footprint": [16, 16] }
+  },
+  "audioProfile": {
+    "sfxType": "painterly_brushstrokes",
+    "bgmType": "warm_acoustic"
+  },
+  "uiKit": {
+    "fontFamily": "'Lora', 'Nunito', system-ui, sans-serif",
+    "fontFamilyDisplay": "'Lora', 'Nunito', system-ui, sans-serif",
+    "radiusSm": "10px",
+    "radiusMd": "18px",
+    "radiusLg": "26px",
+    "shadowPanel": "0 16px 38px rgba(20,12,6,0.5)",
+    "shadowGlow": "0 0 20px rgba(232,147,90,0.4)",
+    "gradientPanel": "linear-gradient(160deg, rgba(64,44,30,0.9), rgba(30,20,14,0.94))",
+    "gradientAccent": "linear-gradient(135deg, #e8935a, #ffcf8a)",
+    "blur": "8px",
+    "pixelArt": false
+  },
+  "rendererUrl": "/plugins/skins/painterly_depth/index.js"
+}

@@ -1,6 +1,8 @@
 import './style.css';
 import Phaser from 'phaser';
 import { WorldScene } from './world/WorldScene';
+import { InteriorScene } from './world/InteriorScene';
+import { RegionScene } from './world/regions/RegionScene';
 import { loadSave, getToken } from './core/state/persistence';
 import { useGameStore } from './core/state/useGameStore';
 import { CharacterSelect } from './ui/CharacterSelect';
@@ -103,7 +105,12 @@ async function boot(): Promise<void> {
       height: viewport.height,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [WorldScene],
+    // M41 — EPIC-34 §1. InteriorScene is launched over WorldScene (which is
+    // put to sleep, not stopped) via `this.scene.launch('InteriorScene', ...)`
+    // — added to the scene manager here so that string key resolves.
+    // M44 — EPIC-35 §2. RegionScene reuses the exact same mechanism for
+    // travel to a non-Common-Ground region.
+    scene: [WorldScene, InteriorScene, RegionScene],
   };
 
   const game = new Phaser.Game(config);

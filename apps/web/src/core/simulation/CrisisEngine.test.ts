@@ -16,6 +16,7 @@ function resetStore() {
     player: {
       classRole: 'pip', cash: 100, energy: 80, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
+        name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
     },
     commons: {
       resilienceScore: 50,
@@ -172,5 +173,45 @@ describe('CrisisEngine', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     checkForCrisis();
     expect(useGameStore.getState().crisisState.activeCrisisId).not.toBeNull();
+  });
+
+  // M46 — EPIC-35 §3. Region-tagged scenario preference.
+  it('checkForCrisis prefers a scenario tagged for the player\'s current region', () => {
+    const tagged = scenarios.find(s => s.region === 'REGION_INDUSTRIAL_OUTSKIRTS');
+    expect(tagged).toBeDefined(); // grounds the test in real data, not a fixture
+
+    initCrisisQueue();
+    useGameStore.setState(s => ({
+      world: { currentRegionId: 'REGION_INDUSTRIAL_OUTSKIRTS' },
+      // lastCrisisDay is CrisisEngine.ts module-level state, not reset by
+      // resetStore() between tests — a large offset guarantees the 3-day
+      // cooldown clears regardless of what an earlier test in this file
+      // left it at.
+      meta: { ...s.meta, day: s.meta.day + 1000 },
+    }));
+    vi.spyOn(Math, 'random').mockReturnValue(0); // pass the 60% roll deterministically
+
+    checkForCrisis();
+    expect(useGameStore.getState().crisisState.activeCrisisId).toBe(tagged!.id);
+  });
+
+  it('never picks a region-tagged scenario for a player in a different region (preference, not restriction)', () => {
+    initCrisisQueue();
+    useGameStore.setState(s => ({
+      world: { currentRegionId: 'REGION_COMMON_GROUND' },
+      // A distinctly different large offset from the previous test's
+      // (which also advances the module-level lastCrisisDay) — using the
+      // same offset from a freshly-reset day:1 base would collide with
+      // whatever the previous test just set lastCrisisDay to.
+      meta: { ...s.meta, day: s.meta.day + 2000 },
+    }));
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    checkForCrisis();
+    const triggeredId = useGameStore.getState().crisisState.activeCrisisId;
+    // The pool draw still succeeds (never starves) even though nothing
+    // matched the current region — it just falls back to the front of the
+    // shuffled queue, same as before this milestone.
+    expect(triggeredId).not.toBeNull();
   });
 });

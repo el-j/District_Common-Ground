@@ -40,6 +40,7 @@ describe('Living District Builder (DistrictGrid)', () => {
         position: { x: 0, y: 0 },
         facing: 'down',
         lastWorkedDay: null,
+        name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
       },
     });
 

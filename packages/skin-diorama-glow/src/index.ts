@@ -16,6 +16,11 @@ interface ResolvedWorldPalette {
   worldPlaza: string;
   worldDoor: string;
   worldHighlight: string;
+  // M32 — 4 new outdoor tile types.
+  worldTree: string;
+  worldWater: string;
+  worldDirtPath: string;
+  worldSidewalk: string;
 }
 
 interface SkinRenderer {
@@ -25,6 +30,7 @@ interface SkinRenderer {
 }
 
 const TS = 16;
+const TILE_FRAME_COUNT = 11; // M32 — 7 original + TREE/WATER/DIRT_PATH/SIDEWALK
 
 /** Lightens (positive) / darkens (negative) a `#rrggbb` hex color. Copied,
  * not imported, from WorldScene's own helper — these bundles must stay
@@ -69,10 +75,10 @@ function dropShadowStrip(ctx: CanvasRenderingContext2D, ox: number, y: number, h
 function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
   const tex = scene.textures.exists('tileset')
     ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('tileset', TS * 7, TS);
+    : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
   if (!tex) throw new Error('tileset canvas failed');
   const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 7, TS);
+  ctx.clearRect(0, 0, TS * TILE_FRAME_COUNT, TS);
 
   // FLOOR
   litFill(ctx, 0, palette.worldFloor);
@@ -149,6 +155,49 @@ function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette
     g.addColorStop(1, shadeColor(palette.worldHighlight, -40));
     ctx.fillStyle = g;
     ctx.fillRect(ox + 6, 6, 4, 4);
+  })();
+
+  // M32 — TREE: lit-gradient canopy blob + trunk, same single-key-light look
+  (() => {
+    const ox = TS * 7;
+    litFill(ctx, ox, palette.worldGrass);
+    ctx.fillStyle = shadeColor(palette.worldTree, -18);
+    ctx.fillRect(ox + 6, 10, 4, 6);
+    const g = ctx.createRadialGradient(ox + 6, 5, 1, ox + 8, 7, 7);
+    g.addColorStop(0, shadeColor(palette.worldTree, 22));
+    g.addColorStop(1, shadeColor(palette.worldTree, -12));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(ox + 8, 7, 6.5, 0, Math.PI * 2); ctx.fill();
+  })();
+
+  // M32 — WATER: lit gradient + a soft highlight ripple band
+  (() => {
+    const ox = TS * 8;
+    litFill(ctx, ox, palette.worldWater);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillRect(ox + 2, 6, TS - 4, 1.5);
+    dropShadowStrip(ctx, ox, TS - 3, 3);
+  })();
+
+  // M32 — DIRT_PATH: lit gradient, mounded-tuft-style speckle in tan tones
+  (() => {
+    const ox = TS * 9;
+    litFill(ctx, ox, palette.worldDirtPath);
+    const hi = shadeColor(palette.worldDirtPath, 20), lo = shadeColor(palette.worldDirtPath, -16);
+    [[3, 4], [9, 3], [6, 10], [12, 9], [2, 12]].forEach(([gx, gy]) => {
+      ctx.fillStyle = hi; ctx.fillRect(ox + gx, gy, 2, 1);
+      ctx.fillStyle = lo; ctx.fillRect(ox + gx, gy + 1, 2, 1);
+    });
+  })();
+
+  // M32 — SIDEWALK: lit gradient, soft-shadowed grid seam instead of a hard line
+  (() => {
+    const ox = TS * 10;
+    litFill(ctx, ox, palette.worldSidewalk);
+    const h = TS / 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ox + h, 0); ctx.lineTo(ox + h, TS); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, h); ctx.lineTo(ox + TS, h); ctx.stroke();
   })();
 
   tex.refresh();

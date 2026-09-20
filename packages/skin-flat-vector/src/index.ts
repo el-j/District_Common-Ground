@@ -14,6 +14,11 @@ interface ResolvedWorldPalette {
   worldPlaza: string;
   worldDoor: string;
   worldHighlight: string;
+  // M32 — 4 new outdoor tile types.
+  worldTree: string;
+  worldWater: string;
+  worldDirtPath: string;
+  worldSidewalk: string;
 }
 
 interface SkinRenderer {
@@ -23,6 +28,7 @@ interface SkinRenderer {
 }
 
 const TS = 16;
+const TILE_FRAME_COUNT = 11; // M32 — 7 original + TREE/WATER/DIRT_PATH/SIDEWALK
 
 function shadeColor(hex: string, percent: number): string {
   const clean = hex.replace('#', '');
@@ -71,10 +77,10 @@ function flatBands(ctx: CanvasRenderingContext2D, ox: number, base: string, band
 function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
   const tex = scene.textures.exists('tileset')
     ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('tileset', TS * 7, TS);
+    : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
   if (!tex) throw new Error('tileset canvas failed');
   const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 7, TS);
+  ctx.clearRect(0, 0, TS * TILE_FRAME_COUNT, TS);
 
   flatBands(ctx, 0, palette.worldFloor, 0.6);
 
@@ -118,6 +124,37 @@ function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette
     ctx.fillStyle = shadeColor(palette.worldGrass, -22); ctx.fillRect(ox, 0, TS, TS);
     ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 3, 3, 10, 10);
     ctx.fillStyle = shadeColor(palette.worldHighlight, -30); ctx.fillRect(ox + 6, 6, 4, 4);
+    const pat = getNoisePattern(ctx);
+    if (pat) { ctx.fillStyle = pat; ctx.fillRect(ox, 0, TS, TS); }
+  })();
+
+  // M32 — TREE: flat grass ground, bold flat capsule canopy, no gradient
+  (() => {
+    const ox = TS * 7;
+    ctx.fillStyle = palette.worldGrass; ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = shadeColor(palette.worldTree, -18); ctx.fillRect(ox + 6, 10, 4, 6);
+    ctx.fillStyle = palette.worldTree; ctx.fillRect(ox + 2, 2, 12, 9);
+    const pat = getNoisePattern(ctx);
+    if (pat) { ctx.fillStyle = pat; ctx.fillRect(ox, 0, TS, TS); }
+  })();
+
+  // M32 — WATER: 2 flat bands (no gradient), one bold flat highlight dash
+  (() => {
+    const ox = TS * 8;
+    flatBands(ctx, ox, palette.worldWater, 0.5);
+    ctx.fillStyle = shadeColor(palette.worldWater, 24);
+    ctx.fillRect(ox + 3, 7, 5, 1); ctx.fillRect(ox + 9, 10, 4, 1);
+  })();
+
+  // M32 — DIRT_PATH: 2 flat bands + noise grain, same as FLOOR/GRASS/PLAZA
+  flatBands(ctx, TS * 9, palette.worldDirtPath, 0.5);
+
+  // M32 — SIDEWALK: flat fill + one bold flat grid cross, no gradient
+  (() => {
+    const ox = TS * 10;
+    ctx.fillStyle = palette.worldSidewalk; ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = shadeColor(palette.worldSidewalk, -14);
+    ctx.fillRect(ox + TS / 2 - 0.5, 0, 1, TS); ctx.fillRect(ox, TS / 2 - 0.5, TS, 1);
     const pat = getNoisePattern(ctx);
     if (pat) { ctx.fillStyle = pat; ctx.fillRect(ox, 0, TS, TS); }
   })();

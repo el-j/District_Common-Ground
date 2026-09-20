@@ -141,6 +141,131 @@
 .card-stats dt { color: #666688; }
 .card-stats dd { color: #e0e0ff; font-variant-numeric: tabular-nums; }
 
+/* M47 — EPIC-36 §3. Confirm step of the new origin flow — reuses
+   .archetype-card/.cs-geo-preview-link's palette throughout, only these
+   few rules are genuinely new. */
+.cs-family-members {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  text-align: left;
+  margin-bottom: 1.25rem;
+}
+
+.cs-family-member {
+  background: var(--ui-gradient-panel, #1a1a2e);
+  border: 1px solid #35354a;
+  border-radius: var(--ui-radius-sm, 3px);
+  padding: 0.85rem;
+}
+
+.cs-family-member-name {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #e0e0ff;
+}
+
+.cs-family-member-relation {
+  display: block;
+  font-size: 0.6rem;
+  color: #777799;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+.cs-family-member-desc {
+  font-size: 0.68rem;
+  color: #aaaacc;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.cs-confirm-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cs-begin-btn {
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  border-color: #6666aa;
+  background: #22223a;
+  width: min(280px, 100%);
+}
+.cs-begin-btn:hover { border-color: #8888dd; background: #2a2a4a; }
+
+/* M48 — EPIC-36 §1/§2/§3. Name/identity step form controls. */
+.cs-identity-form {
+  text-align: left;
+  max-width: 420px;
+  margin: 0 auto 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.cs-field-label {
+  font-size: 0.62rem;
+  color: #777799;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.6rem;
+}
+.cs-field-label:first-child { margin-top: 0; }
+
+.cs-name-input {
+  background: var(--ui-gradient-panel, #1a1a2e);
+  border: 1px solid #35354a;
+  border-radius: var(--ui-radius-sm, 3px);
+  color: #e0e0ff;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  font-size: 0.78rem;
+  padding: 0.55rem 0.7rem;
+}
+.cs-name-input:focus { outline: none; border-color: #6666aa; }
+
+.cs-gender-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cs-gender-btn {
+  background: var(--ui-gradient-panel, #1a1a2e);
+  border: 1px solid #35354a;
+  border-radius: var(--ui-radius-sm, 3px);
+  color: #aaaacc;
+  font-family: var(--ui-font, ui-monospace, monospace);
+  font-size: 0.66rem;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.cs-gender-btn:hover { border-color: #6666aa; }
+.cs-gender-btn--active { border-color: #8888dd; background: #22223a; color: #e0e0ff; }
+
+.cs-appearance-options {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cs-appearance-swatch {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 2px solid #35354a;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.12s, transform 0.12s;
+}
+.cs-appearance-swatch:hover { transform: scale(1.08); }
+.cs-appearance-swatch--active { border-color: #e0e0ff; }
+
 /* ── Top HUD ────────────────────────────────────────────── */
 
 #top-hud {
@@ -162,6 +287,26 @@
   padding-top: 0.1rem;
   min-height: 0.9rem;
 }
+
+/* M35 — EPIC-31 §3. A persistent WorldQuest objective chip, distinct from
+   QuestModal's daily-buff list — visible without opening anything, hidden
+   entirely (via [hidden], not just emptied) when no WorldQuest is active. */
+#hud-objective {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin: 0.15rem auto 0;
+  padding: 0.15rem 0.5rem;
+  max-width: fit-content;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  font-size: 0.55rem;
+}
+
+.hud-objective-icon { font-size: 0.65rem; }
+.hud-objective-title { color: #7dd3fc; font-weight: 600; letter-spacing: 0.02em; }
 
 .hud-row { display: flex; align-items: center; gap: 0.4rem; }
 .hud-top { margin-bottom: 0.2rem; }
@@ -1411,6 +1556,30 @@
   gap: 0.5rem;
 }
 
+/* M40 §3 — the upcycled computer's terminal/BBS affordance. A single-look
+   green-on-black CRT identity, distinct from the shared .settings-panel
+   chrome it otherwise reuses, since a BBS reading isn't the newspaper
+   BroadsheetModal already owns — deliberately not skin-token-driven (this
+   is the item's own fixed in-fiction hardware, not a re-skinnable UI panel). */
+.terminal-panel {
+  background: #04120a;
+  border-color: #1f6a3a;
+}
+.terminal-body {
+  font-family: ui-monospace, 'Courier New', monospace;
+  background: #04120a;
+  padding: 0.9rem 1rem;
+}
+.terminal-line {
+  color: #7dffa0;
+  font-size: 0.68rem;
+  line-height: 1.6;
+  margin: 0 0 0.3rem;
+  text-shadow: 0 0 4px rgba(125, 255, 160, 0.35);
+}
+.terminal-cursor { animation: terminal-blink 1s steps(1) infinite; }
+@keyframes terminal-blink { 50% { opacity: 0.2; } }
+
 /* ── Common Grounds (Social Hub) Modal ─────────────────────── */
 
 .social-hub-panel {
@@ -1609,6 +1778,37 @@
   width: min(480px, calc(100% - 2rem));
   background: linear-gradient(180deg, #0c1a14, #0a140f);
   border-color: #2e6a4f;
+}
+
+/* ── M54 — Proximity Visit Modal — shares district-viewer-panel above ── */
+
+.district-viewer-summary-label {
+  font-size: 0.7rem;
+  color: #cbe8d6;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.proximity-peer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.proximity-peer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  background: rgba(20, 30, 24, 0.6);
+  border: 1px solid #2e5a44;
+  border-radius: 4px;
+}
+
+.proximity-peer-alias {
+  font-size: 0.68rem;
+  color: #cbe8d6;
 }
 
 .district-viewer-summary {
@@ -2037,6 +2237,38 @@
   transition: border-color 0.12s;
 }
 .settings-mute-btn:hover { border-color: var(--skin-accent, #6bacf0); }
+
+/* ── M54 — Settings: Proximity Visiting opt-in ───────────────────── */
+
+.settings-proximity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 1rem 0;
+}
+
+.settings-proximity-label {
+  font-size: 0.66rem;
+  color: #9aa0b4;
+}
+
+.settings-proximity-hint {
+  font-size: 0.62rem;
+  color: #6a7088;
+}
+
+.settings-proximity-btn {
+  background: rgba(20, 20, 30, 0.9);
+  border: 1px solid #4a4a6a;
+  border-radius: 4px;
+  color: #e0e0f0;
+  font-size: 0.7rem;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s;
+}
+.settings-proximity-btn:hover { border-color: var(--skin-accent, #6bacf0); }
 
 /* ── Off-Grid Mesh Terminal (M17) ──────────────────────────────── */
 

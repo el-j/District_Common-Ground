@@ -10,7 +10,30 @@
 
 // M21 §8 — mood is an abstract token; DialogueOverlay resolves it to a
 // portrait emoji/frame, never a hardcoded sprite path baked in here.
-export type DialogueNode = { text: string; responses: { label: string; next: string | null }[]; mood?: 'happy' | 'tired' | 'determined' };
+//
+// M39 §2 — EPIC-33. `teachesRecipe`/`minTrust` extend a small, fixed set of
+// existing nodes (never a new gate mechanism) — DialogueOverlay checks
+// `minTrust` against a `playerTrust` value it's given at construction, and
+// fires `onTeach(recipeId)` the moment this node renders. No trust-gating
+// pattern existed anywhere in the dialogue system before this milestone
+// (confirmed by direct read — trees only ever rotated by day number); this
+// is the real mechanism the M39 task doc's Section 2 referred to.
+import type { RecipeId } from '../core/simulation/Recipes';
+import type { WorldQuestId } from '../core/state/useGameStore';
+
+// M35 — EPIC-31 §4. `assignsQuest` extends the same small, fixed set of
+// existing nodes `teachesRecipe` (M39) already established — fires the
+// moment this node renders, independent of `teachesRecipe`/`minTrust` (a
+// node may carry both, as `higgins_memory` below now does). No new
+// dialogue-gate mechanism, reusing the one M39 built.
+export type DialogueNode = {
+  text: string;
+  responses: { label: string; next: string | null }[];
+  mood?: 'happy' | 'tired' | 'determined';
+  teachesRecipe?: RecipeId;
+  minTrust?: number;
+  assignsQuest?: WorldQuestId;
+};
 
 export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
   // ── Mira (rotation: 5 trees) ───────────────────────────────────────────────
@@ -32,9 +55,10 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     mira_kitchen: {
-      text: "Every bit helps. Even $5 or a few hours of energy goes a long way. Hit the build node nearby to contribute.",
+      text: "Every bit helps. Even $5 or a few hours of energy goes a long way. Hit the build node nearby to contribute. Tell you what — get us to the halfway mark and I'll make sure you eat well for a week.",
       mood: 'determined',
       responses: [{ label: 'Got it, thanks', next: null }],
+      assignsQuest: 'fund-the-kitchen',
     },
   },
   mira_day2: {
@@ -133,9 +157,10 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     leo_legal: {
-      text: "Gives people options when they can't afford a lawyer. Keeps power from just rolling over the block.",
+      text: "Gives people options when they can't afford a lawyer. Keeps power from just rolling over the block. Actually — do me a favor and swing by the Transit Hub. I need a read on what the Utility Station's really up to before the next vote.",
       mood: 'determined',
       responses: [{ label: "I'll try to fund it", next: null }],
+      assignsQuest: 'scout-the-transit-hub',
     },
   },
   leo_day2: {
@@ -234,6 +259,8 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       text: "Find the solar node nearby. Cash buys panels. Your energy buys installation time. Every bit lowers stress across the district.",
       mood: 'determined',
       responses: [{ label: "I'm on it", next: null }],
+      teachesRecipe: 'RECIPE_WIRED_LAMP',
+      minTrust: 20,
     },
   },
   elena_day2: {
@@ -408,6 +435,8 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       text: "Disposable everything, kid. They want you to throw it out and buy new. I want you to fix it and keep the twenty bucks.",
       mood: 'happy',
       responses: [{ label: 'I like that philosophy', next: null }],
+      teachesRecipe: 'RECIPE_UPCYCLED_WORKBENCH',
+      minTrust: 30,
     },
   },
   marcus_day2: {
@@ -481,9 +510,12 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     higgins_memory: {
-      text: "When you've watched the same play performed four times, you start recognizing the actors even in different costumes.",
+      text: "When you've watched the same play performed four times, you start recognizing the actors even in different costumes. Here — take my old tenant covenant copy over to Leo at the plaza. He'll know what to do with it.",
       mood: 'happy',
       responses: [{ label: "That's a sharp way to put it", next: null }],
+      teachesRecipe: 'RECIPE_MENDED_JACKET',
+      minTrust: 20,
+      assignsQuest: 'deliver-higgins-letter',
     },
   },
   higgins_day2: {
@@ -532,6 +564,190 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       text: "Fifty-eight years here, and last night was one of the finest. Funny how a stoop can hold that much love if you let it.",
       mood: 'happy',
       responses: [{ label: 'This block is lucky to have you', next: null }],
+    },
+  },
+
+  // ── M42 — South Canal Workshop & Retail Row NPCs ────────────────────────
+  // Deliberately a single fixed tree each, not the 5-tree day rotation the
+  // open-world roster uses (M23/M26) — a recorded scope reduction: these
+  // are minor, static, one-room interior NPCs, not full roster members.
+  priya_workshop: {
+    priya_workshop: {
+      text: "Priya. Forty pounds of scrap metal came through that door this morning — by tonight it's someone's stove repair.",
+      mood: 'determined',
+      responses: [
+        { label: 'What are you working on?', next: 'priya_bike' },
+        { label: 'Nice to meet you', next: null },
+      ],
+    },
+    priya_bike: {
+      text: "Frames, mostly — bent ones nobody wanted. Straighten the tubing, true the wheels, and you've got a bike worth more than scrap. I can show you, if you've earned some trust around here.",
+      mood: 'happy',
+      responses: [{ label: 'Teach me', next: null }],
+      teachesRecipe: 'RECIPE_UPCYCLED_BIKE',
+      minTrust: 25,
+    },
+  },
+  dax_workshop: {
+    dax_workshop: {
+      text: "Dax. Sawdust's basically my cologne at this point. Every offcut in this shop has a second life waiting in it.",
+      mood: 'happy',
+      responses: [
+        { label: 'How long have you done this?', next: 'dax_history' },
+        { label: 'Good to meet you', next: null },
+      ],
+    },
+    dax_history: {
+      text: "Since I was twelve, fixing my grandfather's chairs. Still do the same joinery he taught me — some things don't need reinventing.",
+      mood: 'determined',
+      responses: [{ label: "That's a good tradition", next: null }],
+    },
+  },
+  ezra_library: {
+    ezra_library: {
+      text: "Ezra. Keeper of whatever this block hasn't thrown away yet — manuals, schematics, the odd cookbook someone left behind.",
+      mood: 'happy',
+      responses: [
+        { label: "Got anything on electronics?", next: 'ezra_radio' },
+        { label: 'Just browsing, thanks', next: null },
+      ],
+    },
+    ezra_radio: {
+      text: "A whole shelf on pre-digital radio repair, actually. Wire, glass, salvaged components — once you've earned my trust I'll walk you through building one from scratch.",
+      mood: 'determined',
+      responses: [{ label: 'Teach me', next: null }],
+      teachesRecipe: 'RECIPE_SALVAGE_RADIO',
+      minTrust: 20,
+    },
+  },
+
+  // ── M45 — EPIC-35 §3. Industrial Outskirts NPCs ─────────────────────────
+  // Same "single fixed tree, not the 5-tree rotation" scope reduction M42
+  // recorded for its own minor interior NPCs — these are open-region
+  // flavor characters, not full roster members.
+  rusty_outskirts: {
+    rusty_outskirts: {
+      text: "Name's Rusty. Been picking this yard clean for twenty years — one crew's scrap is another crew's roof.",
+      mood: 'tired',
+      responses: [
+        { label: "What do you find out here?", next: 'rusty_finds' },
+        { label: 'Good to meet you', next: null },
+      ],
+    },
+    rusty_finds: {
+      text: "Iron mostly, some good scrap metal if the trucks haven't beaten you to it. Watch your step near the crane arm.",
+      mood: 'determined',
+      responses: [{ label: "I'll be careful", next: null }],
+    },
+  },
+  ember_outskirts: {
+    ember_outskirts: {
+      text: "Ember. I haul the coal seams out past the sidings — dirty work, but it keeps the forges running back in town.",
+      mood: 'tired',
+      responses: [
+        { label: "Which forges?", next: 'ember_forges' },
+        { label: 'Nice to meet you', next: null },
+      ],
+    },
+    ember_forges: {
+      text: "The Metalwork Workshop, mostly. Priya doesn't ask where the coal comes from — she just knows it burns clean.",
+      mood: 'happy',
+      responses: [{ label: "Small world", next: null }],
+    },
+  },
+
+  // ── M49 — EPIC-36 §2. Family member NPCs, spawned by InteriorScene.ts
+  // inside the player's own chosen home (see FamilyTemplates.ts's
+  // homeInteriorId). Same single-fixed-tree scope as every other minor
+  // interior NPC this project has added since M42.
+  marisol_family: {
+    marisol_family: {
+      text: "There you are. Table's set if you're hungry — I know money's tight right now, but nobody eats alone in this house.",
+      mood: 'happy',
+      responses: [
+        { label: "Thanks, Mom.", next: 'marisol_advice' },
+        { label: 'I\'ll be back later.', next: null },
+      ],
+    },
+    marisol_advice: {
+      text: "Whatever you're chasing out there — the district needs people who still show up for their neighbors. Don't lose that.",
+      mood: 'determined',
+      responses: [{ label: "I won't.", next: null }],
+    },
+  },
+  teo_family: {
+    teo_family: {
+      text: "Hey! I fixed Mrs. Alvarez's bike chain today — well, she's not related, everyone just calls her that. Anyway, I only charged her two dollars.",
+      mood: 'happy',
+      responses: [
+        { label: "That's generous of you.", next: 'teo_dream' },
+        { label: 'Nice work.', next: null },
+      ],
+    },
+    teo_dream: {
+      text: "Someday I want a real shop. Not like Marcus's — smaller, just for bikes. You think that's silly?",
+      mood: 'determined',
+      responses: [{ label: 'Not silly at all.', next: null }],
+    },
+  },
+  david_family: {
+    david_family: {
+      text: "Back from the line already? Feels like I just got in myself. This district runs on people who never quite catch up on sleep.",
+      mood: 'tired',
+      responses: [
+        { label: "You work too hard.", next: 'david_reason' },
+        { label: "Get some rest.", next: null },
+      ],
+    },
+    david_reason: {
+      text: "Somebody's got to. Just — don't let the grind eat the years the way it's eaten mine. Find time for the people down the hall.",
+      mood: 'tired',
+      responses: [{ label: "I'll try.", next: null }],
+    },
+  },
+  priya_family: {
+    priya_family: {
+      text: "Still can't believe your family took me in without a second thought. Third apartment fell through this year — this couch is a palace by comparison.",
+      mood: 'happy',
+      responses: [
+        { label: "You're welcome here.", next: 'priya_plan' },
+        { label: "Glad you're settled.", next: null },
+      ],
+    },
+    priya_plan: {
+      text: "Soon as I've got steady footing, I want to pay it forward — maybe volunteer at the tool library or the kitchen. This block gave me a chance. I owe it one back.",
+      mood: 'determined',
+      responses: [{ label: 'That\'s a good plan.', next: null }],
+    },
+  },
+  harold_family: {
+    harold_family: {
+      text: "Ah. You're up. I was reviewing the ledgers — the renters on the third floor are three days late again. Third floor, always the third floor.",
+      mood: 'tired',
+      responses: [
+        { label: "Maybe check in on them?", next: 'harold_pushback' },
+        { label: "I'll leave you to it.", next: null },
+      ],
+    },
+    harold_pushback: {
+      text: "Check in? I built this portfolio brick by brick without anyone checking in on me. But — you're young. Maybe you'll do it differently. We'll see.",
+      mood: 'determined',
+      responses: [{ label: 'Maybe I will.', next: null }],
+    },
+  },
+  constance_family: {
+    constance_family: {
+      text: "Didn't expect to run into family out here, of all places. Harold still doesn't know I moved back to the district, and I intend to keep it that way for now.",
+      mood: 'tired',
+      responses: [
+        { label: 'Why the distance?', next: 'constance_reason' },
+        { label: "Your secret's safe.", next: null },
+      ],
+    },
+    constance_reason: {
+      text: "He treats every tenant like a line item. I couldn't stomach it anymore, so I left the business and never looked back. Doesn't mean I don't think about him.",
+      mood: 'tired',
+      responses: [{ label: "That's understandable.", next: null }],
     },
   },
 };

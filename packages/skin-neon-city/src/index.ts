@@ -14,6 +14,11 @@ interface ResolvedWorldPalette {
   worldPlaza: string;
   worldDoor: string;
   worldHighlight: string;
+  // M32 — 4 new outdoor tile types.
+  worldTree: string;
+  worldWater: string;
+  worldDirtPath: string;
+  worldSidewalk: string;
 }
 
 interface SkinRenderer {
@@ -24,6 +29,7 @@ interface SkinRenderer {
 
 const TS = 16;
 const NEAR_BLACK = '#050508';
+const TILE_FRAME_COUNT = 11; // M32 — 7 original + TREE/WATER/DIRT_PATH/SIDEWALK
 
 function shadeColor(hex: string, percent: number): string {
   const clean = hex.replace('#', '');
@@ -68,10 +74,10 @@ function glowLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: num
 function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
   const tex = scene.textures.exists('tileset')
     ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('tileset', TS * 7, TS);
+    : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
   if (!tex) throw new Error('tileset canvas failed');
   const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 7, TS);
+  ctx.clearRect(0, 0, TS * TILE_FRAME_COUNT, TS);
 
   // FLOOR — near-black with a single accent seam line, glow-lit
   (() => {
@@ -133,6 +139,39 @@ function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette
     ctx.translate(ox + 8, 8); ctx.rotate(Math.PI / 4);
     glowStroke(ctx, -5, -5, 10, 10, palette.worldHighlight);
     ctx.restore();
+  })();
+
+  // M32 — TREE: dark ground, an angular glow-stroke canopy silhouette
+  (() => {
+    const ox = TS * 7;
+    ctx.fillStyle = NEAR_BLACK; ctx.fillRect(ox, 0, TS, TS);
+    glowLine(ctx, ox + 8, 15, ox + 8, 10, palette.worldTree);
+    glowStroke(ctx, ox + 3, 1, 10, 9, palette.worldTree);
+  })();
+
+  // M32 — WATER: near-black with horizontal glow ripple lines
+  (() => {
+    const ox = TS * 8;
+    ctx.fillStyle = shadeColor(NEAR_BLACK, 2); ctx.fillRect(ox, 0, TS, TS);
+    glowLine(ctx, ox + 2, 5, ox + TS - 2, 5, palette.worldWater);
+    glowLine(ctx, ox + 2, 10, ox + TS - 2, 10, shadeColor(palette.worldWater, 14));
+  })();
+
+  // M32 — DIRT_PATH (used here as a dim ground accent, not a bright glow —
+  // it's a walkable path, not a light source): near-black, one soft edge line
+  (() => {
+    const ox = TS * 9;
+    ctx.fillStyle = shadeColor(NEAR_BLACK, 3); ctx.fillRect(ox, 0, TS, TS);
+    glowLine(ctx, ox, TS - 1, ox + TS, TS - 1, palette.worldDirtPath);
+  })();
+
+  // M32 — SIDEWALK: dark tile grid traced in glow lines, mirroring PLAZA's technique
+  (() => {
+    const ox = TS * 10;
+    ctx.fillStyle = NEAR_BLACK; ctx.fillRect(ox, 0, TS, TS);
+    const h = TS / 2;
+    glowLine(ctx, ox + h, 0, ox + h, TS, palette.worldSidewalk);
+    glowLine(ctx, ox, h, ox + TS, h, palette.worldSidewalk);
   })();
 
   tex.refresh();

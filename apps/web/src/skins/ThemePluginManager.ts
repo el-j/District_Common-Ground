@@ -16,6 +16,8 @@ const BUILT_IN_IDS = new Set([
   'solarpunk', 'retro_gb', 'labor_woodcut', 'aurora', 'sunset_commons',
   // M30 — 3 hi-fi skins, each with its own dynamically-loaded SkinRenderer bundle.
   'diorama_glow', 'flat_vector', 'neon_city',
+  // M50 — EPIC-37 §1/§2. The hi-fi renderer feasibility proof.
+  'painterly_depth',
 ]);
 
 function toCatalogEntry(theme: ServerThemeManifest): ThemeCatalogEntry {
@@ -45,6 +47,8 @@ export async function getThemeCatalog(): Promise<ThemeCatalogEntry[]> {
       { id: 'diorama_glow', title: 'Diorama Glow', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/diorama_glow/skin.manifest.json' },
       { id: 'flat_vector', title: 'Flat Vector Minimal', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/flat_vector/skin.manifest.json' },
       { id: 'neon_city', title: 'Neon Night-City', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/neon_city/skin.manifest.json' },
+      // M50 — EPIC-37 §1/§2. The hi-fi renderer feasibility proof.
+      { id: 'painterly_depth', title: 'Painterly Depth', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/painterly_depth/skin.manifest.json' },
     ];
   }
 }

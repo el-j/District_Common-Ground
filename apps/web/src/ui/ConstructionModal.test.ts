@@ -25,6 +25,7 @@ function resetStore(overrides: { progress?: number; cash?: number; energy?: numb
     player: {
       classRole: 'pip', cash, energy, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
+        name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
     },
     commons: {
       resilienceScore: 0,

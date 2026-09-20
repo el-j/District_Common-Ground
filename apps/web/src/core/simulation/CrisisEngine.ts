@@ -27,6 +27,13 @@ export interface CrisisScenario {
   context: string;
   choiceA: CrisisChoice;
   choiceB: CrisisChoice;
+  /** M46 — EPIC-35 §3. Optional region tag (a `world/regions/RegionData.ts`
+   *  `RegionId`, kept as `string` here — the same "core/ never imports
+   *  world/" reasoning every other cross-layer id in this codebase already
+   *  follows). `checkForCrisis()` *prefers*, never exclusively restricts
+   *  to, a scenario tagged for the player's current region — extending
+   *  the existing pool/reshuffle pattern (M23), not a parallel system. */
+  region?: string;
 }
 
 export const scenarios: CrisisScenario[] = scenariosRaw as CrisisScenario[];
@@ -89,6 +96,17 @@ export function checkForCrisis(): void {
       scenarios.find(s => s.id === id)?.archetype === 'MIGRATION_SANCT',
     );
     if (migrationId) nextId = migrationId;
+  } else {
+    // M46 — EPIC-35 §3. Prefer (never exclusively restrict, so the pool
+    // never starves — same reasoning M23 §1's reshuffle-on-empty fix
+    // already established) a scenario tagged for the player's current
+    // region, when the migrant-pressure priority above didn't already
+    // pick one.
+    const currentRegionId = state.world.currentRegionId;
+    const regionMatch = state.crisisState.pendingQueue.find(id =>
+      scenarios.find(s => s.id === id)?.region === currentRegionId,
+    );
+    if (regionMatch) nextId = regionMatch;
   }
 
   triggerCrisis(nextId);

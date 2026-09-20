@@ -18,7 +18,11 @@
     "worldRoadBorder": "#8a97a3",
     "worldPlaza": "#f4f6f8",
     "worldDoor": "#ff5a5f",
-    "worldHighlight": "#ffd166"
+    "worldHighlight": "#ffd166",
+    "worldTree": "#1f8a6f",
+    "worldWater": "#4a90d9",
+    "worldDirtPath": "#c9a06a",
+    "worldSidewalk": "#ccd4da"
   },
   "assetMap": {
     "TILES_ATLAS":        { "textureUrl": "assets/skins/flat_vector/tiles.webp",         "tileSize": [16, 16] },

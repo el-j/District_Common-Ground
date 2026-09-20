@@ -1,9 +1,34 @@
 import { createStore } from 'zustand/vanilla';
 import type { DistrictPulseState } from '@district-cg/shared-types';
+import type { MaterialToken } from '../simulation/Materials';
+import type { RecipeId, CraftDiscipline, ItemToken } from '../simulation/Recipes';
+import type { FamilyTemplateId } from '../simulation/FamilyTemplates';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';
 export type GamePhase = 'select' | 'playing';
+
+// M48 — EPIC-36 §2. A small fixed set of common options plus a genuine
+// self-describe escape hatch (free text, `player.genderSelfDescribe`) —
+// respects "can also be diverse" for real rather than reskinning a binary
+// choice. Purely a data/flavor field — no gameplay branches on this
+// anywhere in the codebase, and none should ever be added.
+export type GenderIdentity = 'woman' | 'man' | 'non-binary' | 'prefer-not-to-say' | 'self-describe';
+
+// M48 — EPIC-36 §3. An abstract appearance token, never a hardcoded hex
+// value in game logic — same discipline `EntityToken` already enforces for
+// every other visual element (CLAUDE.md's Critical Architecture Rule).
+// **Scope decision, recorded not silent**: resolving this token inside
+// each skin's real `createPlayerTexture()` (the `SkinRenderer` contract,
+// M30) would mean extending that interface and updating all 8 existing
+// skin packages — a substantially bigger lift than this milestone's "add
+// the data field + selection UI" scope. Every skin currently falls back to
+// its single existing player texture regardless of which token is chosen
+// — the "documented default per skin" EPIC-36's own non-goals explicitly
+// allow, taken to its honest conclusion (every skin uses the fallback
+// today, not zero of them). Wiring real per-token rendering is a real,
+// tracked forward dependency for a future milestone, not built here.
+export type AppearanceToken = 'APPEARANCE_TONE_1' | 'APPEARANCE_TONE_2' | 'APPEARANCE_TONE_3' | 'APPEARANCE_TONE_4';
 // M23 §5 — expanded from 3 to 6 so getQuestsForToday() can rotate a 3-quest
 // window instead of offering the same fixed trio forever.
 export type QuestId =
@@ -19,11 +44,40 @@ export interface QuestState {
   completedOnDay: number | null;
 }
 
+// M35 — EPIC-31 §2. Deliberately named `WorldQuest*` (not `Quest*`) to avoid
+// colliding with `QuestId`/`QuestState` above, which stay exactly as they
+// are — `IrlQuestSystem.ts` is a separate, still-valid self-attested daily
+// buff mechanic, not being replaced. See `core/simulation/WorldQuests.ts`
+// for the full type/data set; only the 2 store-shape pieces live here.
+export type WorldQuestId = 'scout-the-transit-hub' | 'deliver-higgins-letter' | 'fund-the-kitchen';
+
+export interface WorldQuestState {
+  /** At most one active at a time — Section 3's HUD objective chip shows
+   *  either exactly this one or nothing, never a list to pick from. */
+  activeId: WorldQuestId | null;
+  completedIds: WorldQuestId[];
+}
+
 export interface CrisisLogEntry {
   id: string;
   day: number;
   choice: 'scapegoat' | 'solidarity';
   summary: string;
+}
+
+/** M43 §2 — EPIC-34. A player-placed piece of furniture, sourced from the
+ *  player's own crafted/upcycled inventory (M40), not a fixed catalog —
+ *  the one genuine upgrade EPIC-32's absorbed plan gets. `slotIndex` (not
+ *  raw x/y) indexes into the *current* flat's `InteriorDefinition.furnitureSlots`
+ *  — a deliberate, recorded resolution of EPIC-32's open "keyed by flat id
+ *  vs. single current-flat state" question: placements are logically "slot
+ *  N holds item X," re-laid-out against whichever flat is current, so
+ *  moving flats never silently deletes furniture the player already spent
+ *  a crafted item on. */
+export interface PlacedFurniture {
+  instanceId: string;
+  item: ItemToken;
+  slotIndex: number;
 }
 
 export interface GameState {
@@ -58,6 +112,17 @@ export interface GameState {
     /** M24 §2 — the last day the player used the "Work" action; null before
      *  the first use. Mirrors QuestState.completedOnDay's gating semantics. */
     lastWorkedDay: number | null;
+    /** M48 — EPIC-36 §1/§2/§3. New fields on an *already-existing* nested
+     *  slice — genuinely the unsafe case `useGameStore.test.ts` (M38) warned
+     *  about, unlike every other new field this project has added since
+     *  (which all landed as brand-new top-level slices specifically to
+     *  avoid this). `persistence.ts`'s `loadSave()` now defensively merges
+     *  `player` against `INITIAL_STATE.player` for real — see its own
+     *  comment and `persistence.test.ts`'s proof. */
+    name: string;
+    gender: GenderIdentity;
+    genderSelfDescribe?: string;
+    appearance: AppearanceToken;
   };
   commons: {
     resilienceScore: number;
@@ -77,6 +142,75 @@ export interface GameState {
   };
   quests: QuestState[];
   pulseState: DistrictPulseState | null;
+  /** M38 — EPIC-33 §1. A brand-new top-level slice: old saves that predate
+   *  this field simply lack the `inventory` key entirely, so zustand's
+   *  default shallow-merge `setState()` (see persistence.ts's `loadSave()`)
+   *  leaves this default in place automatically — confirmed, not just
+   *  assumed, by `useGameStore.test.ts`'s defensive-merge test. No manual
+   *  migration step was needed (contrast a *new field on an existing*
+   *  nested slice like `player`, which zustand's shallow merge would
+   *  replace wholesale from an old save and does need one). */
+  inventory: {
+    materials: Partial<Record<MaterialToken, number>>;
+    collectedScavengePoints: string[];
+  };
+  /** M39 — EPIC-33 §1. Another brand-new top-level slice (see `inventory`'s
+   *  comment above for why that makes it automatically safe against old
+   *  saves — no defensive-merge code needed here either). Deliberately kept
+   *  separate from `inventory` rather than adding a `.items` field onto it:
+   *  a *new field on an already-existing* slice is exactly the unsafe case
+   *  `useGameStore.test.ts` warns about (zustand's shallow merge replaces
+   *  `inventory` wholesale from a pre-M39 save, which would silently drop
+   *  crafted items if they lived inside it). `craftedItems` is this doc's
+   *  own naming addition — the task doc only specified `knownRecipes`/
+   *  `mastery`; crafted output has to live somewhere and a 3rd brand-new
+   *  top-level key is the same safe pattern, not a new one. */
+  crafting: {
+    knownRecipes: RecipeId[];
+    mastery: Partial<Record<CraftDiscipline, number>>;
+    craftedItems: Partial<Record<ItemToken, number>>;
+    collectedCookbookPoints: string[];
+  };
+  /** M43 §1/§2 — EPIC-34, absorbing EPIC-32's M36/M37 scope. Another
+   *  brand-new top-level slice (see `inventory`'s comment above) — safe
+   *  against old saves with no migration code needed. `currentFlatId` is a
+   *  `HousingOptions.ts` `HousingOption.id` kept as a plain `string` here
+   *  (not the `InteriorId`-coupled type) so `core/state/` never needs to
+   *  import from `world/` — the same layer direction every other slice in
+   *  this file already respects. */
+  housing: {
+    currentFlatId: string | null;
+    movedInOnDay: number | null;
+    furniture: PlacedFurniture[];
+    /** M54 — EPIC-38 §1. Opt-in flag for proximity visiting over the mesh;
+     *  defaults false (never opt-out, always opt-in). A NEW FIELD on this
+     *  *already-existing* slice, not a new top-level slice — needs the
+     *  same defensive merge treatment `player` got in M48, since an old
+     *  save's `housing` object won't have this key at all. See
+     *  `persistence.ts`'s `mergeWithDefaults()`. */
+    visitable: boolean;
+  };
+  /** M44 — EPIC-35 §2. Another brand-new top-level slice (see `inventory`'s
+   *  comment above). `currentRegionId` is kept as a plain `string` here,
+   *  not `world/regions/RegionData.ts`'s real `RegionId` type — the same
+   *  "core/state/ never imports from world/" reasoning `housing.currentFlatId`
+   *  already established for `HousingOption.id`. **Not the same concept as
+   *  `meta.regionCode`** (M16/M17's coarse real-world geo bucket for the
+   *  civic ticker, e.g. "US-WEST") — `world.currentRegionId` is the
+   *  in-fiction game-world region (WoW-style zone) EPIC-35 adds; the two
+   *  names are unrelated on purpose, not a collision to resolve. */
+  world: {
+    currentRegionId: string;
+  };
+  /** M47 — EPIC-36 §1/§2. Another brand-new top-level slice (see
+   *  `inventory`'s comment above). */
+  origin: {
+    familyTemplateId: FamilyTemplateId | null;
+  };
+  /** M35 — EPIC-31 §2/§3. Another brand-new top-level slice (see
+   *  `inventory`'s comment above) — safe against old saves with no
+   *  migration code needed. */
+  worldQuests: WorldQuestState;
 }
 
 export const INITIAL_STATE: GameState = {
@@ -91,6 +225,9 @@ export const INITIAL_STATE: GameState = {
     position: { x: 0, y: 0 },
     facing: 'down',
     lastWorkedDay: null,
+    name: '',
+    gender: 'prefer-not-to-say',
+    appearance: 'APPEARANCE_TONE_1',
   },
   commons: {
     // Starts mid-"crisis" tier (ResilienceDressing.ts: <15 emergency, <30
@@ -120,6 +257,32 @@ export const INITIAL_STATE: GameState = {
     { questId: 'check-in-call',        completedOnDay: null },
   ],
   pulseState: null,
+  inventory: {
+    materials: {},
+    collectedScavengePoints: [],
+  },
+  crafting: {
+    knownRecipes: [],
+    mastery: {},
+    craftedItems: {},
+    collectedCookbookPoints: [],
+  },
+  housing: {
+    currentFlatId: null,
+    movedInOnDay: null,
+    furniture: [],
+    visitable: false,
+  },
+  world: {
+    currentRegionId: 'REGION_COMMON_GROUND',
+  },
+  origin: {
+    familyTemplateId: null,
+  },
+  worldQuests: {
+    activeId: null,
+    completedIds: [],
+  },
 };
 
 export const useGameStore = createStore<GameState>()(() => INITIAL_STATE);

@@ -42,10 +42,23 @@ const KNOWN_PREVIEWS: Record<string, SkinPreview> = {
 };
 const FALLBACK_PREVIEW: SkinPreview = { desc: 'Community theme', accent: '#8a8a9a', bg: '#1a1a28' };
 
+// Bugfix: everything used to render flat in one long scroll (skins, audio,
+// region, proximity, new-game) — reported as settings reading "mixed
+// together." Split into tabs by "big settings thing," reusing the same
+// .settings-tabs/.settings-tab pattern ShopModal.ts already established.
+type SettingsTab = 'appearance' | 'audio' | 'region' | 'account';
+const TAB_LABELS: Record<SettingsTab, string> = {
+  appearance: '🎨 Appearance',
+  audio: '🔊 Audio',
+  region: '🌐 Region & Privacy',
+  account: '👤 Account',
+};
+
 export class SettingsModal {
   private readonly el: HTMLElement;
   private readonly disposeEscape: () => void;
   private scene?: Phaser.Scene;
+  private activeTab: SettingsTab = 'appearance';
   private confirmNewGame = false;
   private catalog: ThemeCatalogEntry[] = [
     { id: 'solarpunk', title: 'Neon Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
@@ -84,34 +97,50 @@ export class SettingsModal {
   }
 
   private render(): void {
-    const activeSkin = getActiveSkinId();
-
     this.el.innerHTML = `
       <div class="settings-panel interactive">
         <div class="settings-header">
           <span class="settings-title">⚙ Settings</span>
           <button class="settings-close" type="button" aria-label="Close">×</button>
         </div>
+        <div class="settings-tabs">
+          ${(Object.keys(TAB_LABELS) as SettingsTab[]).map(tab => `
+            <button class="settings-tab ${tab === this.activeTab ? 'settings-tab--active' : ''}" data-tab="${tab}" type="button">
+              ${TAB_LABELS[tab]}
+            </button>
+          `).join('')}
+        </div>
         <div class="settings-body">
-          ${this.renderSkins(activeSkin)}
-          ${this.renderAudio()}
-          ${this.renderRegion()}
-          ${this.renderProximityVisiting()}
-          <div class="settings-new-game">
-            ${this.confirmNewGame
-              ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
-                 <div class="new-game-confirm-btns">
-                   <button class="construction-submit new-game-yes" type="button">Yes, start over</button>
-                   <button class="auth-btn auth-btn--secondary new-game-cancel" type="button">Cancel</button>
-                 </div>`
-              : `<button class="auth-btn auth-btn--secondary new-game-btn" type="button">🔄 New Game</button>`
-            }
-          </div>
+          ${this.renderActiveTab()}
         </div>
       </div>
     `;
 
     this.bindEvents();
+  }
+
+  private renderActiveTab(): string {
+    switch (this.activeTab) {
+      case 'appearance': return this.renderSkins(getActiveSkinId());
+      case 'audio': return this.renderAudio();
+      case 'region': return `${this.renderRegion()}${this.renderProximityVisiting()}`;
+      case 'account': return this.renderAccount();
+    }
+  }
+
+  private renderAccount(): string {
+    return `
+      <div class="settings-new-game">
+        ${this.confirmNewGame
+          ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
+             <div class="new-game-confirm-btns">
+               <button class="construction-submit new-game-yes" type="button">Yes, start over</button>
+               <button class="auth-btn auth-btn--secondary new-game-cancel" type="button">Cancel</button>
+             </div>`
+          : `<button class="auth-btn auth-btn--secondary new-game-btn" type="button">🔄 New Game</button>`
+        }
+      </div>
+    `;
   }
 
   private renderSkins(activeSkin: string): string {
@@ -199,6 +228,15 @@ export class SettingsModal {
   private bindEvents(): void {
     this.el.querySelector<HTMLButtonElement>('.settings-close')
       ?.addEventListener('click', () => this.close());
+
+    this.el.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playUIClick();
+        this.activeTab = btn.dataset['tab'] as SettingsTab;
+        this.confirmNewGame = false;
+        this.render();
+      });
+    });
 
     this.el.querySelectorAll<HTMLButtonElement>('[data-skin]').forEach(btn => {
       btn.addEventListener('click', () => {

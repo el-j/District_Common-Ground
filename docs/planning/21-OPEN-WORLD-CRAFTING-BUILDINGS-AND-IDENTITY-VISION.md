@@ -151,11 +151,11 @@ Added per a direct follow-up from the user, and it reframes how all five pillars
 
 | Epic | Pillar | Milestones |
 |---|---|---|
-| [EPIC-33](../stories/EPIC-33-crafting-materials-and-upcycling.md) | Crafting, Materials & Upcycling | M38, M39, M40 |
-| [EPIC-34](../stories/EPIC-34-buildings-as-plugins-and-interiors.md) | Buildings as Plugins & Fine-Grained Interiors | M41, M42, M43 |
-| [EPIC-35](../stories/EPIC-35-open-world-regions-and-travel.md) | Open World Regions & Travel | M44, M45, M46 |
-| [EPIC-36](../stories/EPIC-36-character-origin-family-and-identity.md) | Character Origin, Family & Identity | M47, M48, M49 |
-| [EPIC-37](../stories/EPIC-37-hifi-art-direction-rayman-pivot.md) | Hi-Fidelity Art Direction | M50, M51, M52 |
-| [EPIC-38](../stories/EPIC-38-hub-plugin-universe-and-proximity-multiplayer.md) | Hub-and-Plugin Universe & Proximity Multiplayer | M53, M54 |
+| [EPIC-33](../archive/EPIC-33-crafting-materials-and-upcycling.md) | Crafting, Materials & Upcycling | M38, M39, M40 |
+| [EPIC-34](../archive/EPIC-34-buildings-as-plugins-and-interiors.md) | Buildings as Plugins & Fine-Grained Interiors | M41, M42, M43 |
+| [EPIC-35](../archive/EPIC-35-open-world-regions-and-travel.md) | Open World Regions & Travel | M44, M45, M46 |
+| [EPIC-36](../archive/EPIC-36-character-origin-family-and-identity.md) | Character Origin, Family & Identity | M47, M48, M49 |
+| [EPIC-37](../archive/EPIC-37-hifi-art-direction-rayman-pivot.md) | Hi-Fidelity Art Direction | M50, M51, M52 |
+| [EPIC-38](../archive/EPIC-38-hub-plugin-universe-and-proximity-multiplayer.md) | Hub-and-Plugin Universe & Proximity Multiplayer | M53, M54 |
 
 See [`docs/TASK-STATUS.md`](../TASK-STATUS.md) for the reconciled Milestone Overview table, including the M33/M36/M37 supersession notes.

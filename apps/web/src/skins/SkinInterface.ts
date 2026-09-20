@@ -70,6 +70,21 @@ export interface SkinPalette {
   worldWater?: string;
   worldDirtPath?: string;
   worldSidewalk?: string;
+  // 2026-09-20 audit §1 architecture-rule fix — decoration/furniture prop
+  // colors (PROP_BOARDED_WINDOW, PROP_ANVIL, ITEM_SCRAP_STOOL, etc.) used
+  // to be hardcoded 0x.../'#...' literals directly in
+  // WorldScene.ts/InteriorScene.ts/InteractionPrompt.ts, a confirmed
+  // violation of this file's own "game logic must never reference...color
+  // hex codes" rule. Optional, keyed by whichever PropToken/
+  // OutdoorPropToken/DressingPropToken/ItemToken/interaction-bubble id is
+  // relevant — a plain string-keyed map rather than one giant union type,
+  // since (unlike assetMap/EntityToken) an incomplete manifest here is a
+  // real, supported case, not an error: ThemeManager.getActivePropColor()
+  // falls back to DEFAULT_PROP_COLORS (the exact pre-fix hardcoded hex
+  // each token used to have) per-key, so every pre-existing manifest
+  // stays valid untouched and any skin can override just the tokens it
+  // wants to art-direct differently.
+  propColors?: Partial<Record<string, string>>;
 }
 
 export interface SkinAudioProfile {

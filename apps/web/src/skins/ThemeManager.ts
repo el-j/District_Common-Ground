@@ -61,6 +61,76 @@ export function getActiveWorldPalette(): ResolvedWorldPalette {
   return resolveWorldPalette(cached?.palette);
 }
 
+// 2026-09-20 audit §1 architecture-rule fix — the exact pre-fix hardcoded
+// hex values from WorldScene.ts's updateWorldDressing()/
+// renderOutdoorDressing(), InteriorScene.ts's PROP_DRAW_SPEC/
+// FURNITURE_DRAW_SPEC, and InteractionPrompt.ts's bounce-bubble fill,
+// kept here as the fallback so every existing skin manifest (none of
+// which declare `propColors` yet) renders identically to before this
+// fix — only the *source* of the color moved (from an inline literal to
+// a resolved default), not the visual result. Any skin can override
+// individual tokens later via its manifest's `propColors` without this
+// list needing to change.
+export const DEFAULT_PROP_COLORS: Record<string, string> = {
+  // WorldScene.ts — resilience-tier street dressing (DressingPropToken)
+  PROP_BOARDED_WINDOW: '#5a4a3a',
+  PROP_CRACKED_ASPHALT: '#1c1c26',
+  PROP_MARKET_STALL: '#cc8844',
+  PROP_FLOWER_PLANTER: '#dd5588',
+  PROP_BUNTING: '#eecc44',
+  // WorldScene.ts — fixed outdoor decoration (OutdoorPropToken)
+  PROP_ACCENT_TREE: '#1c4020',
+  PROP_BUSH: '#2c5a2e',
+  PROP_STREET_BENCH: '#6b4a2a',
+  PROP_FENCE: '#8a7250',
+  PROP_PARKED_CAR: '#555a66',
+  PROP_PARKED_BIKE: '#445566',
+  // InteriorScene.ts — PROP_DRAW_SPEC (PropToken)
+  PROP_BIKE_RACK: '#556677',
+  PROP_COT: '#774433',
+  PROP_BOXES: '#996633',
+  PROP_LAMP: '#ffdd88',
+  PROP_TABLE: '#8b5a2b',
+  PROP_STOVE: '#444444',
+  PROP_CRATES: '#cc8844',
+  PROP_BENCH: '#775533',
+  PROP_CHALKBOARD: '#223322',
+  PROP_BANNER: '#dd4444',
+  PROP_ANVIL: '#333333',
+  PROP_FORGE: '#883322',
+  PROP_SAWHORSE: '#9c7a4a',
+  PROP_LUMBER_STACK: '#b08a55',
+  PROP_SHELF_HARDWARE: '#667788',
+  PROP_TOOL_RACK: '#556655',
+  PROP_SHELF_GOODS: '#88aa55',
+  PROP_CASH_REGISTER: '#ccaa44',
+  PROP_BOOKSHELF: '#5a4028',
+  PROP_READING_TABLE: '#8b6a3f',
+  PROP_SCRAP_PILE: '#6a6255',
+  PROP_CRANE_ARM: '#445544',
+  PROP_CRUSHED_CAR: '#883333',
+  // InteriorScene.ts — FURNITURE_DRAW_SPEC (placeable ItemToken subset)
+  ITEM_SCRAP_STOOL: '#778899',
+  ITEM_PLANTER_BOX: '#6a8a4a',
+  ITEM_WIRED_LAMP: '#ffe0a0',
+  ITEM_UPCYCLED_WORKBENCH: '#8a6a4a',
+  // InteractionPrompt.ts — the "bounce bubble" behind an interactable
+  UI_INTERACTION_BUBBLE: '#0f1420',
+};
+
+/** Resolves one prop/furniture/UI-chrome color for whichever skin is
+ * currently active, reading synchronously from the manifest cache (same
+ * contract as getActiveWorldPalette) with a per-token fallback to
+ * DEFAULT_PROP_COLORS. Returns a hex string — callers in Phaser-drawing
+ * code convert via Phaser.Display.Color.HexStringToColor(...).color
+ * themselves (kept out of this module so it stays Phaser-independent,
+ * like the rest of ThemeManager.ts). */
+export function getActivePropColorHex(token: string): string {
+  const { activeSkin } = useGameStore.getState().meta;
+  const cached = MANIFEST_CACHE.get(activeSkin);
+  return cached?.palette.propColors?.[token] ?? DEFAULT_PROP_COLORS[token] ?? '#ff00ff';
+}
+
 async function fetchManifest(skinId: string): Promise<SkinManifest> {
   const cached = MANIFEST_CACHE.get(skinId);
   if (cached) return cached;

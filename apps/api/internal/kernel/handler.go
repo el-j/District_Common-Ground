@@ -39,6 +39,17 @@ func (h *Handler) ListGames(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(games)
 }
 
+// ListBuiltinKernelPlugins serves GET /api/v1/kernel-plugins — the server's
+// expected-version record for the always-on plugins hardcoded into the
+// client bundle (see BuiltinKernelPluginManifests's doc comment). The web
+// client's Plugin Library compares its own bundled manifest versions
+// against this to show real "update available" status for those, the same
+// way it already does for user-installed plugins against GET /games.
+func (h *Handler) ListBuiltinKernelPlugins(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(BuiltinKernelPluginManifests())
+}
+
 type verificationRequestBody struct {
 	SourceKind   string         `json:"sourceKind"`
 	ManifestURL  *string        `json:"manifestUrl,omitempty"`

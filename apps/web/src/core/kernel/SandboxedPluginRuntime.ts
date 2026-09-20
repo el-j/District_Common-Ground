@@ -1,6 +1,24 @@
 import type { GameSessionContext, MinigameManifest, ResourceGrant } from '@district-cg/shared-types';
 import { HostPlatformAPI, type HostPlatformCallbacks } from './HostPlatformAPI';
 
+// Security boundary: this actually *runs* an untrusted plugin bundle (as
+// opposed to PluginSandbox.ts, which only inspects its manifest). Same
+// isolation mechanism — `allow-scripts` without `allow-same-origin` (see
+// `mount()` below) gives the iframe an opaque origin, so it cannot reach
+// this page's DOM/storage/cookies directly. The `postMessage` target '*'
+// is safe for the same reason as PluginSandbox.ts: an opaque origin can't
+// be addressed by origin anyway, and the sandbox already blocks anything
+// harmful regardless of who receives the message.
+//
+// The actual privilege boundary a plugin bundle operates under is
+// `handleHostCall()`'s `switch` below: the plugin can only ever reach the
+// 4 explicitly-named HostPlatformAPI methods (playSFX/grantRewards/
+// notify/closeMinigame) — there is no generic RPC or eval-style dispatch,
+// so a compromised/malicious bundle cannot call arbitrary host code no
+// matter what method name it sends. `bridgeId` (checked in `onMessage`)
+// is a correlation id for this specific mount, not a security token —
+// same role as PluginSandbox.ts's nonce.
+
 export interface SandboxedPluginRuntimeOptions {
   manifest: MinigameManifest;
   bundleText: string;

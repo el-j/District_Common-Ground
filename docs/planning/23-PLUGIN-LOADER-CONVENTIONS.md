@@ -1,6 +1,6 @@
 # 23 — Plugin Loader Conventions & Container-Hosting Spike
 
-Companion to [EPIC-38](../stories/EPIC-38-hub-plugin-universe-and-proximity-multiplayer.md) / [M53](../tasks/M53-plugin-first-architecture-conventions.md).
+Companion to [EPIC-38](../archive/EPIC-38-hub-plugin-universe-and-proximity-multiplayer.md) / [M53](../archive/M53-plugin-first-architecture-conventions.md).
 
 ## 1. Audit — the 3 existing loaders, as they actually are today
 
@@ -65,4 +65,4 @@ Rules that make this canonical, not just "however `MinigameLoader` happens to lo
 
 **What it would actually buy**: nothing, for any of the 3 plugin types that exist today. `MinigameLoader`, `SkinRendererLoader`, and `BuildingInteriorLoader` all load pure client-side code — rendering logic, game rules, texture generation — none of which does or needs server-side execution or persistent state. Running any of them in a container would add all the cost above for zero functional gain.
 
-**Conclusion: not worth it yet — recorded honestly, per this section's own instruction that this is an acceptable outcome.** The one upcoming feature that plausibly *does* need a real persistent service is [M54](../tasks/M54-proximity-visiting-over-the-mesh.md)'s proximity-visiting-over-the-mesh — but that's a live peer-discovery/session problem, materially different in shape from "run a minigame's code in a container," and already has its own real infrastructure precedent to reuse (the existing `MeshTransportPlugin`/peer-discovery mesh layer, not a generic container-hosted-plugin mechanism). If a genuine need for server-side plugin execution shows up, it is far more likely to look like M54's mesh-session service than a generalized version of this spike — revisit there, grounded in that milestone's real requirements, rather than building generic container-hosting infrastructure speculatively now.
+**Conclusion: not worth it yet — recorded honestly, per this section's own instruction that this is an acceptable outcome.** The one upcoming feature that plausibly *does* need a real persistent service is [M54](../archive/M54-proximity-visiting-over-the-mesh.md)'s proximity-visiting-over-the-mesh — but that's a live peer-discovery/session problem, materially different in shape from "run a minigame's code in a container," and already has its own real infrastructure precedent to reuse (the existing `MeshTransportPlugin`/peer-discovery mesh layer, not a generic container-hosted-plugin mechanism). If a genuine need for server-side plugin execution shows up, it is far more likely to look like M54's mesh-session service than a generalized version of this spike — revisit there, grounded in that milestone's real requirements, rather than building generic container-hosting infrastructure speculatively now.

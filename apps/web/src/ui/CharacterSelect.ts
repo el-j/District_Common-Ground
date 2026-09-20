@@ -2,7 +2,6 @@ import { beginFromFamilyTemplate, setPlayerName, setPlayerGender, setPlayerAppea
 import { playUIClick } from '../core/audio/SoundSynth';
 import { FAMILY_TEMPLATES, type FamilyTemplate } from '../core/simulation/FamilyTemplates';
 import type { GenderIdentity, AppearanceToken, ClassRole } from '../core/state/useGameStore';
-import { GeoPreviewModal } from './GeoPreviewModal';
 
 // M48 — EPIC-36 §1. Falls back to the flavor name each family template's
 // classRole already carries (the pre-M47 archetype names) if the player
@@ -88,7 +87,6 @@ export class CharacterSelect {
         <h1 class="cs-title">District: Common Ground</h1>
         <p class="cs-subtitle">You were born into one of these families. Choose where your story begins.</p>
         <div class="cs-cards">${cards}</div>
-        <button class="cs-geo-preview-link" type="button">🗺️ Preview Real-World Neighborhood Mode (PoC)</button>
       </div>
     `;
   }
@@ -229,11 +227,6 @@ export class CharacterSelect {
       setPlayerAppearance(this.appearanceChoice);
       this.dismiss();
       this.onComplete();
-    });
-
-    this.el.querySelector<HTMLButtonElement>('.cs-geo-preview-link:not([data-back]):not([data-back-identity])')?.addEventListener('click', () => {
-      playUIClick();
-      new GeoPreviewModal(this.el.parentElement ?? document.body);
     });
   }
 

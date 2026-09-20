@@ -37,6 +37,14 @@ import { SettingsModal } from './SettingsModal';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { setHousingVisitable } from '../core/state/actions';
 
+/** Bugfix: settings are now split into tabs (Appearance/Audio/Region &
+ *  Privacy/Account) instead of one long flat scroll — see SettingsModal.ts's
+ *  own comment. Tests for anything outside the default "appearance" tab
+ *  have to switch tabs first, same as ShopModal.test.ts's own tab tests. */
+function openTab(root: HTMLElement, tab: 'appearance' | 'audio' | 'region' | 'account'): void {
+  root.querySelector<HTMLButtonElement>(`[data-tab="${tab}"]`)!.click();
+}
+
 // M31 Section 3 — the standalone mute HUD icon was removed and folded into
 // SettingsModal, reusing SoundSynth's existing mute flag rather than a
 // second one. See EPIC-31/M31 Section 3.
@@ -51,6 +59,7 @@ describe('SettingsModal audio control', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'audio');
 
     const btn = root.querySelector<HTMLButtonElement>('.settings-mute-btn');
     expect(btn).not.toBeNull();
@@ -61,6 +70,7 @@ describe('SettingsModal audio control', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'audio');
 
     root.querySelector<HTMLButtonElement>('.settings-mute-btn')!.click();
 
@@ -73,6 +83,7 @@ describe('SettingsModal audio control', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'audio');
 
     root.querySelector<HTMLButtonElement>('.settings-mute-btn')!.click();
 
@@ -92,6 +103,7 @@ describe('SettingsModal proximity visiting toggle', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'region');
 
     expect(root.querySelector('.settings-proximity-btn')).toBeNull();
     expect(root.querySelector('.settings-proximity-hint')).not.toBeNull();
@@ -102,6 +114,7 @@ describe('SettingsModal proximity visiting toggle', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'region');
 
     const btn = root.querySelector<HTMLButtonElement>('.settings-proximity-btn');
     expect(btn).not.toBeNull();
@@ -113,9 +126,39 @@ describe('SettingsModal proximity visiting toggle', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new SettingsModal(root);
+    openTab(root, 'region');
 
     root.querySelector<HTMLButtonElement>('.settings-proximity-btn')!.click();
 
     expect(setHousingVisitable).toHaveBeenCalledWith(true);
+  });
+});
+
+// Bugfix — settings tabs.
+describe('SettingsModal tabs', () => {
+  beforeEach(() => {
+    useGameStore.setState(INITIAL_STATE, true);
+  });
+
+  it('defaults to the Appearance tab, showing the skin grid', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+
+    expect(root.querySelector('.settings-tab--active')?.getAttribute('data-tab')).toBe('appearance');
+    expect(root.querySelector('.skin-grid')).not.toBeNull();
+    expect(root.querySelector('.settings-mute-btn')).toBeNull();
+  });
+
+  it('switches tabs on click, showing only the active tab\'s content', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+
+    openTab(root, 'account');
+
+    expect(root.querySelector('.settings-tab--active')?.getAttribute('data-tab')).toBe('account');
+    expect(root.querySelector('.settings-new-game')).not.toBeNull();
+    expect(root.querySelector('.skin-grid')).toBeNull();
   });
 });

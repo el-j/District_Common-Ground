@@ -13,6 +13,7 @@ import type { RecipeId, CraftingStation, ItemToken } from '../core/simulation/Re
 import type { MaterialCategory } from '../core/simulation/Materials';
 import { housingOptionsForInterior } from '../core/simulation/HousingOptions';
 import { getFamilyTemplate } from '../core/simulation/FamilyTemplates';
+import { resolvePropColor } from '../skins/resolvePropColor';
 
 const TS = 16;
 
@@ -20,41 +21,58 @@ const TS = 16;
 // renderInteriorProps() used, moved here since props now render inside the
 // isolated interior scene, not painted onto the shared exterior tilemap.
 // M42 adds 10 more tokens for the 5 new workshop/retail/library interiors.
-const PROP_DRAW_SPEC: Record<PropToken, { w: number; h: number; color: number }> = {
-  PROP_BIKE_RACK: { w: 12, h: 6, color: 0x556677 },
-  PROP_COT: { w: 14, h: 8, color: 0x774433 },
-  PROP_BOXES: { w: 10, h: 10, color: 0x996633 },
-  PROP_LAMP: { w: 4, h: 8, color: 0xffdd88 },
-  PROP_TABLE: { w: 20, h: 8, color: 0x8b5a2b },
-  PROP_STOVE: { w: 10, h: 10, color: 0x444444 },
-  PROP_CRATES: { w: 10, h: 8, color: 0xcc8844 },
-  PROP_BENCH: { w: 14, h: 5, color: 0x775533 },
-  PROP_CHALKBOARD: { w: 12, h: 10, color: 0x223322 },
-  PROP_BANNER: { w: 14, h: 4, color: 0xdd4444 },
-  PROP_ANVIL: { w: 10, h: 8, color: 0x333333 },
-  PROP_FORGE: { w: 12, h: 10, color: 0x883322 },
-  PROP_SAWHORSE: { w: 14, h: 6, color: 0x9c7a4a },
-  PROP_LUMBER_STACK: { w: 12, h: 8, color: 0xb08a55 },
-  PROP_SHELF_HARDWARE: { w: 14, h: 10, color: 0x667788 },
-  PROP_TOOL_RACK: { w: 10, h: 10, color: 0x556655 },
-  PROP_SHELF_GOODS: { w: 14, h: 10, color: 0x88aa55 },
-  PROP_CASH_REGISTER: { w: 8, h: 8, color: 0xccaa44 },
-  PROP_BOOKSHELF: { w: 10, h: 12, color: 0x5a4028 },
-  PROP_READING_TABLE: { w: 12, h: 6, color: 0x8b6a3f },
-  PROP_SCRAP_PILE: { w: 14, h: 10, color: 0x6a6255 },
-  PROP_CRANE_ARM: { w: 6, h: 16, color: 0x445544 },
-  PROP_CRUSHED_CAR: { w: 16, h: 10, color: 0x883333 },
+// Dimensions only — color is resolved live at lookup time (propDrawSpec()/
+// furnitureDrawSpec() below), not baked in here. These are module-level
+// `const`s evaluated once at import time; calling resolvePropColor() here
+// directly would freeze every prop's color to whatever skin happened to be
+// active at that first module load and never update again on a later skin
+// switch, so the color lookup has to happen per-call instead.
+const PROP_DIMENSIONS: Record<PropToken, { w: number; h: number }> = {
+  PROP_BIKE_RACK: { w: 12, h: 6 },
+  PROP_COT: { w: 14, h: 8 },
+  PROP_BOXES: { w: 10, h: 10 },
+  PROP_LAMP: { w: 4, h: 8 },
+  PROP_TABLE: { w: 20, h: 8 },
+  PROP_STOVE: { w: 10, h: 10 },
+  PROP_CRATES: { w: 10, h: 8 },
+  PROP_BENCH: { w: 14, h: 5 },
+  PROP_CHALKBOARD: { w: 12, h: 10 },
+  PROP_BANNER: { w: 14, h: 4 },
+  PROP_ANVIL: { w: 10, h: 8 },
+  PROP_FORGE: { w: 12, h: 10 },
+  PROP_SAWHORSE: { w: 14, h: 6 },
+  PROP_LUMBER_STACK: { w: 12, h: 8 },
+  PROP_SHELF_HARDWARE: { w: 14, h: 10 },
+  PROP_TOOL_RACK: { w: 10, h: 10 },
+  PROP_SHELF_GOODS: { w: 14, h: 10 },
+  PROP_CASH_REGISTER: { w: 8, h: 8 },
+  PROP_BOOKSHELF: { w: 10, h: 12 },
+  PROP_READING_TABLE: { w: 12, h: 6 },
+  PROP_SCRAP_PILE: { w: 14, h: 10 },
+  PROP_CRANE_ARM: { w: 6, h: 16 },
+  PROP_CRUSHED_CAR: { w: 16, h: 10 },
 };
+
+function propDrawSpec(token: PropToken): { w: number; h: number; color: number } {
+  const { w, h } = PROP_DIMENSIONS[token];
+  return { w, h, color: resolvePropColor(token) };
+}
 
 // M43 §2/§3 — EPIC-34. Only the 4 'furniture'-kind ItemTokens ever need a
 // draw spec here (the rest of the catalog is sold/used, never placed in a
 // room) — a `Partial` map, not a full `Record<ItemToken, ...>`.
-const FURNITURE_DRAW_SPEC: Partial<Record<ItemToken, { w: number; h: number; color: number }>> = {
-  ITEM_SCRAP_STOOL: { w: 8, h: 8, color: 0x778899 },
-  ITEM_PLANTER_BOX: { w: 12, h: 6, color: 0x6a8a4a },
-  ITEM_WIRED_LAMP: { w: 5, h: 9, color: 0xffe0a0 },
-  ITEM_UPCYCLED_WORKBENCH: { w: 16, h: 8, color: 0x8a6a4a },
+const FURNITURE_DIMENSIONS: Partial<Record<ItemToken, { w: number; h: number }>> = {
+  ITEM_SCRAP_STOOL: { w: 8, h: 8 },
+  ITEM_PLANTER_BOX: { w: 12, h: 6 },
+  ITEM_WIRED_LAMP: { w: 5, h: 9 },
+  ITEM_UPCYCLED_WORKBENCH: { w: 16, h: 8 },
 };
+
+function furnitureDrawSpec(item: ItemToken): { w: number; h: number; color: number } | undefined {
+  const dims = FURNITURE_DIMENSIONS[item];
+  if (!dims) return undefined;
+  return { w: dims.w, h: dims.h, color: resolvePropColor(item) };
+}
 
 export interface InteriorSceneData {
   interiorId: InteriorId;
@@ -151,16 +169,26 @@ export class InteriorScene extends Phaser.Scene {
     this.add.text(x1px + 6, y1px + 4, def.label, { fontSize: '9px', color: '#e8d9b8' }).setDepth(2);
 
     this.physics.world.setBounds(x1px, y1px, wpx, hpx);
-    this.cameras.main.setBounds(x1px, y1px, wpx, hpx);
 
     const cx = x1px + wpx / 2, cy = y1px + hpx / 2;
     const sprite = this.physics.add.sprite(cx, cy, 'player', 0);
     sprite.setCollideWorldBounds(true);
     this.player = new PlayerEntity(sprite);
-    this.cameras.main.startFollow(sprite, true, 0.15, 0.15);
 
     const zoom = Math.min(3, this.scale.width / wpx, this.scale.height / hpx);
     this.cameras.main.setZoom(Math.max(1, zoom));
+
+    // Bugfix: Phaser's camera-bounds clamp (clampX/clampY in BaseCamera.js)
+    // pins scroll to a fixed, off-center value whenever the bounds are
+    // narrower than the display — it does NOT auto-center them — so a
+    // startFollow()+setBounds() camera on a room smaller than the viewport
+    // (true for every interior in this game, most severely the 2-tile-wide
+    // Library) rendered badly off-center. Every room here is small enough
+    // to fit the viewport at the zoom just computed (that's what the
+    // Math.min above guarantees), so the camera can simply be centered once
+    // and left there — no follow needed, and none of Phaser's clamp math
+    // gets a chance to mis-center it.
+    this.cameras.main.centerOn(cx, cy);
 
     inputManager.init(this);
     this.actionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
@@ -366,7 +394,7 @@ export class InteriorScene extends Phaser.Scene {
     const furniture = useGameStore.getState().housing.furniture;
     furniture.forEach(placed => {
       const slot = slots[placed.slotIndex];
-      const spec = FURNITURE_DRAW_SPEC[placed.item];
+      const spec = furnitureDrawSpec(placed.item);
       if (!slot || !spec) return;
       const px = slot.x * TS + TS / 2, py = slot.y * TS + TS / 2;
       this.furnitureSprites.push(this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3));
@@ -408,7 +436,7 @@ export class InteriorScene extends Phaser.Scene {
   private renderProps(propsOverride?: PropPlacement[]): void {
     const props = propsOverride ?? INTERIORS[this.interiorId].props;
     props.forEach(prop => {
-      const spec = PROP_DRAW_SPEC[prop.token];
+      const spec = propDrawSpec(prop.token);
       const px = prop.x * TS + TS / 2, py = prop.y * TS + TS / 2;
       const rect = this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3);
       this.propSprites.push(rect);

@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { resolvePropColor } from '../skins/resolvePropColor';
 
 /**
  * M21 — Interactable Bounce-Bubble Indicators (spec §6.1, §7.5).
@@ -23,7 +24,7 @@ export class InteractionPrompt {
    *  NPC/node — i.e. clicking the bubble does exactly what pressing E
    *  would, not a separate/duplicated interaction. */
   constructor(scene: Phaser.Scene, x: number, y: number, icon: string, onClick?: () => void) {
-    this.bubble = scene.add.circle(0, -18, 8, 0x0f1420, 0.72);
+    this.bubble = scene.add.circle(0, -18, 8, resolvePropColor('UI_INTERACTION_BUBBLE'), 0.72);
     this.icon = scene.add
       .text(0, -18, icon, { fontSize: '10px' })
       .setOrigin(0.5, 0.5);

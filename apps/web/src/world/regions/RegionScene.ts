@@ -134,8 +134,12 @@ export class RegionScene extends Phaser.Scene {
 
     // M41/M45 — WAKE listener for returning from an interior entered from
     // this region (e.g. the Scrapyard Depot) — mirrors WorldScene.ts's own
-    // onWakeFromInterior() exactly.
+    // onWakeFromInterior() exactly, including its bugfix: inputManager is a
+    // shared singleton InteriorScene.create() rebinds to its own input
+    // plugin, so it has to be rebound back here on wake or movement stays
+    // dead for the rest of the session (see WorldScene.ts's own comment).
     this.events.on(Phaser.Scenes.Events.WAKE, (_sys: unknown, data: { returnX: number; returnY: number }) => {
+      inputManager.init(this);
       const px = data.returnX * TS + TS / 2, py = data.returnY * TS + TS / 2;
       this.player.getSprite().setPosition(px, py);
       this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);

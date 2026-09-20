@@ -49,6 +49,20 @@ type pluginArtifact interface {
 	Lookup(symbolName string) (goplugin.Symbol, error)
 }
 
+// openPlugin (and runtimeLoader.load below) is a genuinely different trust
+// model from the web client's plugin system — worth being explicit about,
+// since they share the word "plugin" but not the safety properties.
+// goplugin.Open loads and runs a native .so with the full privileges of
+// this server process: real filesystem/network/process access, no
+// sandbox, no permission whitelist, nothing analogous to the web client's
+// PluginSandbox.ts/SandboxedPluginRuntime.ts iframe isolation. A .so
+// dropped in defaultPluginDir ("./plugins") — and anything watch() below
+// auto-discovers there every pluginPollInterval — is implicitly as fully
+// trusted as this binary itself: there is no verification step and no
+// analog of the web-side hash-check/quarantine/owner-approval flow
+// (PluginRegistry.ts). Server operators are the only gate here: this path
+// must never be reachable by anything less trusted than whoever can
+// already deploy to this server's filesystem.
 var openPlugin = func(path string) (pluginArtifact, error) {
 	return goplugin.Open(path)
 }

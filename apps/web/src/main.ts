@@ -14,13 +14,9 @@ import { bootstrapInstalledPlugins } from './core/kernel/PluginRegistry';
 import { Kernel } from './core/kernel/Kernel';
 import { switchSkin, getActiveSkinId } from './skins/ThemeManager';
 import { inputManager } from './world/InputManager';
-import { skinsPlugin } from './skins/plugin';
-import { worldPlugin } from './world/plugin';
+import { BUILTIN_KERNEL_PLUGINS } from './core/kernel/builtinKernelPlugins';
+import { getDisabledKernelPluginIds } from './core/kernel/KernelPluginPrefs';
 import { fetchAndMergeMinigameCatalog } from './core/kernel/builtinMinigameCatalog';
-import { geoWeatherPlugin } from '@district-cg/plugin-geo-weather';
-import { meshCommsPlugin } from '@district-cg/plugin-mesh-comms';
-import { mutualCreditPlugin } from '@district-cg/plugin-mutual-credit';
-import { bitchatPlugin } from '@district-cg/plugin-bitchat';
 import { initOfflineReadiness } from './core/pwa/ServiceWorkerRegistry';
 import { initMeshRuntime, sendChatMessage, onChatMessage, getActivePeerCount, getTransportBadges } from './core/mesh/meshRuntime';
 
@@ -75,13 +71,15 @@ async function boot(): Promise<void> {
     getActivePeerCount,
     getTransportBadges,
   });
-  kernel
-    .use(skinsPlugin)
-    .use(worldPlugin)
-    .use(geoWeatherPlugin)
-    .use(meshCommsPlugin)
-    .use(mutualCreditPlugin)
-    .use(bitchatPlugin);
+  // Plugin Library's "Built-in Plugins" section can disable any non-core
+  // entry (skins/world stay mandatory); that preference only takes effect
+  // on the next load, since KernelPluginModule has no live unregister path.
+  const disabledKernelPluginIds = await getDisabledKernelPluginIds();
+  for (const entry of BUILTIN_KERNEL_PLUGINS) {
+    if (entry.core || !disabledKernelPluginIds.has(entry.module.manifest.id)) {
+      kernel.use(entry.module);
+    }
+  }
 
   const viewport = getViewportSize();
 

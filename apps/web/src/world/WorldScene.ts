@@ -15,7 +15,7 @@ import { SafeHavenBanner } from '../ui/SafeHavenBanner';
 import { TopHUD } from '../ui/TopHUD';
 import { useGameStore, type AppearanceToken, type WorldQuestId } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
-import { addTrust, spendEnergy, reduceStress, collectMaterial, learnRecipe, collectCookbook, travelToRegion, assignWorldQuest, checkZoneWorldQuestProgress, checkTalkWorldQuestProgress } from '../core/state/actions';
+import { addTrust, spendEnergy, collectMaterial, learnRecipe, collectCookbook, travelToRegion, assignWorldQuest, checkZoneWorldQuestProgress, checkTalkWorldQuestProgress } from '../core/state/actions';
 import { startBGMLoop, playRain, stopRain, setBgmPhase } from '../core/audio/SoundSynth';
 import { weatherTier, type WeatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
@@ -25,6 +25,7 @@ import { getActiveWorldPalette, getActiveSkinId, getActiveManifest, type Resolve
 import { SkinRendererLoader } from '../skins/SkinRendererLoader';
 import type { SkinRenderer } from '../skins/SkinRendererInterface';
 import { INTERIORS, ALL_INTERIOR_IDS, type InteriorDefinition, type InteriorId } from './InteriorProps';
+import { getHousingOption } from '../core/simulation/HousingOptions';
 import type { InteriorSceneData } from './InteriorScene';
 import { resilienceTier, dressingTierFor, dressingPropsForTier, type DressingTier, type DressingPropToken } from './ResilienceDressing';
 import { OUTDOOR_DRESSING_PROPS, type OutdoorPropToken } from './OutdoorDressing';
@@ -37,6 +38,7 @@ import { DIALOGUES, pickDialogueKey } from './NpcDialogues';
 import { COLS, ROWS, T, TILE_FRAME_COUNT, BLOCKING_TILES, DOOR_TILES, buildMap, isWalkableTile } from './MapData';
 import type { RegionSceneData } from './regions/RegionScene';
 import { REGIONS, isRegionUnlocked, type RegionId } from './regions/RegionData';
+import { resolvePropColor } from '../skins/resolvePropColor';
 
 // M41/M44 — the minimal shape both InteriorScene.ts's and RegionScene.ts's
 // WAKE payloads satisfy — onWakeFromInterior() only ever reads returnX/
@@ -821,8 +823,29 @@ export class WorldScene extends Phaser.Scene {
       if (state.meta.day !== this.prevDay) {
         this.ticksSinceDay = 0;
         this.prevDay = state.meta.day;
+        // Bugfix: advanceDay() (core/state/actions.ts) only ticks stats —
+        // it's a headless store function with no Phaser access — and left
+        // the player standing wherever they were when the day ended. "End
+        // Day" is framed to the player as going to sleep, so send them to
+        // their rented flat's door on the same tick the day actually
+        // advances. Runs unconditionally (safe even while this scene is
+        // asleep — it's just a transform write, picked up next wake).
+        this.movePlayerHomeOnDayEnd(state.housing.currentFlatId);
       }
     });
+  }
+
+  /** See the day-advance subscription above for why this exists. No-ops
+   *  when the player has no flat (currentFlatId === null) — that's a real,
+   *  valid "no fixed home" state, not a bug. */
+  private movePlayerHomeOnDayEnd(currentFlatId: string | null): void {
+    const option = getHousingOption(currentFlatId);
+    if (!option) return;
+    const def = INTERIORS[option.buildingInteriorId as InteriorId];
+    if (!def || def.homeRegion !== 'REGION_COMMON_GROUND') return;
+    const px = def.doorTile.x * TS + TS / 2, py = def.doorTile.y * TS + TS / 2;
+    this.player.getSprite().setPosition(px, py);
+    this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);
   }
 
   /**
@@ -1276,7 +1299,6 @@ export class WorldScene extends Phaser.Scene {
       targets: txt, y: txt.y - 24, alpha: 0, duration: 900,
       ease: 'Power2', onComplete: () => txt.destroy(),
     });
-    reduceStress(0); // placeholder — community effect captured in trust
   }
 
   private openHistory(): void {
@@ -1411,11 +1433,11 @@ export class WorldScene extends Phaser.Scene {
     this.dressingSprites = [];
 
     const drawSpec: Record<DressingPropToken, { w: number; h: number; color: number }> = {
-      PROP_BOARDED_WINDOW: { w: 12, h: 10, color: 0x5a4a3a },
-      PROP_CRACKED_ASPHALT: { w: 14, h: 4, color: 0x1c1c26 },
-      PROP_MARKET_STALL: { w: 16, h: 10, color: 0xcc8844 },
-      PROP_FLOWER_PLANTER: { w: 10, h: 6, color: 0xdd5588 },
-      PROP_BUNTING: { w: 16, h: 4, color: 0xeecc44 },
+      PROP_BOARDED_WINDOW: { w: 12, h: 10, color: resolvePropColor('PROP_BOARDED_WINDOW') },
+      PROP_CRACKED_ASPHALT: { w: 14, h: 4, color: resolvePropColor('PROP_CRACKED_ASPHALT') },
+      PROP_MARKET_STALL: { w: 16, h: 10, color: resolvePropColor('PROP_MARKET_STALL') },
+      PROP_FLOWER_PLANTER: { w: 10, h: 6, color: resolvePropColor('PROP_FLOWER_PLANTER') },
+      PROP_BUNTING: { w: 16, h: 4, color: resolvePropColor('PROP_BUNTING') },
     };
     dressingPropsForTier(tier).forEach(placement => {
       const spec = drawSpec[placement.token];
@@ -1431,12 +1453,12 @@ export class WorldScene extends Phaser.Scene {
    *  layer doesn't change and so needs no stored/destroyable references. */
   private renderOutdoorDressing(): void {
     const drawSpec: Record<OutdoorPropToken, { w: number; h: number; color: number }> = {
-      PROP_ACCENT_TREE: { w: 12, h: 14, color: 0x1c4020 },
-      PROP_BUSH: { w: 10, h: 7, color: 0x2c5a2e },
-      PROP_STREET_BENCH: { w: 14, h: 5, color: 0x6b4a2a },
-      PROP_FENCE: { w: 16, h: 4, color: 0x8a7250 },
-      PROP_PARKED_CAR: { w: 15, h: 9, color: 0x555a66 },
-      PROP_PARKED_BIKE: { w: 10, h: 6, color: 0x445566 },
+      PROP_ACCENT_TREE: { w: 12, h: 14, color: resolvePropColor('PROP_ACCENT_TREE') },
+      PROP_BUSH: { w: 10, h: 7, color: resolvePropColor('PROP_BUSH') },
+      PROP_STREET_BENCH: { w: 14, h: 5, color: resolvePropColor('PROP_STREET_BENCH') },
+      PROP_FENCE: { w: 16, h: 4, color: resolvePropColor('PROP_FENCE') },
+      PROP_PARKED_CAR: { w: 15, h: 9, color: resolvePropColor('PROP_PARKED_CAR') },
+      PROP_PARKED_BIKE: { w: 10, h: 6, color: resolvePropColor('PROP_PARKED_BIKE') },
     };
     OUTDOOR_DRESSING_PROPS.forEach(placement => {
       const spec = drawSpec[placement.token];
@@ -1567,6 +1589,16 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private onWakeFromInterior(data: SceneReturnData): void {
+    // Bugfix: `inputManager` is a module-level singleton shared by every
+    // scene, and InteriorScene.create()/RegionScene.create() both call
+    // inputManager.init(this) to bind its cursors/WASD keys to *their own*
+    // input plugin. That rebinding is never undone — WorldScene.create()
+    // only runs once at boot (scene.wake() doesn't re-run create()) — so
+    // once the interior scene is scene.stop()'d, inputManager was left
+    // holding Key objects tied to a now-destroyed input plugin, and
+    // movement silently stopped working for the rest of the session.
+    // Re-binding here on every wake fixes it without touching create().
+    inputManager.init(this);
     const px = data.returnX * TS + TS / 2, py = data.returnY * TS + TS / 2;
     this.player.getSprite().setPosition(px, py);
     this.cameras.main.startFollow(this.player.getSprite(), true, 0.1, 0.1);

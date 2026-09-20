@@ -1,6 +1,6 @@
 # 22 — Hi-Fi Art Pipeline & Direction Bible
 
-Companion to [EPIC-37](../stories/EPIC-37-hifi-art-direction-rayman-pivot.md) / [M51](../tasks/M51-art-pipeline-and-direction-bible.md). Formalizes what [M50](../tasks/M50-hifi-renderer-feasibility-skin.md) proved out (`packages/skin-painterly-depth`) into a repeatable convention and process, written for whoever — human or AI-assisted — builds the next piece of hi-fi content, not just for M51's own author.
+Companion to [EPIC-37](../archive/EPIC-37-hifi-art-direction-rayman-pivot.md) / [M51](../archive/M51-art-pipeline-and-direction-bible.md). Formalizes what [M50](../archive/M50-hifi-renderer-feasibility-skin.md) proved out (`packages/skin-painterly-depth`) into a repeatable convention and process, written for whoever — human or AI-assisted — builds the next piece of hi-fi content, not just for M51's own author.
 
 ## 1. Asset sourcing — where this stands today
 

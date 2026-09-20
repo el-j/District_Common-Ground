@@ -16,9 +16,11 @@ import { getHousingOption } from '../simulation/HousingOptions';
 import { getFamilyTemplate, type FamilyTemplateId } from '../simulation/FamilyTemplates';
 import { getWorldQuestDefinition } from '../simulation/WorldQuests';
 
-// Exported so BalanceSimulator.ts (M13) can start its solvency sweeps from
-// the exact same per-archetype Day-1 numbers the real game seeds, instead of
-// keeping a second hand-copied table that could drift out of sync.
+// Exported so BalanceSimulator.test.ts (M13) can start its solvency sweeps
+// from the exact same per-archetype Day-1 numbers the real game seeds,
+// instead of keeping a second hand-copied table that could drift out of
+// sync — the production BalanceSimulator.ts itself takes an injected seed
+// param and doesn't import this directly.
 export const ARCHETYPE_SEEDS: Record<ClassRole, {
   cash: number;
   energy: number;

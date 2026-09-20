@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { switchSkin, resolveUiKit, DEFAULT_UI_KIT } from './ThemeManager';
+import { switchSkin, resolveUiKit, DEFAULT_UI_KIT, DEFAULT_PROP_COLORS, getActivePropColorHex } from './ThemeManager';
 import type { SkinManifest, SkinUIKit } from './SkinInterface';
 
 // M15 outstanding test: dynamic theme loading overrides building stage
@@ -168,5 +168,49 @@ describe('ThemeManager switchSkin uiKit application (M22 Test 22.3)', () => {
 
     await switchSkin('labor_woodcut');
     expect(doc.documentElement.dataset['pixelArt']).toBe('true');
+  });
+});
+
+// 2026-09-20 audit §1 architecture-rule fix — getActivePropColorHex() is
+// what WorldScene.ts/InteriorScene.ts/InteractionPrompt.ts now call
+// instead of hardcoding prop/furniture colors directly.
+describe('ThemeManager.getActivePropColorHex (architecture-rule fix)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('falls back to DEFAULT_PROP_COLORS for a skin whose manifest has no propColors at all', async () => {
+    const manifest = makeManifest({ skinId: 'labor_woodcut' });
+    vi.stubGlobal('document', makeMockDocument());
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'HEAD') return { ok: false } as Response;
+      return { ok: true, json: async () => manifest } as unknown as Response;
+    }));
+
+    await switchSkin('labor_woodcut');
+
+    expect(getActivePropColorHex('PROP_ANVIL')).toBe(DEFAULT_PROP_COLORS['PROP_ANVIL']);
+  });
+
+  it("uses the active skin's own propColors override when it declares one", async () => {
+    const manifest = makeManifest({
+      skinId: 'neon_city',
+      palette: {
+        background: '#111', surface: '#222', accent: '#333',
+        text: '#eee', hudBg: '#000', hudBorder: '#444', hudText: '#fff',
+        propColors: { PROP_ANVIL: '#ff00aa' },
+      },
+    });
+    vi.stubGlobal('document', makeMockDocument());
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'HEAD') return { ok: false } as Response;
+      return { ok: true, json: async () => manifest } as unknown as Response;
+    }));
+
+    await switchSkin('neon_city');
+
+    expect(getActivePropColorHex('PROP_ANVIL')).toBe('#ff00aa');
+    // A token the override didn't mention still falls back per-key.
+    expect(getActivePropColorHex('PROP_FORGE')).toBe(DEFAULT_PROP_COLORS['PROP_FORGE']);
   });
 });

@@ -4,7 +4,7 @@ Story: [`docs/stories/EPIC-31-world-hud-progression-overhaul.md`](../stories/EPI
 
 Planning: none new under `docs/planning/` — scoped ad hoc from a direct user complaint ("buildings are all empty nothing inside"), grounded by an Explore-agent audit of `InteriorProps.ts`/`WorldScene.ts`'s interior-rendering code before writing this doc.
 
-Status: **Planned — not yet implemented.**
+Status: **Superseded 2026-09-19** by [EPIC-34](../archive/EPIC-34-buildings-as-plugins-and-interiors.md)'s M41/M42 — kept in `docs/tasks/` (not archived) so the as-planned-vs-as-shipped delta stays inspectable. See `docs/TASK-STATUS.md`'s Milestone Overview.
 
 ## Section 1 — Resolve the interior-isolation design question
 

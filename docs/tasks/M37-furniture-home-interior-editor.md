@@ -6,7 +6,7 @@ Story: [`docs/stories/EPIC-32-home-and-housing.md`](../stories/EPIC-32-home-and-
 
 Planning: none new under `docs/planning/` — scoped ad hoc from the same user request as M36 ("a 'home-mode' to adjust the furniture and what is in the flat"), grounded by an Explore-agent audit of `InteriorProps.ts`/`WorldScene.ts`'s prop-rendering code and `DistrictGrid.ts`'s existing placement-UI pattern, plus a Plan-agent design pass, before writing this doc.
 
-Status: **Planned — not yet implemented.**
+Status: **Superseded 2026-09-19**, absorbed whole into [EPIC-34](../archive/EPIC-34-buildings-as-plugins-and-interiors.md)'s M43 (furniture sourced from EPIC-33's crafting system instead of a fixed catalog) — kept in `docs/tasks/` (not archived) so the as-planned-vs-as-shipped delta stays inspectable. See `docs/TASK-STATUS.md`'s Milestone Overview.
 
 ## Section 1 — Prerequisite: redraw/destroy capability for interior props
 

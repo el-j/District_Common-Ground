@@ -8,13 +8,19 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",
     "lint": "oxlint src/",
     "check": "tsc --noEmit && oxlint src/",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@district-cg/shared-types": "*",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.2",
+    "@vitest/coverage-v8": "^5.0.0",
     "jsdom": "^30.0.1",
     "oxlint": "^1.82.0",
     "tailwindcss": "^4.3.3",

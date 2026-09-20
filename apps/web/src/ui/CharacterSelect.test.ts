@@ -1,17 +1,5 @@
 // @vitest-environment jsdom
-// CharacterSelect.ts imports GeoPreviewModal.ts, which imports
-// world/InputManager.ts, which does `import Phaser from 'phaser'` at
-// module scope — loading that (even without instantiating anything)
-// crashes under plain jsdom (no `canvas` npm package installed), the same
-// issue DialogueOverlay.test.ts's own comment already documents. Mocked
-// out here rather than pulling the real Phaser runtime into this modal's
-// unit tests — this file never needed GeoPreviewModal's real behavior
-// (that button isn't under test).
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-vi.mock('../world/InputManager', () => ({
-  inputManager: { setLocked: vi.fn() },
-}));
+import { describe, it, expect, beforeEach } from 'vitest';
 
 import { CharacterSelect } from './CharacterSelect';
 import { FAMILY_TEMPLATES } from '../core/simulation/FamilyTemplates';

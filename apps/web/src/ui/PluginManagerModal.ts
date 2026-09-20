@@ -17,6 +17,9 @@ import {
 } from '../api/endpoints/plugins';
 import { getToken } from '../core/state/persistence';
 import { bindEscapeClose } from './modalDismiss';
+import { BUILTIN_KERNEL_PLUGINS } from '../core/kernel/builtinKernelPlugins';
+import { getDisabledKernelPluginIds, setKernelPluginDisabled } from '../core/kernel/KernelPluginPrefs';
+import { listBuiltinKernelPlugins, type ServerKernelPluginManifest } from '../api/endpoints/kernelPlugins';
 
 export class PluginManagerModal {
   private readonly el: HTMLElement;
@@ -26,6 +29,7 @@ export class PluginManagerModal {
   private statusEl: HTMLElement | null = null;
   private listEl: HTMLElement | null = null;
   private queueEl: HTMLElement | null = null;
+  private builtinListEl: HTMLElement | null = null;
   private installedRecords: InstalledPluginRecord[] = [];
 
   constructor(root: HTMLElement) {
@@ -43,6 +47,7 @@ export class PluginManagerModal {
 
     this.disposeEscape = bindEscapeClose(() => this.close());
 
+    void this.renderBuiltinPlugins();
     void this.renderCatalog().catch(err => this.setStatus(err instanceof Error ? err.message : 'Unable to load plugins', 'error'));
     void this.renderOwnerQueue();
   }
@@ -55,7 +60,14 @@ export class PluginManagerModal {
           <button class="plugin-close" type="button" aria-label="Close">×</button>
         </div>
         <div class="plugin-body">
-          <p class="plugin-copy">Install a plugin from a trusted manifest URL or upload a bundled module. The installer validates the manifest, permissions, and bundle hash, then compares the result against the live server catalog.</p>
+          <section class="plugin-section">
+            <h3 class="plugin-section-title">Built-in Plugins</h3>
+            <p class="plugin-copy">These ship inside the game itself — Skins and World are required and always on; the rest can be turned off if you don't want them. Disabling one takes effect the next time the game loads.</p>
+            <div class="plugin-builtin-list" aria-live="polite"></div>
+          </section>
+          <section class="plugin-section">
+            <h3 class="plugin-section-title">Install a Plugin</h3>
+            <p class="plugin-copy">Install a plugin from a trusted manifest URL or upload a bundled module. The installer validates the manifest, permissions, and bundle hash, then compares the result against the live server catalog.</p>
           <div class="plugin-install-grid">
             <label class="plugin-field">
               <span>Manifest URL</span>
@@ -82,6 +94,7 @@ export class PluginManagerModal {
             </div>
             <div class="plugin-queue-list"></div>
           </div>
+          </section>
         </div>
       </div>
     `;
@@ -91,6 +104,7 @@ export class PluginManagerModal {
     this.statusEl = this.el.querySelector<HTMLElement>('.plugin-status');
     this.listEl = this.el.querySelector<HTMLElement>('.plugin-list');
     this.queueEl = this.el.querySelector<HTMLElement>('.plugin-queue');
+    this.builtinListEl = this.el.querySelector<HTMLElement>('.plugin-builtin-list');
 
     this.bind();
   }
@@ -185,6 +199,78 @@ export class PluginManagerModal {
       },
     });
     return true;
+  }
+
+  private async renderBuiltinPlugins(): Promise<void> {
+    if (!this.builtinListEl) return;
+
+    const disabledIds = await getDisabledKernelPluginIds();
+    let serverManifests: ServerKernelPluginManifest[] = [];
+    try {
+      serverManifests = await listBuiltinKernelPlugins();
+    } catch {
+      // Server unreachable — still show the built-in list, just without an update check.
+    }
+    const serverById = new Map(serverManifests.map(m => [m.id, m]));
+
+    this.builtinListEl.innerHTML = BUILTIN_KERNEL_PLUGINS
+      .map(entry => this.renderBuiltinCard(entry, disabledIds.has(entry.module.manifest.id), serverById.get(entry.module.manifest.id)))
+      .join('');
+    this.bindBuiltinActions();
+  }
+
+  private renderBuiltinCard(
+    entry: (typeof BUILTIN_KERNEL_PLUGINS)[number],
+    disabled: boolean,
+    serverManifest: ServerKernelPluginManifest | undefined,
+  ): string {
+    const { manifest } = entry.module;
+    const pill = !serverManifest
+      ? { cls: 'missing', label: 'Unable to check' }
+      : serverManifest.version === manifest.version
+        ? { cls: 'matches', label: 'Up to date' }
+        : { cls: 'outdated', label: 'Update available' };
+
+    const statusLine = entry.core ? 'Core — always on' : disabled ? 'Disabled' : 'Active';
+    const action = entry.core
+      ? '<span class="plugin-pill plugin-pill--core">Required</span>'
+      : `<button class="plugin-btn ${disabled ? 'plugin-btn--secondary' : 'plugin-btn--danger'}" type="button" data-action="toggle-builtin" data-builtin-id="${manifest.id}">${disabled ? 'Enable' : 'Disable'}</button>`;
+
+    return `
+      <article class="plugin-card" data-builtin-plugin-id="${manifest.id}">
+        <div class="plugin-card-head">
+          <div>
+            <h3>${manifest.title}</h3>
+            <p>${manifest.id} · v${manifest.version}</p>
+          </div>
+          <span class="plugin-pill plugin-pill--${pill.cls}">${pill.label}</span>
+        </div>
+        <p class="plugin-desc">${manifest.description}</p>
+        <dl class="plugin-meta">
+          <dt>Status</dt><dd>${statusLine}</dd>
+          <dt>Latest known</dt><dd>${serverManifest ? `v${serverManifest.version}` : 'unknown'}</dd>
+        </dl>
+        <div class="plugin-card-actions">${action}</div>
+      </article>
+    `;
+  }
+
+  private bindBuiltinActions(): void {
+    this.builtinListEl?.querySelectorAll<HTMLButtonElement>('[data-action="toggle-builtin"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset['builtinId'];
+        if (!id) return;
+        playUIClick();
+        const nowDisabling = btn.textContent === 'Disable';
+        void setKernelPluginDisabled(id, nowDisabling).then(() => {
+          this.setStatus(
+            nowDisabling ? 'Plugin disabled — reload the game for it to take effect.' : 'Plugin re-enabled — reload the game for it to take effect.',
+            'info',
+          );
+          void this.renderBuiltinPlugins();
+        });
+      });
+    });
   }
 
   private async renderCatalog(): Promise<void> {

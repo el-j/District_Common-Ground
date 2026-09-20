@@ -14,6 +14,18 @@ import { useGameStore } from '../state/useGameStore';
 const INDEX_KEY = 'dcg-installed-plugin-index';
 const BUNDLE_KEY_PREFIX = 'dcg-installed-plugin-bundle:';
 
+// Security-relevant constants for user-installed (third-party) plugins —
+// see this file's other comments (isAllowedRemoteUrl, createRecord,
+// launchInstalledPlugin) for how each is actually enforced.
+//
+// validateManifest() below only lets a manifest be *installed* if every
+// permission it declares is in this whitelist — it is not re-checked at
+// call time. SandboxedPluginRuntime.ts's handleHostCall() doesn't consult
+// `manifest.permissions` at all, so any plugin that reaches trustLevel
+// 'trusted' can call every HostPlatformAPI method (including
+// grantRewards) regardless of what it declared here. This whitelist is
+// therefore an install-time manifest-shape gate, not a runtime capability
+// check — worth knowing before adding a new, more sensitive host method.
 const ALLOWED_PERMISSIONS = new Set(['wallet:grant']);
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,63}$/;
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -83,6 +95,18 @@ function validateManifest(manifest: MinigameManifest): void {
   }
 }
 
+// Guards both "install from manifest URL" and the manifestUrl a record
+// later re-fetches to recheck for updates (refreshInstalledPlugins,
+// below). Deliberately permissive — same-origin, any https:, or plain
+// http: to localhost/127.0.0.1 (for local plugin dev) — this is NOT an
+// SSRF allowlist in the traditional sense: it still lets the browser fetch
+// any public https: host the player pastes in. The actual safety net for a
+// malicious manifest/bundle is downstream of this check, not here: bundle
+// hash verification (sha256 below) plus the iframe sandbox
+// (PluginSandbox.ts/SandboxedPluginRuntime.ts) that ultimately runs it,
+// and the fact this is a same-origin browser fetch (no cookies/credentials
+// forwarded to a third-party host, no server-side request this could
+// pivot through).
 function isAllowedRemoteUrl(url: URL): boolean {
   if (url.origin === window.location.origin) return true;
   if (url.protocol === 'https:') return true;
@@ -159,6 +183,15 @@ function createRecord(manifest: MinigameManifest, bundleSha256: string, sourceKi
     bundleStorageKey: bundleStorageKey(manifest.id),
     installedAt: timestamp,
     updatedAt: timestamp,
+    // Every plugin this function is ever called for arrives via 'file' or
+    // 'url' (PluginSourceKind has no third case), so this is always
+    // 'review-needed': every freshly-installed third-party plugin is
+    // quarantined — inert in the UI (launchInstalledPlugin below refuses
+    // to run it) until an owner (isOwner() in handler.go server-side)
+    // approves the pending verification request PluginManagerModal
+    // submits right after install. trustLevel only ever becomes 'trusted'
+    // through refreshInstalledPlugins reconciling against that
+    // server-side approval, never locally/client-side.
     trustLevel: sourceKind === 'file' || sourceKind === 'url' ? 'review-needed' : 'trusted',
   };
 }

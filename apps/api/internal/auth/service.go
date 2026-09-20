@@ -23,6 +23,12 @@ func NewService(db *pgxpool.Pool, token *TokenService) *Service {
 	return &Service{db: db, token: token}
 }
 
+// Register and Login are the two places a plaintext password ever exists
+// in this process — bcrypt cost 12 (CLAUDE.md-mandated) both hashes it
+// here and compares it in Login via bcrypt.CompareHashAndPassword, never a
+// direct string/hash comparison. Login intentionally collapses "no such
+// email" and "wrong password" into the same ErrInvalidCreds/401 so the
+// response can't be used to enumerate registered emails.
 func (s *Service) Register(ctx context.Context, email, password string) (userId, tok string, err error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {

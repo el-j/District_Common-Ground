@@ -58,40 +58,47 @@ function makeKernel(root: HTMLElement): Kernel {
   });
 }
 
-// M31 Section 1 — the 12-button bottom cluster was split into a short
-// primary toolbar plus a top-corner Menu drawer for everything else. See
-// EPIC-31/M31 Section 1.
-describe('TopHUD Menu/toolbar button grouping', () => {
+// Bugfix (post-M31 revert): M31's ☰ drawer had hidden every in-game
+// shortcut but Settings/Radio/Quest/Work, and put Settings in the same row
+// as those gameplay shortcuts — reported as settings and in-game items
+// reading as mixed together. Every gameplay shortcut (TopHUD's own
+// built-ins and any kernel plugin's) now lands directly in the
+// always-visible toolbar; Settings is the one button kept isolated.
+describe('TopHUD icon toolbar / Settings isolation', () => {
   beforeEach(() => resetStore());
 
-  it('keeps only the short-listed primary controls in the bottom toolbar', () => {
+  it('puts every gameplay shortcut directly in the always-visible toolbar', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new TopHUD(root, makeKernel(root));
 
     const toolbar = root.querySelector('#hud-icon-toolbar')!;
-    expect(toolbar.querySelector('.settings-open-btn')).not.toBeNull();
     expect(toolbar.querySelector('.radio-open-btn')).not.toBeNull();
     expect(toolbar.querySelector('.quest-open-btn')).not.toBeNull();
     expect(toolbar.querySelector('.work-open-btn')).not.toBeNull();
-    // Secondary functions must NOT be in the bottom toolbar.
-    expect(toolbar.querySelector('.share-open-btn')).toBeNull();
-    expect(toolbar.querySelector('.builder-open-btn')).toBeNull();
+    expect(toolbar.querySelector('.share-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.builder-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.plugins-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.shop-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.social-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.civic-open-btn')).not.toBeNull();
+    expect(toolbar.querySelector('.journal-open-btn')).not.toBeNull();
+    // Settings is never a toolbar shortcut — it's the isolated button below.
+    expect(toolbar.querySelector('.settings-open-btn')).toBeNull();
   });
 
-  it('routes secondary functions into the Menu drawer instead', () => {
+  it('keeps Settings as its own isolated button, separate from every gameplay shortcut', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     new TopHUD(root, makeKernel(root));
 
-    const drawer = root.querySelector('#hud-menu-drawer')!;
-    expect(drawer.querySelector('.share-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.builder-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.plugins-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.shop-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.social-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.civic-open-btn')).not.toBeNull();
-    expect(drawer.querySelector('.journal-open-btn')).not.toBeNull();
+    const settingsBtn = root.querySelector<HTMLButtonElement>('#hud-settings-btn')!;
+    expect(settingsBtn).not.toBeNull();
+    expect(root.querySelector('#hud-icon-toolbar')!.contains(settingsBtn)).toBe(false);
+    expect(root.querySelectorAll('.settings-modal, .settings-overlay').length).toBe(0);
+
+    settingsBtn.click();
+    expect(root.querySelector('.settings-overlay')).not.toBeNull();
   });
 
   it('removes the standalone mute button entirely (folded into Settings)', () => {
@@ -102,35 +109,15 @@ describe('TopHUD Menu/toolbar button grouping', () => {
     expect(root.querySelector('.mute-open-btn')).toBeNull();
   });
 
-  it('opens the Menu drawer on click and closes it after a drawer button fires', () => {
-    const root = document.createElement('div');
-    document.body.appendChild(root);
-    new TopHUD(root, makeKernel(root));
-
-    const menuBtn = root.querySelector<HTMLButtonElement>('#hud-menu-btn')!;
-    const drawer = root.querySelector<HTMLElement>('#hud-menu-drawer')!;
-    expect(drawer.hidden).toBe(true);
-
-    menuBtn.click();
-    expect(drawer.hidden).toBe(false);
-    expect(menuBtn.getAttribute('aria-expanded')).toBe('true');
-
-    drawer.querySelector<HTMLButtonElement>('.share-open-btn')!.click();
-    expect(drawer.hidden).toBe(true);
-    expect(menuBtn.getAttribute('aria-expanded')).toBe('false');
-  });
-
-  it('a kernel plugin button registered with no group defaults into the Menu drawer', () => {
+  it('a kernel plugin button lands directly in the toolbar too', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
     const hud = new TopHUD(root, makeKernel(root));
 
     hud.registerButton({ id: 'geo', icon: '🌍', label: 'Weather', onClick: () => undefined });
 
-    const drawer = root.querySelector('#hud-menu-drawer')!;
     const toolbar = root.querySelector('#hud-icon-toolbar')!;
-    expect(drawer.querySelector('.geo-open-btn')).not.toBeNull();
-    expect(toolbar.querySelector('.geo-open-btn')).toBeNull();
+    expect(toolbar.querySelector('.geo-open-btn')).not.toBeNull();
   });
 });
 

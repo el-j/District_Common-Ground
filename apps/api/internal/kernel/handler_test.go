@@ -50,6 +50,46 @@ func newListGamesRouter(h *kernel.Handler) chi.Router {
 	return r
 }
 
+func TestListBuiltinKernelPlugins_ServesStaticManifestsWithNoDependencies(t *testing.T) {
+	// Unlike ListGames, this doesn't touch the registry/sessions/repo at
+	// all — a nil Handler built from just BuiltinKernelPluginManifests()
+	// should serve correctly, and doesn't need Docker/Postgres.
+	h := kernel.NewHandler(nil, nil, nil, "")
+	r := chi.NewRouter()
+	r.Get("/kernel-plugins", h.ListBuiltinKernelPlugins)
+
+	req := httptest.NewRequest(http.MethodGet, "/kernel-plugins", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var plugins []kernel.BuiltinKernelPlugin
+	if err := json.Unmarshal(rec.Body.Bytes(), &plugins); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if len(plugins) != len(kernel.BuiltinKernelPluginManifests()) {
+		t.Fatalf("expected %d plugins, got %d", len(kernel.BuiltinKernelPluginManifests()), len(plugins))
+	}
+
+	var sawCore, sawOptional bool
+	for _, p := range plugins {
+		if p.ID == "" || p.Version == "" || p.Title == "" {
+			t.Fatalf("plugin %+v missing required field", p)
+		}
+		if p.Core {
+			sawCore = true
+		} else {
+			sawOptional = true
+		}
+	}
+	if !sawCore || !sawOptional {
+		t.Fatalf("expected both core and optional plugins in response, got core=%v optional=%v", sawCore, sawOptional)
+	}
+}
+
 func TestListGames_MergesRegistryBuiltinAndVerifiedCatalogs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test — requires Docker")

@@ -4,7 +4,7 @@ Story: [`docs/stories/EPIC-32-home-and-housing.md`](../stories/EPIC-32-home-and-
 
 Planning: none new under `docs/planning/` — scoped ad hoc from a direct user request ("users need to find a new flat or living community to rent in... brings different positive and negative things for health etc."), grounded by an Explore-agent audit of `WorldScene.ts`/`InteriorProps.ts`/`useGameStore.ts` (housing state), a second audit of `EconomyMath.ts`/`actions.ts`/`CrisisEngine.ts` (economy hook + tradeoff pattern), and a Plan-agent design pass, before writing this doc.
 
-Status: **Planned — not yet implemented.**
+Status: **Superseded 2026-09-19**, absorbed whole into [EPIC-34](../archive/EPIC-34-buildings-as-plugins-and-interiors.md)'s M43 — kept in `docs/tasks/` (not archived) so the as-planned-vs-as-shipped delta stays inspectable. See `docs/TASK-STATUS.md`'s Milestone Overview.
 
 ## Section 1 — GameState housing slice
 

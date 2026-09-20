@@ -95,6 +95,7 @@ func main() {
 		r.Get("/district/attrition", economicSnapshotHandler.HandleAttritionRate)
 		r.With(requireAuth).Post("/district/economic-snapshot", economicSnapshotHandler.HandleRecordSnapshot)
 		r.Get("/games", kernelHandler.ListGames)
+		r.Get("/kernel-plugins", kernelHandler.ListBuiltinKernelPlugins)
 		r.Get("/themes", themeHandler.List)
 		r.Get("/shop/catalog", shopHandler.Catalog)
 		r.With(requireAuth).Get("/shop/wallet", shopHandler.Wallet)

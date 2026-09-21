@@ -37,6 +37,84 @@ describe('RECIPES catalog', () => {
     expect(advanced.length).toBe(1);
     expect(advanced[0]!.minMastery).toBeGreaterThan(0);
   });
+
+  // Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+  // most recipes' exact `inputs`/`tier`/`minMastery`/`label` were never
+  // asserted directly (only exercised indirectly through hand-typed material
+  // maps in checkCraftEligibility tests) — a real balance-data typo (e.g. a
+  // swapped material amount) would ship silently. One table, checked against
+  // the real docs/task-doc-recorded recipe design.
+  it('every recipe matches its recorded design exactly (inputs, itemInputs, tier, minMastery, output)', () => {
+    expect(RECIPES).toEqual({
+      RECIPE_SCRAP_STOOL: {
+        id: 'RECIPE_SCRAP_STOOL', label: 'Scrap-Metal Stool', discipline: 'metalwork',
+        inputs: { MATERIAL_SCRAP_METAL: 2, MATERIAL_IRON: 1 }, output: 'ITEM_SCRAP_STOOL', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_PLANTER_BOX: {
+        id: 'RECIPE_PLANTER_BOX', label: 'Reclaimed Planter Box', discipline: 'woodwork',
+        inputs: { MATERIAL_RECLAIMED_WOOD: 2, MATERIAL_WOOD: 1 }, output: 'ITEM_PLANTER_BOX', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_MENDED_JACKET: {
+        id: 'RECIPE_MENDED_JACKET', label: 'Mended Jacket', discipline: 'textiles',
+        inputs: { MATERIAL_WOOL: 2, MATERIAL_COTTON: 1, MATERIAL_LEATHER: 1 }, output: 'ITEM_MENDED_JACKET', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_WIRED_LAMP: {
+        id: 'RECIPE_WIRED_LAMP', label: 'Wired Salvage Lamp', discipline: 'electronics',
+        inputs: { MATERIAL_WIRE: 2, MATERIAL_GLASS: 1, MATERIAL_ELECTRONIC_COMPONENT: 1 }, output: 'ITEM_WIRED_LAMP', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_FORAGED_POUCH: {
+        id: 'RECIPE_FORAGED_POUCH', label: 'Foraged Goods Pouch', discipline: 'horticulture',
+        inputs: { MATERIAL_MUSHROOM: 2, MATERIAL_RESIN: 1, MATERIAL_LEATHER: 1 }, output: 'ITEM_FORAGED_POUCH', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_SIMPLE_STEW: {
+        id: 'RECIPE_SIMPLE_STEW', label: 'Simple Mushroom Stew', discipline: 'culinary',
+        inputs: { MATERIAL_MUSHROOM: 3, MATERIAL_WOOD: 1 }, output: 'ITEM_SIMPLE_STEW', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_UPCYCLED_WORKBENCH: {
+        id: 'RECIPE_UPCYCLED_WORKBENCH', label: 'Upcycled Workbench', discipline: 'metalwork',
+        inputs: { MATERIAL_SCRAP_METAL: 4, MATERIAL_RECLAIMED_WOOD: 3, MATERIAL_IRON: 2 }, output: 'ITEM_UPCYCLED_WORKBENCH', minMastery: 2, tier: 'advanced',
+      },
+      RECIPE_UPCYCLED_BIKE: {
+        id: 'RECIPE_UPCYCLED_BIKE', label: 'Upcycled Bike', discipline: 'metalwork',
+        inputs: { MATERIAL_SCRAP_METAL: 5, MATERIAL_RUBBER: 3, MATERIAL_RECLAIMED_WOOD: 2 }, output: 'ITEM_UPCYCLED_BIKE', minMastery: 3, tier: 'basic',
+      },
+      RECIPE_BASIC_TOOLS: {
+        id: 'RECIPE_BASIC_TOOLS', label: 'Basic Tools', discipline: 'metalwork',
+        inputs: { MATERIAL_SCRAP_METAL: 2, MATERIAL_WIRE: 1 }, output: 'ITEM_BASIC_TOOLS', minMastery: 0, tier: 'basic',
+      },
+      RECIPE_SALVAGE_RADIO: {
+        id: 'RECIPE_SALVAGE_RADIO', label: 'Salvage Radio', discipline: 'electronics',
+        inputs: { MATERIAL_GLASS: 1, MATERIAL_WIRE: 2, MATERIAL_ELECTRONIC_COMPONENT: 2 }, itemInputs: { ITEM_BASIC_TOOLS: 1 },
+        output: 'ITEM_SALVAGE_RADIO', minMastery: 1, tier: 'basic',
+      },
+      RECIPE_CIRCUIT_BOARD: {
+        id: 'RECIPE_CIRCUIT_BOARD', label: 'Reclaimed Circuit Board', discipline: 'electronics',
+        inputs: { MATERIAL_SCRAP_METAL: 2, MATERIAL_RESIN: 2 }, output: 'ITEM_CIRCUIT_BOARD', minMastery: 2, tier: 'basic',
+      },
+      RECIPE_UPCYCLED_COMPUTER: {
+        id: 'RECIPE_UPCYCLED_COMPUTER', label: 'Upcycled Computer', discipline: 'electronics',
+        inputs: { MATERIAL_RUBBER: 2 }, itemInputs: { ITEM_SALVAGE_RADIO: 1, ITEM_CIRCUIT_BOARD: 1 },
+        output: 'ITEM_UPCYCLED_COMPUTER', minMastery: 3, tier: 'basic',
+      },
+    });
+  });
+
+  it('every ITEM_DEFINITIONS entry matches its recorded kinds, baseSellValue and discipline exactly', () => {
+    expect(ITEM_DEFINITIONS).toEqual({
+      ITEM_SCRAP_STOOL: { token: 'ITEM_SCRAP_STOOL', label: 'Scrap-Metal Stool', kinds: ['furniture', 'sellable'], baseSellValue: 8, discipline: 'metalwork' },
+      ITEM_PLANTER_BOX: { token: 'ITEM_PLANTER_BOX', label: 'Reclaimed Planter Box', kinds: ['furniture', 'sellable'], baseSellValue: 7, discipline: 'woodwork' },
+      ITEM_MENDED_JACKET: { token: 'ITEM_MENDED_JACKET', label: 'Mended Jacket', kinds: ['equippable', 'sellable'], baseSellValue: 12, discipline: 'textiles' },
+      ITEM_WIRED_LAMP: { token: 'ITEM_WIRED_LAMP', label: 'Wired Salvage Lamp', kinds: ['furniture', 'sellable'], baseSellValue: 10, discipline: 'electronics' },
+      ITEM_FORAGED_POUCH: { token: 'ITEM_FORAGED_POUCH', label: 'Foraged Goods Pouch', kinds: ['sellable'], baseSellValue: 6, discipline: 'horticulture' },
+      ITEM_SIMPLE_STEW: { token: 'ITEM_SIMPLE_STEW', label: 'Simple Mushroom Stew', kinds: ['sellable'], baseSellValue: 5, discipline: 'culinary' },
+      ITEM_UPCYCLED_WORKBENCH: { token: 'ITEM_UPCYCLED_WORKBENCH', label: 'Upcycled Workbench', kinds: ['furniture', 'sellable'], baseSellValue: 30, discipline: 'metalwork' },
+      ITEM_BASIC_TOOLS: { token: 'ITEM_BASIC_TOOLS', label: 'Basic Tools', kinds: ['component'], baseSellValue: 0, discipline: 'metalwork' },
+      ITEM_SALVAGE_RADIO: { token: 'ITEM_SALVAGE_RADIO', label: 'Salvage Radio', kinds: ['component', 'sellable'], baseSellValue: 18, discipline: 'electronics' },
+      ITEM_CIRCUIT_BOARD: { token: 'ITEM_CIRCUIT_BOARD', label: 'Reclaimed Circuit Board', kinds: ['component'], baseSellValue: 0, discipline: 'electronics' },
+      ITEM_UPCYCLED_COMPUTER: { token: 'ITEM_UPCYCLED_COMPUTER', label: 'Upcycled Computer', kinds: ['sellable', 'usable'], baseSellValue: 60, discipline: 'electronics' },
+      ITEM_UPCYCLED_BIKE: { token: 'ITEM_UPCYCLED_BIKE', label: 'Upcycled Bike', kinds: ['sellable'], baseSellValue: 45, discipline: 'metalwork' },
+    });
+  });
 });
 
 describe('checkCraftEligibility', () => {
@@ -163,6 +241,50 @@ describe('checkCraftEligibility with itemInputs', () => {
     const stool = RECIPES['RECIPE_SCRAP_STOOL'];
     const result = checkCraftEligibility(stool, [stool.id], { MATERIAL_SCRAP_METAL: 2, MATERIAL_IRON: 1 }, 0, false, {});
     expect(result).toEqual({ ok: true });
+  });
+});
+
+// Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found in
+// checkCraftEligibility()/stationSupportsRecipe(): the `.every()` guards and
+// the `atStation` default param had no test distinguishing them from a
+// weaker `.some()` check or a wrong default.
+describe('checkCraftEligibility — coverage gaps', () => {
+  it('reports missing-materials when ONE input is satisfied but another is not (distinguishes every() from some())', () => {
+    const recipe = RECIPES['RECIPE_SCRAP_STOOL']; // needs MATERIAL_SCRAP_METAL:2, MATERIAL_IRON:1
+    const result = checkCraftEligibility(recipe, [recipe.id], { MATERIAL_SCRAP_METAL: 10, MATERIAL_IRON: 0 }, 0);
+    expect(result).toEqual({ ok: false, reason: 'missing-materials' });
+  });
+
+  it('reports missing-item-inputs when ONE crafted item requirement is satisfied but another is not', () => {
+    const computer = RECIPES['RECIPE_UPCYCLED_COMPUTER']; // needs ITEM_SALVAGE_RADIO:1 AND ITEM_CIRCUIT_BOARD:1
+    const result = checkCraftEligibility(
+      computer, [computer.id], { MATERIAL_RUBBER: 2 }, 3, false,
+      { ITEM_SALVAGE_RADIO: 5, ITEM_CIRCUIT_BOARD: 0 },
+    );
+    expect(result).toEqual({ ok: false, reason: 'missing-item-inputs' });
+  });
+
+  it('defaults atStation to false for a basic recipe (succeeds without passing the param at all)', () => {
+    const recipe = RECIPES['RECIPE_SCRAP_STOOL'];
+    const result = checkCraftEligibility(recipe, [recipe.id], { MATERIAL_SCRAP_METAL: 2, MATERIAL_IRON: 1 }, 0);
+    expect(result).toEqual({ ok: true });
+  });
+
+  it('defaults atStation to false for an advanced recipe (fails station-gate without passing the param at all)', () => {
+    const advanced = RECIPES['RECIPE_UPCYCLED_WORKBENCH'];
+    const result = checkCraftEligibility(
+      advanced, [advanced.id],
+      { MATERIAL_SCRAP_METAL: 4, MATERIAL_RECLAIMED_WOOD: 3, MATERIAL_IRON: 2 },
+      2, // sufficient mastery — only the station gate should block this
+    );
+    expect(result).toEqual({ ok: false, reason: 'requires-crafting-station' });
+  });
+});
+
+describe('stationSupportsRecipe — coverage gaps', () => {
+  it('accepts an advanced-tier station for a BASIC recipe of the same discipline (tier check only applies to advanced recipes)', () => {
+    const recipe = RECIPES['RECIPE_SCRAP_STOOL']; // basic, metalwork
+    expect(stationSupportsRecipe({ id: 's5', discipline: 'metalwork', requiredTier: 'advanced' }, recipe)).toBe(true);
   });
 });
 

@@ -13,11 +13,14 @@
     "check": "tsc --noEmit && oxlint src/",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:mutation": "stryker run"
   },
   "devDependencies": {
     "@district-cg/shared-types": "*",
     "@playwright/test": "^1.63.0",
+    "@stryker-mutator/core": "^10.0.0",
+    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.2",
     "@vitest/coverage-v8": "^5.0.0",

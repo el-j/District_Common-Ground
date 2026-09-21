@@ -33,4 +33,18 @@ describe('getSeasonalMultipliers', () => {
     expect(getSeasonalMultipliers(-1)).toEqual(getSeasonalMultipliers(11));
     expect(getSeasonalMultipliers(25)).toEqual(getSeasonalMultipliers(1));
   });
+
+  it('returns the exact known multiplier set for January (month 0)', () => {
+    expect(getSeasonalMultipliers(0)).toEqual({ food: 1.30, energy: 1.25, wage: 1.0, transit: 1.10, heat: 0.60, migrant: 0.90 });
+  });
+
+  it('returns the exact known multiplier set for July (month 6)', () => {
+    expect(getSeasonalMultipliers(6)).toEqual({ food: 0.95, energy: 1.30, wage: 1.0, transit: 0.95, heat: 1.35, migrant: 1.05 });
+  });
+
+  it('migrant pressure peaks in November (month 10) — CrisisEngine\'s MIGRATION_SANCT priority threshold (1.5) is never reached by seasonal data alone', () => {
+    const values = Array.from({ length: 12 }, (_, m) => getSeasonalMultipliers(m).migrant);
+    expect(getSeasonalMultipliers(10).migrant).toBe(Math.max(...values));
+    values.forEach(v => expect(v).toBeLessThan(1.5));
+  });
 });

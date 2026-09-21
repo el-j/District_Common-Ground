@@ -110,4 +110,65 @@ describe('IrlQuestSystem', () => {
     expect(day1.length).toBe(3);
     expect(day4.length).toBe(3);
   });
+
+  // Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+  // 3 of 6 completeQuest() switch cases had zero test coverage, and
+  // questWindowForDay()'s exact modulo/wraparound arithmetic was only
+  // checked indirectly (via "is different", never against known values).
+  it('completeQuest skillshare-swap adds $20', () => {
+    completeQuest('skillshare-swap');
+    expect(useGameStore.getState().player.cash).toBe(70); // 50 + 20
+  });
+
+  it('completeQuest green-space-tidy reduces stress by 15, floored at 0', () => {
+    completeQuest('green-space-tidy');
+    expect(useGameStore.getState().player.stressLevel).toBe(15); // 30 - 15
+    useGameStore.setState(s => ({ player: { ...s.player, stressLevel: 5 } }));
+    completeQuest('green-space-tidy');
+    expect(useGameStore.getState().player.stressLevel).toBe(0); // floored, not -10
+  });
+
+  it('completeQuest check-in-call adds trust and energy, both capped', () => {
+    completeQuest('check-in-call');
+    const { player } = useGameStore.getState();
+    expect(player.socialTrust).toBe(50); // 40 + 10
+    expect(player.energy).toBe(90); // 80 + 10
+
+    useGameStore.setState(s => ({ player: { ...s.player, socialTrust: 95, energy: 95 } }));
+    completeQuest('check-in-call');
+    const after = useGameStore.getState().player;
+    expect(after.socialTrust).toBe(100); // capped, not 105
+    expect(after.energy).toBe(after.maxEnergy); // capped, not 105
+  });
+
+  it('questWindowForDay(1) returns the first 3 pool entries in order', () => {
+    resetStore(1);
+    const ids = getQuestsForToday().map(q => q.questId);
+    expect(ids).toEqual(['digital-deescalation', 'community-reconnect', 'local-mutual-aid']);
+  });
+
+  it('questWindowForDay wraps around the end of the 6-item pool back to the start', () => {
+    // day 6: startIdx = ((6-1) % 6 + 6) % 6 = 5 -> indices [5, 0, 1]
+    resetStore(6);
+    const ids = getQuestsForToday().map(q => q.questId);
+    expect(ids).toEqual(['check-in-call', 'digital-deescalation', 'community-reconnect']);
+  });
+
+  it('questWindowForDay(7) cycles back to the exact same window as day 1', () => {
+    resetStore(1);
+    const day1 = getQuestsForToday().map(q => q.questId);
+    resetStore(7);
+    const day7 = getQuestsForToday().map(q => q.questId);
+    expect(day7).toEqual(day1);
+  });
+
+  it('getQuestsForToday defaults a quest with no stored state to available', () => {
+    resetStore(1);
+    // Remove digital-deescalation's stored state entirely (simulates a save
+    // that predates this quest, or one never yet surfaced).
+    useGameStore.setState(s => ({ quests: s.quests.filter(q => q.questId !== 'digital-deescalation') }));
+    const today = getQuestsForToday();
+    const q = today.find(q => q.questId === 'digital-deescalation')!;
+    expect(q.available).toBe(true);
+  });
 });

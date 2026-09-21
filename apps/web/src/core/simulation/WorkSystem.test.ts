@@ -92,4 +92,41 @@ describe('WorkSystem', () => {
     expect(getWorkForToday()).toBeNull();
     expect(performWork()).toEqual({ success: false, reason: 'no-archetype' });
   });
+
+  // Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+  // exact object-shape/boundary assertions the "partial" checks above don't pin down.
+  it('getWorkForToday returns the exact already-worked shape', () => {
+    performWork();
+    expect(getWorkForToday()).toEqual({
+      definition: WORK_DEFINITIONS.pip,
+      available: false,
+      reason: 'already-worked',
+    });
+  });
+
+  it('getWorkForToday returns the exact too-tired shape', () => {
+    resetStore({ classRole: 'morgan', energy: 5 }); // morgan costs 15 energy
+    expect(getWorkForToday()).toEqual({
+      definition: WORK_DEFINITIONS.morgan,
+      available: false,
+      reason: 'too-tired',
+    });
+  });
+
+  it('is available (not too-tired) at exactly the energy cost boundary — only strictly below blocks', () => {
+    resetStore({ classRole: 'morgan', energy: 15 }); // morgan costs exactly 15
+    const status = getWorkForToday();
+    expect(status).toEqual({ definition: WORK_DEFINITIONS.morgan, available: true });
+    expect(performWork().success).toBe(true);
+  });
+
+  it('is too-tired one point below the energy cost boundary', () => {
+    resetStore({ classRole: 'morgan', energy: 14 });
+    expect(getWorkForToday()?.reason).toBe('too-tired');
+  });
+
+  it('is available exactly on the day after lastWorkedDay, not still locked', () => {
+    resetStore({ day: 6, lastWorkedDay: 5, energy: 80 });
+    expect(getWorkForToday()).toEqual({ definition: WORK_DEFINITIONS.pip, available: true });
+  });
 });

@@ -102,3 +102,38 @@ describe('runSolvencySweep — Test 13.3 Algorithm Pay Slash', () => {
     }
   });
 });
+
+// Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+// every existing test reads snapshot cash/energy/stress but never the `day`
+// field or the array's own length/shape, so the day-counter loop itself
+// (`for (let day = 1; day <= days; day += 1)`) had zero direct assertions.
+describe('runSolvencySweep — loop shape', () => {
+  it('returns exactly `days` snapshots, with day numbered 1..days in order', () => {
+    const snaps = runSolvencySweep('pip', 5, seedFor('pip'));
+    expect(snaps.length).toBe(5);
+    expect(snaps.map(s => s.day)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('returns an empty array for a 0-day sweep', () => {
+    expect(runSolvencySweep('pip', 0, seedFor('pip'))).toEqual([]);
+  });
+
+  it('floors cash at 0 rather than going negative', () => {
+    // Arthur's baseline cashDelta is strongly positive; force it negative
+    // with an extreme seed (no cash, zero regen headroom) plus a punishing
+    // wage/food combination to actually drive the floor.
+    const snaps = runSolvencySweep(
+      'pip', 3,
+      { cash: 0, energy: 80, maxEnergy: 100, stress: 30, socialTrust: 40 },
+      UNBUILT_COMMONS,
+      { ...DEFAULT_MULTIPLIERS, wage: 0, food: 100 }, // earning ~0, food cost astronomically high
+    );
+    snaps.forEach(s => expect(s.cash).toBeGreaterThanOrEqual(0));
+  });
+
+  it('caps energy at seed.maxEnergy, not a hardcoded 100', () => {
+    const snaps = runSolvencySweep('pip', 10, { ...seedFor('pip'), maxEnergy: 60 });
+    snaps.forEach(s => expect(s.energy).toBeLessThanOrEqual(60));
+    expect(snaps[9]!.energy).toBe(60); // still caps, just at the lower ceiling
+  });
+});

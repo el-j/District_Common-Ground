@@ -50,7 +50,24 @@ describe('housingOptionsForInterior', () => {
     expect(housingOptionsForInterior('pipsCourierRoom').length).toBe(1);
   });
 
+  it('returns the exact matching ids, not just a count', () => {
+    const blockB = housingOptionsForInterior('apartmentBlockB').map(o => o.id).sort();
+    expect(blockB).toEqual(['block-b-private', 'block-b-shared']);
+  });
+
   it('returns an empty list for an interior with no housing options', () => {
     expect(housingOptionsForInterior('library')).toEqual([]);
+  });
+});
+
+describe('getHousingOption — every real option resolves with its own consequences', () => {
+  it('block-b-private resolves with its own distinct, non-zero-everywhere deltas', () => {
+    const option = getHousingOption('block-b-private');
+    expect(option?.consequences).toEqual({ cashDelta: -18, energyDelta: 2, stressDelta: -4 });
+  });
+
+  it('block-b-shared resolves with its own distinct deltas', () => {
+    const option = getHousingOption('block-b-shared');
+    expect(option?.consequences).toEqual({ cashDelta: -8, energyDelta: -1, stressDelta: 1 });
   });
 });

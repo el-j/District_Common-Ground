@@ -47,6 +47,22 @@ describe('RegionData', () => {
     expect(isRegionUnlocked(rule, { trust: 19, resilienceScore: 100, completedQuestIds: [] })).toBe(false);
     expect(isRegionUnlocked(rule, { trust: 20, resilienceScore: 0, completedQuestIds: [] })).toBe(true);
   });
+
+  // Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+  // every REGIONS field except sceneKey/arrivalPoint(COMMON_GROUND)/unlockRule
+  // had zero direct assertions.
+  it('REGION_INDUSTRIAL_OUTSKIRTS has its own real label and arrival point', () => {
+    const region = getRegion('REGION_INDUSTRIAL_OUTSKIRTS');
+    expect(region.label).toBe('Industrial Outskirts');
+    expect(region.arrivalPoint).toEqual({ x: 10, y: 10 });
+    expect(region.unlockCondition.length).toBeGreaterThan(0);
+  });
+
+  it('REGION_COMMON_GROUND has its own real label and unlock condition text', () => {
+    const region = getRegion('REGION_COMMON_GROUND');
+    expect(region.label).toBe('Common Ground');
+    expect(region.unlockCondition.length).toBeGreaterThan(0);
+  });
 });
 
 describe('isRegionUnlocked', () => {

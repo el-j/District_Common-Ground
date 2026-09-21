@@ -4,6 +4,9 @@ apps/web/dist/
 apps/web/coverage/
 apps/web/test-results/
 apps/web/playwright-report/
+apps/web/reports/
+apps/web/.stryker-tmp/
+apps/web/stryker-tmp/
 apps/web/public/plugins/
 apps/api/bin/
 apps/api/vendor/

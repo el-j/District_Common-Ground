@@ -124,6 +124,84 @@ describe('applyDailyTick', () => {
     const b = applyDailyTick('pip', baseCommons, 0, DEFAULT_MULTIPLIERS, undefined);
     expect(b).toEqual(a);
   });
+
+  // Closes the mutation-testing gap the 2026-09-20/21 Stryker audit found:
+  // every existing test used classRole 'pip' — morgan/arthur's earning
+  // branches, the null/unknown-role fallback, and per-bonus stress
+  // boundaries had zero direct coverage.
+  describe('classRole branches', () => {
+    it('morgan earns 8 minus a transit-scaled commute penalty', () => {
+      const result = applyDailyTick('morgan', baseCommons, 0);
+      // commutePenalty = round(2*1.0) = 2; earning = 8-2 = 6; foodCost 3 -> cashDelta = 3
+      expect(result.cashDelta).toBe(3);
+    });
+
+    it('morgan\'s commute penalty scales with the transit multiplier', () => {
+      const multipliers = { ...DEFAULT_MULTIPLIERS, transit: 2.5 };
+      const result = applyDailyTick('morgan', baseCommons, 0, multipliers);
+      // commutePenalty = round(2*2.5) = 5; earning = 8-5 = 3; foodCost 3 -> cashDelta = 0
+      expect(result.cashDelta).toBe(0);
+    });
+
+    it('morgan regenerates energy at the commuter rate (5/day), distinct from pip', () => {
+      const result = applyDailyTick('morgan', baseCommons, 0);
+      expect(result.energyDelta).toBe(-5); // regen 5 - upkeep 10
+    });
+
+    it('arthur earns a flat 12 regardless of wage or transit multipliers', () => {
+      const baseline = applyDailyTick('arthur', baseCommons, 0);
+      const extreme = applyDailyTick('arthur', baseCommons, 0, { ...DEFAULT_MULTIPLIERS, wage: 5, transit: 5 });
+      expect(baseline.cashDelta).toBe(9); // 12 - 3 foodCost
+      expect(extreme.cashDelta).toBe(baseline.cashDelta); // genuinely unaffected, not coincidentally equal
+    });
+
+    it('arthur regenerates energy at the landlord rate (10/day), netting exactly 0 by default', () => {
+      const result = applyDailyTick('arthur', baseCommons, 0);
+      expect(result.energyDelta).toBe(0); // regen 10 - upkeep 10
+    });
+
+    it('a null classRole (pre-character-select) falls back to 8 regen and 0 earning', () => {
+      const result = applyDailyTick(null, baseCommons, 0);
+      expect(result.energyDelta).toBe(-2); // regen 8 - upkeep 10
+      expect(result.cashDelta).toBe(-3); // earning 0 - foodCost 3
+    });
+
+    it('an unrecognized classRole string also falls back to the 8-regen/0-earning default', () => {
+      const result = applyDailyTick('not-a-real-archetype', baseCommons, 0);
+      expect(result.energyDelta).toBe(-2);
+      expect(result.cashDelta).toBe(-3);
+    });
+  });
+
+  describe('per-bonus stress boundaries (isolated, not just all-built together)', () => {
+    it('solar bonus alone reduces stress by exactly 5 once at the 100 threshold, not before', () => {
+      const below = applyDailyTick('pip', { ...baseCommons, solarGridProgress: 99 }, 0);
+      const at = applyDailyTick('pip', { ...baseCommons, solarGridProgress: 100 }, 0);
+      expect(below.stressDelta).toBe(5); // no bonus yet
+      expect(at.stressDelta).toBe(0); // 5 - 5(solar)
+    });
+
+    it('legal bonus alone reduces stress by exactly 4 once at the 100 threshold, not before', () => {
+      const below = applyDailyTick('pip', { ...baseCommons, legalFundProgress: 99 }, 0);
+      const at = applyDailyTick('pip', { ...baseCommons, legalFundProgress: 100 }, 0);
+      expect(below.stressDelta).toBe(5);
+      expect(at.stressDelta).toBe(1); // 5 - 4(legal)
+    });
+
+    it('kitchen stress bonus alone reduces stress by exactly 3 once at the 100 threshold, not before', () => {
+      const below = applyDailyTick('pip', { ...baseCommons, kitchenProgress: 99 }, 0);
+      const at = applyDailyTick('pip', { ...baseCommons, kitchenProgress: 100 }, 0);
+      expect(below.stressDelta).toBe(5);
+      expect(at.stressDelta).toBe(2); // 5 - 3(kitchen)
+    });
+
+    it('trust relief floors socialTrust/20, only stepping down at exact multiples of 20', () => {
+      const just_below = applyDailyTick('pip', baseCommons, 19);
+      const at = applyDailyTick('pip', baseCommons, 20);
+      expect(just_below.stressDelta).toBe(5); // floor(19/20)=0, no relief yet
+      expect(at.stressDelta).toBe(4); // floor(20/20)=1 -> 5-1
+    });
+  });
 });
 
 describe('resilienceTier', () => {

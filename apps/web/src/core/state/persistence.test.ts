@@ -14,8 +14,22 @@ vi.mock('../../api/endpoints/save', () => ({
   uploadToServer: vi.fn(),
 }));
 
-import { loadSave } from './persistence';
+import { loadFromServer, uploadToServer } from '../../api/endpoints/save';
+import { ApiError } from '../../api/client';
+
+import { loadSave, saveToDB, clearSave, getToken, setToken, clearToken } from './persistence';
 import { useGameStore, INITIAL_STATE } from './useGameStore';
+
+const mockLocalStorage = (() => {
+  let map = new Map<string, string>();
+  return {
+    getItem: (k: string) => map.get(k) ?? null,
+    setItem: (k: string, v: string) => { map.set(k, v); },
+    removeItem: (k: string) => { map.delete(k); },
+    clear: () => { map.clear(); },
+  };
+})();
+vi.stubGlobal('localStorage', mockLocalStorage);
 
 // M48 — EPIC-36 §1/§2/§3. See docs/tasks/M48-name-and-identity-customization.md.
 // The real defensive-merge fix this milestone needed — `player` gained new
@@ -95,5 +109,69 @@ describe('loadSave() defensive-merges housing against INITIAL_STATE', () => {
     await loadSave();
 
     expect(useGameStore.getState().housing.visitable).toBe(true);
+  });
+});
+
+describe('persistence token management, server sync, and clearing', () => {
+  beforeEach(() => {
+    store.clear();
+    mockLocalStorage.clear();
+    useGameStore.setState(INITIAL_STATE, true);
+    vi.clearAllMocks();
+  });
+
+  it('manages token via getToken, setToken, clearToken', () => {
+    expect(getToken()).toBeNull();
+    setToken('token-123');
+    expect(getToken()).toBe('token-123');
+    clearToken();
+    expect(getToken()).toBeNull();
+  });
+
+  it('loads save from server when token is present and valid', async () => {
+    setToken('auth-token');
+    const serverState = {
+      ...INITIAL_STATE,
+      meta: { ...INITIAL_STATE.meta, day: 15 },
+    };
+    vi.mocked(loadFromServer).mockResolvedValue(serverState as any);
+
+    await loadSave();
+    expect(useGameStore.getState().meta.day).toBe(15);
+  });
+
+  it('clears token on 401 ApiError and falls back to IndexedDB', async () => {
+    setToken('bad-token');
+    vi.mocked(loadFromServer).mockRejectedValue(new ApiError(401, 'Unauthorized'));
+
+    const localSave = {
+      ...INITIAL_STATE,
+      meta: { ...INITIAL_STATE.meta, day: 4 },
+    };
+    store.set('district-cg-save', localSave);
+
+    await loadSave();
+    expect(getToken()).toBeNull();
+    expect(useGameStore.getState().meta.day).toBe(4);
+  });
+
+  it('clears saved state in DB via clearSave()', async () => {
+    store.set('district-cg-save', { test: true });
+    await clearSave();
+    expect(store.get('district-cg-save')).toBeUndefined();
+  });
+
+  it('saves to IndexedDB and triggers uploadToServer when token exists', async () => {
+    setToken('save-token');
+    vi.mocked(uploadToServer).mockResolvedValue({} as any);
+
+    const testState = {
+      ...INITIAL_STATE,
+      meta: { ...INITIAL_STATE.meta, day: 20 },
+    };
+
+    await saveToDB(testState as any);
+    expect(store.get('district-cg-save')).toEqual(testState);
+    expect(uploadToServer).toHaveBeenCalledWith('save-token', testState);
   });
 });

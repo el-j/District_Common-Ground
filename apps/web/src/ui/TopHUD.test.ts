@@ -152,3 +152,109 @@ describe('TopHUD player-name badge', () => {
     expect(root.querySelector('.hud-badge')!.textContent).toBe('M');
   });
 });
+
+describe('TopHUD context action and interactive flows', () => {
+  beforeEach(() => resetStore());
+
+  it('sets, triggers, and hides context action button', () => {
+    const root = document.createElement('div');
+    root.id = 'ui-root';
+    document.body.appendChild(root);
+
+    const hud = new TopHUD(root, makeKernel(root));
+    const actionSpy = vi.fn();
+
+    hud.setAction('Speak with Sal', actionSpy);
+    const actionBtn = root.querySelector<HTMLButtonElement>('.context-action-button')!;
+    expect(actionBtn).not.toBeNull();
+    expect(actionBtn.hidden).toBe(false);
+    expect(actionBtn.textContent).toContain('Speak with Sal');
+    expect(actionBtn.textContent).toContain('E');
+
+    // Trigger action via button click
+    actionBtn.click();
+    expect(actionSpy).toHaveBeenCalledTimes(1);
+
+    // Trigger action via programmatic triggerAction()
+    hud.triggerAction();
+    expect(actionSpy).toHaveBeenCalledTimes(2);
+
+    // Hide action
+    hud.hideAction();
+    expect(actionBtn.hidden).toBe(true);
+
+    // Triggering when hidden does nothing
+    hud.triggerAction();
+    expect(actionSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('updates zone and hides on select phase', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const hud = new TopHUD(root, makeKernel(root));
+
+    hud.setZone('Canal District');
+    expect(root.querySelector('#hud-zone')?.textContent).toBe('Canal District');
+
+    // Transition to select phase
+    useGameStore.setState({
+      ...useGameStore.getState(),
+      meta: { ...useGameStore.getState().meta, phase: 'select' },
+    });
+
+    expect((root.querySelector('#top-hud') as HTMLElement).hidden).toBe(true);
+    expect((root.querySelector('.end-day-btn') as HTMLElement).hidden).toBe(true);
+  });
+
+  it('renders barometer and active quest chips when state contains them', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+
+    useGameStore.setState({
+      ...useGameStore.getState(),
+      pulseState: {
+        multipliers: {
+          food: 1.25,
+          energy: 0.9,
+          wage: 1.0,
+          transit: 1.0,
+          heat: 1.0,
+          migrant: 1.0,
+        },
+        fetchedAt: new Date().toISOString(),
+        source: 'live',
+      },
+      worldQuests: {
+        activeId: 'fund-the-kitchen',
+        completedIds: [],
+      },
+    });
+
+    const baro = root.querySelector('#hud-barometer') as HTMLElement;
+    expect(baro.hidden).toBe(false);
+    expect(baro.textContent).toContain('🧺 +25%');
+    expect(baro.textContent).toContain('⚡ -10%');
+
+    const obj = root.querySelector('#hud-objective') as HTMLElement;
+    expect(obj.hidden).toBe(false);
+  });
+
+  it('triggers end day flow and opens broadsheet modal', async () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+
+    const endDayBtn = root.querySelector<HTMLButtonElement>('.end-day-btn')!;
+    expect(endDayBtn).not.toBeNull();
+    endDayBtn.click();
+
+    // Give microtasks time to execute async onEndDay
+    await new Promise((r) => setTimeout(r, 20));
+
+    const broadsheet = root.querySelector('.broadsheet-overlay') as HTMLElement;
+    expect(broadsheet).not.toBeNull();
+    expect(broadsheet.hidden).toBe(false);
+  });
+});
+

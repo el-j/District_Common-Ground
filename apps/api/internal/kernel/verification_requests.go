@@ -136,6 +136,9 @@ func (r *Repository) ReviewVerificationRequest(ctx context.Context, requestID, r
 }
 
 func (r *Repository) ListVerifiedPlugins(ctx context.Context) ([]PluginMetadata, error) {
+	if r == nil || r.db == nil {
+		return nil, nil
+	}
 	rows, err := r.db.Query(ctx,
 		`SELECT plugin_metadata
 		 FROM plugin_verification_requests

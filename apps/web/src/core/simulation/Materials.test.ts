@@ -33,7 +33,7 @@ describe('MaterialToken taxonomy', () => {
     });
   });
 
-  it('every token has a positive price in the M42-forward-dependency price stub', () => {
+  it('every token has a positive price in the canonical material price table', () => {
     MATERIAL_TOKENS.forEach(t => {
       expect(MATERIAL_PRICES[t]).toBeGreaterThan(0);
     });

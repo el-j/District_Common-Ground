@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { buildBroadsheetHTML, type BroadsheetData } from './broadsheetHTML';
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BroadsheetModal, buildBroadsheetHTML, type BroadsheetData } from './BroadsheetModal';
+import { useGameStore } from '../core/state/useGameStore';
+import { inputManager } from '../world/InputManager';
+
+vi.mock('../world/InputManager', () => ({
+  inputManager: {
+    setLocked: vi.fn(),
+  },
+}));
 
 const BASE_DATA: BroadsheetData = {
   headline: 'District Holds Steady Amid Economic Pressure',
@@ -85,5 +94,92 @@ describe('buildBroadsheetHTML', () => {
   it('omits the citation pill when source is unset (hardcoded fallback path)', () => {
     const html = buildBroadsheetHTML(BASE_DATA);
     expect(html).not.toContain('broadsheet-citation');
+  });
+});
+
+describe('BroadsheetModal Class', () => {
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    root = document.createElement('div');
+    document.body.appendChild(root);
+    useGameStore.setState({
+      player: {
+        classRole: 'pip',
+        cash: 100,
+        energy: 50,
+        maxEnergy: 100,
+        socialTrust: 50,
+        stressLevel: 20,
+        position: { x: 0, y: 0 },
+        facing: 'down',
+        lastWorkedDay: null,
+        name: '',
+        gender: 'prefer-not-to-say',
+        appearance: 'APPEARANCE_TONE_1',
+      },
+    });
+  });
+
+  it('initializes overlay and paper elements in root', () => {
+    const modal = new BroadsheetModal(root);
+    const overlay = root.querySelector('.broadsheet-overlay') as HTMLElement;
+    expect(overlay).not.toBeNull();
+    expect(overlay.hidden).toBe(true);
+    expect(overlay.getAttribute('role')).toBe('dialog');
+
+    modal.destroy();
+    expect(root.querySelector('.broadsheet-overlay')).toBeNull();
+  });
+
+  it('opens modal, locks input, and wires close button', () => {
+    const modal = new BroadsheetModal(root);
+    const onClose = vi.fn();
+    modal.open(BASE_DATA, onClose);
+
+    const overlay = root.querySelector('.broadsheet-overlay') as HTMLElement;
+    expect(overlay.hidden).toBe(false);
+    expect(inputManager.setLocked).toHaveBeenCalledWith(true);
+
+    const closeBtn = root.querySelector<HTMLButtonElement>('.broadsheet-close');
+    expect(closeBtn).not.toBeNull();
+    closeBtn?.click();
+
+    expect(overlay.hidden).toBe(true);
+    expect(inputManager.setLocked).toHaveBeenCalledWith(false);
+    expect(onClose).toHaveBeenCalled();
+    modal.destroy();
+  });
+
+  it('closes on Escape key press when visible', () => {
+    const modal = new BroadsheetModal(root);
+    const onClose = vi.fn();
+    modal.open(BASE_DATA, onClose);
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    const overlay = root.querySelector('.broadsheet-overlay') as HTMLElement;
+    expect(overlay.hidden).toBe(true);
+    expect(onClose).toHaveBeenCalled();
+    modal.destroy();
+  });
+
+  it('wires commons clue and grants energy on correct answer', () => {
+    const modal = new BroadsheetModal(root);
+    modal.open(BASE_DATA);
+
+    const clueInput = root.querySelector<HTMLInputElement>('.commons-clue-input');
+    const feedback = root.querySelector<HTMLElement>('.commons-clue-feedback');
+    expect(clueInput).not.toBeNull();
+    expect(feedback).not.toBeNull();
+
+    if (clueInput) {
+      clueInput.value = 'solidarity';
+      clueInput.dispatchEvent(new Event('input'));
+    }
+
+    expect(feedback?.textContent).toContain('Correct!');
+    expect(useGameStore.getState().player.energy).toBe(55);
+    expect(clueInput?.disabled).toBe(true);
+    modal.destroy();
   });
 });

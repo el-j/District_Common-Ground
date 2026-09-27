@@ -52,9 +52,8 @@ export const MATERIAL_CATEGORY: Record<MaterialToken, MaterialCategory> = {
 export const MATERIAL_TOKENS: readonly MaterialToken[] =
   Object.keys(MATERIAL_CATEGORY) as MaterialToken[];
 
-// M38 §3 — a data stub only. The real Baumarkt/Supermarket buy UI is
-// EPIC-34's M42; this exists now so M42 has real numbers to wire a UI to
-// rather than inventing its own pricing table later.
+// Canonical Material Price Table — provides base retail and crafting purchase
+// values consumed by Baumarkt, Supermarket, and trade interfaces.
 export const MATERIAL_PRICES: Record<MaterialToken, number> = {
   MATERIAL_WOOD: 3,
   MATERIAL_STONE: 4,

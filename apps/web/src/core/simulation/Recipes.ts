@@ -334,10 +334,8 @@ export function consumeRecipeItemInputs(
   return next;
 }
 
-// Crafting-station contract stub (§3) — real station *locations* are
-// EPIC-34/M42's job; this just defines the shape M42 will attach to real
-// buildings, and the tier-check function above already treats "no station"
-// as the correct default for 'advanced' recipes.
+// Canonical Crafting-Station Contract — used by workshop building interiors
+// (metalwork, woodworking, kitchen, etc.) to validate recipe crafting requirements.
 export interface CraftingStation {
   id: string;
   discipline: CraftDiscipline;

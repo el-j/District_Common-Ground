@@ -22,15 +22,15 @@ vi.mock('../core/kernel/PluginRegistry', () => ({
   getPluginCatalogSnapshot: vi.fn(() => Promise.resolve({ installed: [], serverGames: [] })),
   installPluginFromBundleFile: vi.fn(),
   installPluginFromManifestUrl: vi.fn(),
-  launchInstalledPlugin: vi.fn(),
+  launchInstalledPlugin: vi.fn(() => Promise.resolve()),
   refreshInstalledPlugins: vi.fn(() => Promise.resolve()),
   removeInstalledPlugin: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('../api/endpoints/plugins', () => ({
   listVerificationRequests: vi.fn(() => Promise.resolve([])),
-  reviewVerificationRequest: vi.fn(),
-  submitVerificationRequest: vi.fn(),
+  reviewVerificationRequest: vi.fn(() => Promise.resolve()),
+  submitVerificationRequest: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock('../core/state/persistence', () => ({
@@ -160,3 +160,174 @@ describe('PluginManagerModal built-in plugins section', () => {
     expect(await getDisabledKernelPluginIds()).toEqual(new Set());
   });
 });
+
+describe('PluginManagerModal catalog, installation, and verification queue', () => {
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    root = document.createElement('div');
+    document.body.appendChild(root);
+    store.clear();
+    vi.clearAllMocks();
+    listBuiltinKernelPlugins.mockResolvedValue([]);
+  });
+
+  it('installs plugin from manifest URL and handles empty input error', async () => {
+    new PluginManagerModal(root);
+    await flush();
+
+    const installUrlBtn = root.querySelector<HTMLButtonElement>('[data-action=install-url]')!;
+    const input = root.querySelector<HTMLInputElement>('.plugin-input')!;
+
+    // Empty URL shows error
+    installUrlBtn.click();
+    await flush();
+    expect(root.querySelector('.plugin-status')?.textContent).toContain('Enter a manifest URL first.');
+
+    // Valid URL triggers install
+    input.value = 'https://example.com/plugin.json';
+    const { installPluginFromManifestUrl } = await import('../core/kernel/PluginRegistry');
+    vi.mocked(installPluginFromManifestUrl).mockResolvedValue({
+      record: {
+        id: 'test-custom',
+        version: '1.0.0',
+        title: 'Test Plugin',
+        description: 'Testing',
+        category: 'delivery',
+        thumbnailUrl: '',
+        entrypointUrl: '',
+        permissions: [],
+        targetHardware: 'canvas',
+        sourceKind: 'manifest',
+        manifestUrl: 'https://example.com/plugin.json',
+        bundleSha256: 'abc1234567890',
+        installedAt: new Date().toISOString(),
+        trustLevel: 'unverified',
+      },
+    } as any);
+
+    installUrlBtn.click();
+    await flush();
+    expect(installPluginFromManifestUrl).toHaveBeenCalledWith('https://example.com/plugin.json');
+  });
+
+  it('installs plugin from uploaded bundle file and handles missing file error', async () => {
+    new PluginManagerModal(root);
+    await flush();
+
+    const installFileBtn = root.querySelector<HTMLButtonElement>('[data-action=install-file]')!;
+    const fileInput = root.querySelector<HTMLInputElement>('.plugin-file')!;
+
+    // No file selected shows error
+    installFileBtn.click();
+    await flush();
+    expect(root.querySelector('.plugin-status')?.textContent).toContain('Choose a bundled JavaScript module first.');
+
+    // With file selected
+    const mockFile = new File(['export default {}'], 'plugin.js', { type: 'application/javascript' });
+    Object.defineProperty(fileInput, 'files', { value: [mockFile], configurable: true });
+
+    const { installPluginFromBundleFile } = await import('../core/kernel/PluginRegistry');
+    vi.mocked(installPluginFromBundleFile).mockResolvedValue({
+      record: {
+        id: 'test-uploaded',
+        version: '1.0.0',
+        title: 'Uploaded Plugin',
+        description: 'Testing upload',
+        category: 'puzzle',
+        thumbnailUrl: '',
+        entrypointUrl: '',
+        permissions: [],
+        targetHardware: 'canvas',
+        sourceKind: 'upload',
+        bundleSha256: 'xyz987654321',
+        installedAt: new Date().toISOString(),
+        trustLevel: 'unverified',
+      },
+    } as any);
+
+    installFileBtn.click();
+    await flush();
+    expect(installPluginFromBundleFile).toHaveBeenCalledWith(mockFile);
+  });
+
+  it('renders installed plugin card and handles launch and remove actions', async () => {
+    const { getPluginCatalogSnapshot, removeInstalledPlugin, launchInstalledPlugin } = await import('../core/kernel/PluginRegistry');
+    vi.mocked(getPluginCatalogSnapshot).mockResolvedValue({
+      installed: [
+        {
+          id: 'test-card-plugin',
+          version: '1.2.0',
+          title: 'Card Game',
+          description: 'A playable card plugin',
+          category: 'puzzle',
+          thumbnailUrl: '',
+          entrypointUrl: '',
+          permissions: [],
+          targetHardware: 'canvas',
+          sourceKind: 'manifest',
+          bundleSha256: 'hash123456789',
+          installedAt: new Date().toISOString(),
+          trustLevel: 'verified',
+        },
+      ],
+      serverGames: [],
+    } as any);
+
+    new PluginManagerModal(root);
+    await flush();
+
+    const card = root.querySelector('[data-plugin-id="test-card-plugin"]');
+    expect(card).not.toBeNull();
+
+    // Launch
+    const launchBtn = card?.querySelector<HTMLButtonElement>('[data-action=launch]');
+    launchBtn?.click();
+    await flush();
+    expect(launchInstalledPlugin).toHaveBeenCalledWith('test-card-plugin', {}, expect.any(Object));
+
+    // Remove
+    const removeBtn = card?.querySelector<HTMLButtonElement>('[data-action=remove]');
+    removeBtn?.click();
+    await flush();
+    expect(removeInstalledPlugin).toHaveBeenCalledWith('test-card-plugin');
+  });
+
+  it('renders owner verification queue and handles approve/reject reviews', async () => {
+    const { listVerificationRequests, reviewVerificationRequest } = await import('../api/endpoints/plugins');
+    vi.mocked(listVerificationRequests).mockResolvedValue([
+      {
+        id: 'req-1',
+        requesterUserId: 'user-pip',
+        pluginId: 'community-radio',
+        sourceKind: 'manifest',
+        bundleSha256: 'abcdef123456',
+        status: 'pending',
+        pluginMetadata: {
+          title: 'Community Radio',
+          description: 'Radio station streaming',
+        },
+        createdAt: new Date().toISOString(),
+      },
+    ] as any);
+
+    new PluginManagerModal(root);
+    await flush();
+
+    const queueCard = root.querySelector('[data-request-id="req-1"]');
+    expect(queueCard).not.toBeNull();
+
+    // Approve
+    const approveBtn = queueCard?.querySelector<HTMLButtonElement>('[data-action=approve]');
+    approveBtn?.click();
+    await flush();
+    expect(reviewVerificationRequest).toHaveBeenCalledWith('req-1', true, 'Approved by owner');
+
+    // Reject
+    const rejectBtn = queueCard?.querySelector<HTMLButtonElement>('[data-action=reject]');
+    rejectBtn?.click();
+    await flush();
+    expect(reviewVerificationRequest).toHaveBeenCalledWith('req-1', false, 'Rejected by owner');
+  });
+});
+

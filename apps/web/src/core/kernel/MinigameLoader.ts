@@ -129,3 +129,8 @@ export class MinigameLoader {
     return { container, instance };
   }
 }
+
+if (typeof window !== 'undefined') {
+  (window as unknown as { __MinigameLoader?: typeof MinigameLoader }).__MinigameLoader = MinigameLoader;
+}
+

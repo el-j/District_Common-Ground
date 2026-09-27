@@ -1,5 +1,5 @@
 import {
-  useGameStore, type ClassRole, type CrisisLogEntry, type GameState, type PlacedFurniture,
+  useGameStore, type ClassRole, type GameState, type PlacedFurniture,
   type GenderIdentity, type AppearanceToken, type WorldQuestId,
 } from './useGameStore';
 import { saveToDB } from './persistence';
@@ -79,6 +79,7 @@ export function beginFromFamilyTemplate(templateId: FamilyTemplateId): void {
 const MAX_NAME_LENGTH = 40;
 export function sanitizePlayerName(raw: string): string {
   return raw
+    // oxlint-disable-next-line eslint/no-control-regex
     .replace(/[\x00-\x1F\x7F]/g, '')
     .replace(/\s+/g, ' ')
     .trim()
@@ -104,16 +105,6 @@ export function setPlayerGender(gender: GenderIdentity, selfDescribe?: string): 
 export function setPlayerAppearance(appearance: AppearanceToken): void {
   useGameStore.setState(state => ({
     player: { ...state.player, appearance },
-  }));
-}
-
-// M47 — EPIC-36 §2. Records which family template the player picked in the
-// new origin flow — CharacterSelect.ts still calls setArchetype(classRole)
-// separately to actually seed player stats (see FamilyTemplates.ts's own
-// doc comment for why this milestone doesn't switch that mechanism yet).
-export function chooseFamilyTemplate(templateId: FamilyTemplateId): void {
-  useGameStore.setState(state => ({
-    origin: { ...state.origin, familyTemplateId: templateId },
   }));
 }
 
@@ -572,28 +563,3 @@ export function travelToRegion(regionId: string): void {
   }));
 }
 
-export function setActiveCrisis(id: string): void {
-  useGameStore.setState(state => ({
-    crisisState: { ...state.crisisState, activeCrisisId: id },
-  }));
-}
-
-export function resolveCrisis(choice: CrisisLogEntry['choice'], summary: string): void {
-  useGameStore.setState(state => {
-    const crisis = state.crisisState;
-    if (!crisis.activeCrisisId) return {};
-    const entry: CrisisLogEntry = {
-      id: crisis.activeCrisisId,
-      day: state.meta.day,
-      choice,
-      summary,
-    };
-    return {
-      crisisState: {
-        activeCrisisId: null,
-        pendingQueue: crisis.pendingQueue,
-        historyLog: [...crisis.historyLog, entry],
-      },
-    };
-  });
-}

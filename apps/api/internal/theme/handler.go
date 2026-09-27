@@ -46,11 +46,13 @@ func NewHandler(repo *kernel.Repository) *Handler {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	themes := append([]kernel.PluginMetadata{}, builtInThemes...)
 
-	verified, err := h.repo.ListVerifiedPlugins(r.Context())
-	if err == nil {
-		for _, plugin := range verified {
-			if plugin.Category == Category {
-				themes = append(themes, plugin)
+	if h.repo != nil {
+		verified, err := h.repo.ListVerifiedPlugins(r.Context())
+		if err == nil {
+			for _, plugin := range verified {
+				if plugin.Category == Category {
+					themes = append(themes, plugin)
+				}
 			}
 		}
 	}

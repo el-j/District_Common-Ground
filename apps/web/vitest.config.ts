@@ -7,10 +7,11 @@ export default defineConfig({
     environment: 'node',
     include: [
       'src/**/*.test.ts',
-      // Standalone first-party plugin packages (registered with the frontend
-      // Kernel, not statically imported) live outside apps/web/src but are
-      // still exercised by the same `npm test` invocation.
+      // Standalone first-party packages (plugins, minigames, skins) live outside
+      // apps/web/src but are tested within the workspace vitest runner.
       '../../packages/plugin-*/src/**/*.test.ts',
+      '../../packages/minigame-*/src/**/*.test.ts',
+      '../../packages/skin-*/src/**/*.test.ts',
     ],
     // 2026-09-20 audit: real coverage is well under 100% in several
     // high-risk spots (the plugin-sandbox kernel, most UI modals, all 4

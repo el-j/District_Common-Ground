@@ -49,8 +49,8 @@ export function buildBroadsheetHTML(data: BroadsheetData): string {
         </div>
         <div class="broadsheet-commons-clue">
           <h3>Commons Clue (+5 Energy)</h3>
-          <p class="commons-clue-hint">Across: Mutual support between neighbors (9)</p>
-          <input class="commons-clue-input" type="text" maxlength="9" placeholder="_________"
+          <p class="commons-clue-hint">Across: Mutual support between neighbors (10)</p>
+          <input class="commons-clue-input" type="text" maxlength="10" placeholder="__________"
             aria-label="Commons Clue answer" autocomplete="off" spellcheck="false" />
           <div class="commons-clue-feedback" aria-live="polite"></div>
         </div>

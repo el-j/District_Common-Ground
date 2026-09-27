@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/district-cg/api/internal/auth"
 	"github.com/district-cg/api/internal/civic"
@@ -47,6 +48,15 @@ func main() {
 	defer pool.Close()
 
 	tokenSvc := auth.NewTokenService(cfg.JWTSecret)
+	r := buildRouter(cfg, pool, tokenSvc)
+
+	log.Printf("api listening on :%s", cfg.Port)
+	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
+		log.Fatalf("server: %v", err)
+	}
+}
+
+func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenService) chi.Router {
 	authSvc := auth.NewService(pool, tokenSvc)
 	authHandler := auth.NewHandler(authSvc)
 
@@ -127,8 +137,5 @@ func main() {
 		r.With(requireAuth).Post("/games/{id}/complete", kernelHandler.CompleteSession)
 	})
 
-	log.Printf("api listening on :%s", cfg.Port)
-	if err := http.ListenAndServe(":"+cfg.Port, r); err != nil {
-		log.Fatalf("server: %v", err)
-	}
+	return r
 }

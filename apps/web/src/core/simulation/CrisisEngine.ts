@@ -2,7 +2,7 @@ import { useGameStore, type CrisisLogEntry } from '../state/useGameStore';
 import { gainCash, spendCash, spendEnergy, addTrust, loseTrust, addStress, reduceStress } from '../state/actions';
 import { recordCrisisChoice } from '../../api/endpoints/district';
 import { recordAction } from '../offline/offlineRuntime';
-import scenariosRaw from '../../../public/assets/data/crisis_scenarios.json';
+import scenariosRaw from '../../data/crisis_scenarios.json';
 
 export interface CrisisConsequences {
   cashDelta: number;

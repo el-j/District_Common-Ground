@@ -1,4 +1,5 @@
 import { getCatalog, getWallet, getInventory, purchaseItem } from '../api/endpoints/shop';
+import { setOwnedShopItems } from '../core/state/actions';
 import { ApiError } from '../api/client';
 import type { ShopItem, ShopItemCategory } from '@district-cg/shared-types';
 import { inputManager } from '../world/InputManager';
@@ -54,6 +55,7 @@ export class ShopModal {
       const [wallet, inventory] = await Promise.all([getWallet(), getInventory()]);
       this.balanceST = wallet.solidarityTokens;
       this.owned = new Set(inventory.ownedItemIds);
+      setOwnedShopItems(inventory.ownedItemIds);
       this.signedIn = true;
     } catch (err) {
       this.signedIn = !(err instanceof ApiError && err.status === 401);
@@ -173,6 +175,7 @@ export class ShopModal {
       const result = await purchaseItem(itemId);
       this.balanceST = result.wallet.solidarityTokens;
       this.owned = new Set(result.inventory.ownedItemIds);
+      setOwnedShopItems(result.inventory.ownedItemIds);
       this.confirmingId = null;
       playSolidarityChime();
     } catch (err) {

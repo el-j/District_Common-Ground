@@ -2,6 +2,21 @@ import type { MinigameManifest, MinigameInstance, GameSessionContext } from '@di
 import { HostPlatformAPI, type HostPlatformCallbacks } from './HostPlatformAPI';
 import { MinigameContainer } from './MinigameContainer';
 import { useGameStore } from '../state/useGameStore';
+import { startMinigameRun } from '../state/actions';
+import { MINIGAME_LIMITS } from '../simulation/EconomyRules';
+
+/** Thrown by a launch when the player doesn't have the energy a run costs. */
+export class MinigameTooTiredError extends Error {
+  constructor() {
+    super(`Too tired to play — a run needs ${MINIGAME_LIMITS.energyCost} energy.`);
+    this.name = 'MinigameTooTiredError';
+  }
+}
+
+/** Charges one run's energy, or throws MinigameTooTiredError. */
+export function chargeMinigameRun(): void {
+  if (!startMinigameRun().ok) throw new MinigameTooTiredError();
+}
 
 export interface MinigameModule {
   createMinigame(): MinigameInstance;
@@ -86,6 +101,9 @@ export class MinigameLoader {
     const manifest = this.manifests.get(id);
     const module = await loader();
     const instance = module.createMinigame();
+    // Charged only once the module has loaded, so a failed download never
+    // costs the player energy.
+    chargeMinigameRun();
 
     const state = useGameStore.getState();
     const container = new MinigameContainer({

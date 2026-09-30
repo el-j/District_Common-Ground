@@ -8,7 +8,8 @@ const { login, register } = vi.hoisted(() => ({
 vi.mock('../api/endpoints/auth', () => ({ login, register }));
 
 const { setToken } = vi.hoisted(() => ({ setToken: vi.fn() }));
-vi.mock('../core/state/persistence', () => ({ setToken }));
+const { rememberOfflineChoice } = vi.hoisted(() => ({ rememberOfflineChoice: vi.fn() }));
+vi.mock('../core/state/persistence', () => ({ setToken, rememberOfflineChoice, clearOfflineChoice: vi.fn() }));
 
 import { AuthOverlay } from './AuthOverlay';
 import { ApiError } from '../api/client';
@@ -95,6 +96,27 @@ describe('AuthOverlay', () => {
     expect(onDone).not.toHaveBeenCalled();
   });
 
+  it('at boot it is a title screen: Play first, sign-in tucked away', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new AuthOverlay(root, vi.fn());
+    expect(root.querySelector('.auth-overlay--title')).not.toBeNull();
+    expect(root.querySelector('.auth-play')!.textContent).toMatch(/Play/);
+    const signin = root.querySelector<HTMLDetailsElement>('details.auth-signin')!;
+    expect(signin.open).toBe(false);
+    expect(signin.querySelector('.auth-form')).not.toBeNull();
+    expect(root.querySelectorAll('.title-building').length).toBeGreaterThan(5);
+  });
+
+  it('as a later sign-in prompt it shows the form straight away', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new AuthOverlay(root, vi.fn(), 'Not now');
+    expect(root.querySelector('.auth-overlay--title')).toBeNull();
+    expect(root.querySelector('details.auth-signin')).toBeNull();
+    expect(root.querySelector('.auth-offline')!.textContent).toBe('Not now');
+  });
+
   it('dismisses immediately via the offline button without calling the API', () => {
     const root = document.createElement('div');
     document.body.appendChild(root);
@@ -107,5 +129,7 @@ describe('AuthOverlay', () => {
     expect(register).not.toHaveBeenCalled();
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(root.querySelector('.auth-overlay')).toBeNull();
+    // remembered, so the sign-in wall doesn't block every launch (audit §3.6)
+    expect(rememberOfflineChoice).toHaveBeenCalled();
   });
 });

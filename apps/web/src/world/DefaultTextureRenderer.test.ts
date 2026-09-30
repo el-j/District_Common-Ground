@@ -16,9 +16,12 @@ function createMockScene(): any {
           getContext: vi.fn(() => ({
             clearRect: vi.fn(),
             fillRect: vi.fn(),
+            strokeRect: vi.fn(),
             beginPath: vi.fn(),
             moveTo: vi.fn(),
             lineTo: vi.fn(),
+            arc: vi.fn(),
+            fill: vi.fn(),
             stroke: vi.fn(),
           })),
           refresh: vi.fn(),
@@ -46,18 +49,18 @@ describe('DefaultTextureRenderer', () => {
       worldWallShadow: '#5c3225',
       worldGrass: '#4d7c3f',
       worldRoad: '#2d3748',
-      worldRoadMarking: '#f6e05e',
+      worldRoadBorder: '#1a202c',
+      worldPlaza: '#a0aec0',
       worldDoor: '#744210',
-      worldDoorKnob: '#ecc94b',
-      worldBuilt: '#975a16',
-      worldSidewalk: '#cbd5e0',
-      worldDirt: '#7b341e',
+      worldHighlight: '#ecc94b',
+      worldTree: '#276749',
       worldWater: '#3182ce',
-      worldTreeCanopy: '#276749',
+      worldDirtPath: '#7b341e',
+      worldSidewalk: '#cbd5e0',
     };
 
     createTilesetTexture(scene, mockPalette);
-    expect(scene.textures.createCanvas).toHaveBeenCalledWith('tileset', 16 * 10, 16);
+    expect(scene.textures.createCanvas).toHaveBeenCalledWith('tileset', 16 * 11, 16);
   });
 
   it('createPlayerTexture handles appearance skin tones and frames', () => {

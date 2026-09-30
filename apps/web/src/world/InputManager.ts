@@ -45,6 +45,9 @@ class InputManager {
       Phaser.Input.Events.POINTER_DOWN,
       (pointer: Phaser.Input.Pointer) => {
         if (this.touchId !== null) return;
+        // The virtual thumbstick is for touchscreens only — a mouse click
+        // on desktop used to draw it and steer the player (audit §3.8).
+        if (!pointer.wasTouch) return;
         const halfScreen = scene.scale.width / 2;
         if (pointer.x < halfScreen) {
           this.touchId = pointer.id;

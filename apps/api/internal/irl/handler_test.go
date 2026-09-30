@@ -50,8 +50,9 @@ func TestLogDeed_ValidatesAndCreditsWallet(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
-	if resp.Deed.STAwarded != 50 || resp.Wallet.SolidarityTokens != 50 {
-		t.Errorf("got deed st=%d wallet st=%d, want 50/50", resp.Deed.STAwarded, resp.Wallet.SolidarityTokens)
+	// a client-claimed peer verification pays like an honor-system deed
+	if resp.Deed.STAwarded != 25 || resp.Wallet.SolidarityTokens != 25 {
+		t.Errorf("got deed st=%d wallet st=%d, want 25/25", resp.Deed.STAwarded, resp.Wallet.SolidarityTokens)
 	}
 }
 

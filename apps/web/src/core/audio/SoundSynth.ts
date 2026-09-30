@@ -332,6 +332,68 @@ export function playSolidarityChime(): void {
   });
 }
 
+// ── Feedback cues (stat changes, milestones) ──────────────────────────────
+
+function tone(audio: AudioContext, freq: number, start: number, dur: number, type: OscillatorType, peak: number): void {
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(peak, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+  osc.connect(gain);
+  gain.connect(getMasterOutput());
+  osc.start(start);
+  osc.stop(start + dur + 0.02);
+}
+
+/** Bright two-note "coin" for earning money. */
+export function playCoin(): void {
+  const audio = getCtx();
+  if (!audio) return;
+  const t = audio.currentTime;
+  tone(audio, 987.8, t, 0.08, 'square', 0.05);
+  tone(audio, 1318.5, t + 0.07, 0.22, 'square', 0.05);
+}
+
+/** Gentle falling blip for a loss — noticeable, never punishing. */
+export function playSoftDrop(): void {
+  const audio = getCtx();
+  if (!audio) return;
+  const t = audio.currentTime;
+  const osc = audio.createOscillator();
+  const gain = audio.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(440, t);
+  osc.frequency.exponentialRampToValueAtTime(260, t + 0.18);
+  gain.gain.setValueAtTime(0.09, t);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  osc.connect(gain);
+  gain.connect(getMasterOutput());
+  osc.start(t);
+  osc.stop(t + 0.25);
+}
+
+/** Warm rising chime for trust and resilience gains. */
+export function playWarmRise(): void {
+  const audio = getCtx();
+  if (!audio) return;
+  const t = audio.currentTime;
+  [523.3, 784].forEach((f, i) => tone(audio, f, t + i * 0.09, 0.35, 'sine', 0.08));
+}
+
+/** Full celebration: an arpeggio into a held major chord (a commons opens). */
+export function playFanfare(): void {
+  const audio = getCtx();
+  if (!audio) return;
+  if ('vibrate' in navigator) navigator.vibrate([20, 40, 20, 40, 60]);
+  const t = audio.currentTime;
+  [392, 523.3, 659.3, 784].forEach((f, i) => tone(audio, f, t + i * 0.11, 0.28, 'triangle', 0.12));
+  [523.3, 659.3, 784, 1046.5].forEach(f => tone(audio, f, t + 0.5, 1.6, 'sine', 0.07));
+  tone(audio, 261.6, t + 0.5, 1.6, 'triangle', 0.08);
+}
+
 // ── BGM ambient loop ──────────────────────────────────────────────────────
 // Am → F → C → G chord progression, 84 BPM, triangle + sine pads.
 // Uses lookahead scheduling so each 4-bar loop plays gaplessly.

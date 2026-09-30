@@ -17,9 +17,21 @@ vi.mock('../skins/ThemePluginManager', () => ({
 }));
 
 vi.mock('../core/state/persistence', () => ({
-  clearSave: vi.fn(() => Promise.resolve()),
+  startNewGame: vi.fn(() => Promise.resolve()),
   saveToDB: vi.fn(() => Promise.resolve()),
+  getToken: vi.fn(() => null),
+  clearToken: vi.fn(),
+  rememberOfflineChoice: vi.fn(),
 }));
+
+const { hasTelemetryConsent, setTelemetryConsent, downloadMyData, deleteAccount } = vi.hoisted(() => ({
+  hasTelemetryConsent: vi.fn(() => false),
+  setTelemetryConsent: vi.fn(),
+  downloadMyData: vi.fn(() => Promise.resolve()),
+  deleteAccount: vi.fn(() => Promise.resolve()),
+}));
+vi.mock('../core/privacy/consent', () => ({ hasTelemetryConsent, setTelemetryConsent }));
+vi.mock('../api/endpoints/account', () => ({ downloadMyData, deleteAccount }));
 
 vi.mock('../core/state/actions', () => ({
   setRegionCode: vi.fn(),
@@ -36,6 +48,7 @@ vi.mock('../core/audio/SoundSynth', () => ({ setBGMMuted, isBGMMuted, playUIClic
 import { SettingsModal } from './SettingsModal';
 import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { setHousingVisitable } from '../core/state/actions';
+import { getToken, clearToken, rememberOfflineChoice } from '../core/state/persistence';
 
 /** Bugfix: settings are now split into tabs (Appearance/Audio/Region &
  *  Privacy/Account) instead of one long flat scroll — see SettingsModal.ts's
@@ -160,5 +173,79 @@ describe('SettingsModal tabs', () => {
     expect(root.querySelector('.settings-tab--active')?.getAttribute('data-tab')).toBe('account');
     expect(root.querySelector('.settings-new-game')).not.toBeNull();
     expect(root.querySelector('.skin-grid')).toBeNull();
+  });
+});
+
+// Launch audit Phase 6 — GDPR: opt-in statistics, data export, account erasure.
+describe('SettingsModal privacy & account data', () => {
+  const flush = () => new Promise(r => setTimeout(r, 0));
+  function open(tab: 'region' | 'account'): HTMLElement {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new SettingsModal(root);
+    openTab(root, tab);
+    return root;
+  }
+
+  beforeEach(() => {
+    useGameStore.setState(INITIAL_STATE, true);
+    vi.mocked(getToken).mockReturnValue(null);
+    hasTelemetryConsent.mockReturnValue(false);
+    [setTelemetryConsent, downloadMyData, deleteAccount, clearToken, rememberOfflineChoice].forEach(f => vi.mocked(f).mockClear());
+  });
+
+  it('shows the statistics opt-in unchecked by default and links the privacy policy', () => {
+    const root = open('region');
+    const box = root.querySelector<HTMLInputElement>('.settings-telemetry-toggle')!;
+    expect(box.checked).toBe(false);
+    expect(root.querySelector<HTMLAnchorElement>('a[href="/privacy.html"]')).not.toBeNull();
+  });
+
+  it('opting in stores consent', () => {
+    const root = open('region');
+    const box = root.querySelector<HTMLInputElement>('.settings-telemetry-toggle')!;
+    box.checked = true;
+    box.dispatchEvent(new Event('change'));
+    expect(setTelemetryConsent).toHaveBeenCalledWith(true);
+  });
+
+  it('offers no export/delete while playing offline', () => {
+    const root = open('account');
+    expect(root.querySelector('.export-data-btn')).toBeNull();
+    expect(root.querySelector('.delete-account-btn')).toBeNull();
+  });
+
+  it('downloads my data with the account token', () => {
+    vi.mocked(getToken).mockReturnValue('tok');
+    const root = open('account');
+    root.querySelector<HTMLButtonElement>('.export-data-btn')!.click();
+    expect(downloadMyData).toHaveBeenCalledWith('tok');
+  });
+
+  it('deleting needs a second confirmation, then erases the account and continues offline', async () => {
+    vi.mocked(getToken).mockReturnValue('tok');
+    const root = open('account');
+    root.querySelector<HTMLButtonElement>('.delete-account-btn')!.click();
+    expect(deleteAccount).not.toHaveBeenCalled();
+    expect(root.textContent).toContain('permanently');
+
+    vi.mocked(clearToken).mockImplementationOnce(() => { vi.mocked(getToken).mockReturnValue(null); });
+    root.querySelector<HTMLButtonElement>('.delete-account-yes')!.click();
+    await flush();
+    expect(deleteAccount).toHaveBeenCalledWith('tok');
+    expect(clearToken).toHaveBeenCalled();
+    expect(rememberOfflineChoice).toHaveBeenCalled();
+    expect(root.textContent).toContain('Your account was deleted');
+  });
+
+  it('a failed deletion keeps the token and says so', async () => {
+    vi.mocked(getToken).mockReturnValue('tok');
+    deleteAccount.mockReturnValueOnce(Promise.reject(new Error('offline')));
+    const root = open('account');
+    root.querySelector<HTMLButtonElement>('.delete-account-btn')!.click();
+    root.querySelector<HTMLButtonElement>('.delete-account-yes')!.click();
+    await flush();
+    expect(clearToken).not.toHaveBeenCalled();
+    expect(root.textContent).toContain("couldn't be deleted");
   });
 });

@@ -40,10 +40,12 @@ export interface HousingOption {
   consequences: HousingConsequences;
 }
 
-// No fixed home (housing.currentFlatId === null) is a valid, real default —
-// no rent, no bonuses either. 3 virtual units across the 2 apartment
-// footprints (EPIC-32's "2-4 virtual rentable units" grounding), none
-// strictly dominant: cheap+cozy, mid-price+social, pricey+restful.
+// No fixed home (housing.currentFlatId === null) is a valid state, but
+// sleeping rough costs energy and adds stress (EconomyMath.ts's
+// ROUGH_SLEEPING), so every flat is worth its rent. 3 virtual units across
+// the 2 apartment footprints, none strictly dominant: cheap+cozy,
+// mid-price+energising, pricey+restful. Furniture placed in a rented flat
+// relieves stress too (FURNITURE_MAX_RELIEF).
 export const HOUSING_OPTIONS: readonly HousingOption[] = [
   {
     id: 'pips-courier-room',
@@ -58,8 +60,8 @@ export const HOUSING_OPTIONS: readonly HousingOption[] = [
     buildingInteriorId: 'apartmentBlockB',
     unitLabel: 'Shared Room',
     label: 'Shared Room — Block B',
-    description: 'A shared flat with roommates you barely know yet. More people around, less quiet.',
-    consequences: { cashDelta: -8, energyDelta: -1, stressDelta: 1 },
+    description: 'A shared flat with roommates you barely know yet. Less quiet, but someone always cooks.',
+    consequences: { cashDelta: -7, energyDelta: 3, stressDelta: 0 },
   },
   {
     id: 'block-b-private',
@@ -67,7 +69,7 @@ export const HOUSING_OPTIONS: readonly HousingOption[] = [
     unitLabel: 'Private Suite',
     label: 'Private Suite — Block B',
     description: 'Your own private space in the same building. Costs more, but you sleep properly.',
-    consequences: { cashDelta: -18, energyDelta: 2, stressDelta: -4 },
+    consequences: { cashDelta: -15, energyDelta: 6, stressDelta: -5 },
   },
 ];
 

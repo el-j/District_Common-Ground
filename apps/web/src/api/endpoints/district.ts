@@ -1,4 +1,5 @@
 import { request } from '../client';
+import { hasTelemetryConsent } from '../../core/privacy/consent';
 
 /**
  * Fire-and-forget: records one anonymous crisis-resolution choice so the
@@ -29,7 +30,10 @@ export function recordEconomicSnapshot(day: number, archetype: string, cash: num
 	});
 }
 
+/** Statistics leave the device only for signed-in players who opted in
+ *  (Settings → Region & Privacy). Off by default — launch audit Phase 6. */
 function getAuthToken(): string | undefined {
+	if (!hasTelemetryConsent()) return undefined;
 	try {
 		return localStorage.getItem('dcg-token') ?? undefined;
 	} catch {

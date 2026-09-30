@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../core/offline/offlineRuntime', () => ({ recordAction: vi.fn() }));
+vi.mock('../world/InputManager', () => ({ inputManager: { setLocked: vi.fn() } }));
 
 import { DistrictBuilderModal } from './DistrictBuilderModal';
 

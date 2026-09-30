@@ -59,6 +59,13 @@ func rewardFor(method VerificationMethod) (stAwarded, cabAwarded int64) {
 
 var ErrInvalidDeed = errors.New("invalid deed category or verification method")
 
+// ErrDailyLimit: the user already logged DailyDeedLimit deeds today (UTC).
+var ErrDailyLimit = errors.New("daily deed limit reached")
+
+// DailyDeedLimit caps self-reported deeds per user per UTC day (2026-09-29
+// launch audit §1.8 — deeds, and so Solidarity Tokens, were unlimited).
+const DailyDeedLimit = 3
+
 type Deed struct {
 	ID                 string `json:"id"`
 	Category           string `json:"category"`
@@ -90,6 +97,9 @@ func (r *Repository) LogDeed(ctx context.Context, userID string, category Catego
 	if !category.Valid() || !method.Valid() {
 		return Deed{}, Wallet{}, ErrInvalidDeed
 	}
+	// The server can't yet verify a peer handshake, so a client-claimed
+	// "peer_verified" is recorded and paid as honor-system (audit §1.8).
+	method = VerificationHonorSystem
 	stAwarded, cabAwarded := rewardFor(method)
 
 	tx, err := r.db.Begin(ctx)
@@ -97,6 +107,22 @@ func (r *Repository) LogDeed(ctx context.Context, userID string, category Catego
 		return Deed{}, Wallet{}, fmt.Errorf("begin log deed: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Serialise this user's deed logging so concurrent requests can't
+	// both slip under the daily limit.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, "irl-deeds:"+userID); err != nil {
+		return Deed{}, Wallet{}, fmt.Errorf("lock deeds: %w", err)
+	}
+	var today int
+	if err := tx.QueryRow(ctx,
+		`SELECT COUNT(*) FROM irl_deeds WHERE user_id = $1 AND created_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'`,
+		userID,
+	).Scan(&today); err != nil {
+		return Deed{}, Wallet{}, fmt.Errorf("count today's deeds: %w", err)
+	}
+	if today >= DailyDeedLimit {
+		return Deed{}, Wallet{}, ErrDailyLimit
+	}
 
 	var deed Deed
 	var createdAt time.Time

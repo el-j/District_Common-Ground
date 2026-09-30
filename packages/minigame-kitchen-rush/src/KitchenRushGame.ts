@@ -382,13 +382,14 @@ export class KitchenRushGame {
   }
 
   private onGameOver(): void {
-    const cashEarned = this.served * 7;
-    const trustEarned = Math.min(20, this.comboMax * 2);
+    // Scaled to the host's per-run caps (2026-09-29 launch audit: $20,
+    // 3 trust; the run's energy is charged by the host at launch).
+    const cashEarned = Math.min(20, this.served * 2);
+    const trustEarned = Math.min(3, this.comboMax);
 
     void this.context.host.grantRewards({
       cashDelta: cashEarned,
       trustDelta: trustEarned,
-      energyDelta: -5,
     });
 
     this.context.host.notify(

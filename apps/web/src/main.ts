@@ -3,11 +3,13 @@ import Phaser from 'phaser';
 import { WorldScene } from './world/WorldScene';
 import { InteriorScene } from './world/InteriorScene';
 import { RegionScene } from './world/regions/RegionScene';
-import { loadSave, getToken } from './core/state/persistence';
+import { loadSave, getToken, startAutosave, hasChosenOffline } from './core/state/persistence';
+import { applyWorldEffectsFromState } from './core/simulation/CrisisEngine';
 import { useGameStore } from './core/state/useGameStore';
 import { CharacterSelect } from './ui/CharacterSelect';
 import { TopHUD } from './ui/TopHUD';
 import { AuthOverlay } from './ui/AuthOverlay';
+import { setBootStatus, hideBootScreen, showBootError } from './ui/bootScreen';
 import { setupAudioOnInteraction, playUIClick, playSolidarityChime } from './core/audio/SoundSynth';
 import { MinigameLoader } from './core/kernel/MinigameLoader';
 import { bootstrapInstalledPlugins } from './core/kernel/PluginRegistry';
@@ -41,16 +43,22 @@ async function boot(): Promise<void> {
   // opens the walkie-talkie modal.
   initMeshRuntime();
 
-  if (!getToken()) {
+  if (!getToken() && !hasChosenOffline()) {
+    hideBootScreen();
     await new Promise<void>((resolve) => { new AuthOverlay(uiRoot, resolve); });
   }
 
+  setBootStatus('Loading your save…');
   await loadSave();
+  // 2026-09-29 launch audit §2.1 — progress used to be saved only on End Day.
+  startAutosave();
+  applyWorldEffectsFromState();
   await bootstrapInstalledPlugins().catch(() => undefined);
 
   // M29 — the 5 built-in minigames now load via MinigameLoader.loadRemoteMinigame()
   // instead of being statically imported into this bundle. One bad/missing
   // game logs and is skipped rather than blocking boot.
+  setBootStatus('Loading minigames…');
   const minigameCatalog = await fetchAndMergeMinigameCatalog();
   await Promise.all(
     minigameCatalog.map((manifest) =>
@@ -120,6 +128,7 @@ async function boot(): Promise<void> {
 
   setupAudioOnInteraction();
 
+  hideBootScreen();
   const hud = new TopHUD(uiRoot, kernel);
   WorldScene.setHud(hud);
 
@@ -158,4 +167,7 @@ async function boot(): Promise<void> {
   });
 }
 
-void boot();
+boot().catch((err: unknown) => {
+  console.error('[boot] failed', err);
+  showBootError(err);
+});

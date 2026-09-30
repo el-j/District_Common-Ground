@@ -1,0 +1,15 @@
+- generic [ref=e4]:
+  - 'heading "District: Common Ground" [level=1] [ref=e5]'
+  - paragraph [ref=e6]: Sign in to save your progress across devices.
+  - generic [ref=e7]:
+    - textbox "Email" [ref=e8]
+    - textbox "Password (8+ chars)" [ref=e9]
+    - button "Sign In" [ref=e10] [cursor=pointer]
+    - button "Create Account" [ref=e11] [cursor=pointer]
+  - button "Play offline (no account)" [ref=e12] [cursor=pointer]
+  - paragraph [ref=e13]:
+    - link "Privacy policy" [ref=e14] [cursor=pointer]:
+      - /url: /privacy.html
+    - text: ·
+    - link "Imprint" [ref=e15] [cursor=pointer]:
+      - /url: /imprint.html

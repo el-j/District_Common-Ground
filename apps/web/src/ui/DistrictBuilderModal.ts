@@ -1,5 +1,6 @@
 import { DistrictGrid } from '../builder/DistrictGrid';
 import { bindEscapeClose } from './modalDismiss';
+import { inputManager } from '../world/InputManager';
 
 export class DistrictBuilderModal {
   private el: HTMLElement;
@@ -44,21 +45,20 @@ export class DistrictBuilderModal {
     gridContainer.className = 'district-grid-mount-point';
     card.appendChild(gridContainer);
 
-    this.grid = new DistrictGrid(gridContainer, {
-      onHarvest: (_parcel, resource, amount) => {
-        console.info(`Harvested ${amount} ${resource}`);
-      },
-    });
+    this.grid = new DistrictGrid(gridContainer);
     this.grid.render();
 
     this.el.appendChild(card);
     root.appendChild(this.el);
 
     this.disposeEscape = bindEscapeClose(() => this.close(onClose));
+    // the player could walk around with the builder open (audit §3.14)
+    inputManager.setLocked(true);
   }
 
   private close(onClose?: () => void): void {
     this.disposeEscape();
+    inputManager.setLocked(false);
     if (this.el.parentElement) {
       this.el.parentElement.removeChild(this.el);
     }

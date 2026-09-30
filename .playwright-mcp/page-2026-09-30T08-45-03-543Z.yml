@@ -1,0 +1,82 @@
+- generic [active] [ref=f3e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 2
+          - generic "20% resilience"
+          - generic: 20%
+        - generic:
+          - generic: 💰 $27
+          - generic: ⚡100
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 65%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=f3e105] [cursor=pointer]: ⚙
+    - generic:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=f3e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=f3e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=f3e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=f3e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=f3e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=f3e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=f3e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=f3e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=f3e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=f3e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=f3e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=f3e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=f3e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=f3e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=f3e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=f3e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=f3e122] [cursor=pointer]: 📡
+    - button "End day and view morning dispatch" [ref=f3e123] [cursor=pointer]: End Day
+    - button "Read cookbook 📖 E" [ref=f3e17]:
+      - generic [ref=f3e162]: Read cookbook 📖
+      - generic [ref=f3e163]: E
+    - generic [aria-hidden]: +$2
+    - generic [aria-hidden]: +20⚡
+    - generic [aria-hidden]: +5% stress
+    - status "Morning ledger, day 2" [ref=f3e164]:
+      - banner [ref=f3e165]:
+        - heading "☀️ Day 2" [level=2] [ref=f3e166]
+        - button "Close the morning ledger" [ref=f3e167] [cursor=pointer]: Start the day →
+      - generic [ref=f3e168]:
+        - generic [ref=f3e169]: 💰 $25 → $27
+        - generic [ref=f3e170]: ⚡ 80 → 100
+        - generic [ref=f3e171]: 😰 60% → 65%
+      - list [ref=f3e172]:
+        - listitem [ref=f3e173]:
+          - generic [aria-hidden] [ref=f3e174]: 🚲
+          - generic [ref=f3e175]: Gig shifts
+          - generic [ref=f3e176]: +$5
+        - listitem [ref=f3e178]:
+          - generic [aria-hidden] [ref=f3e179]: 🛒
+          - generic [ref=f3e180]: Groceries
+          - generic [ref=f3e181]: −$3
+        - listitem [ref=f3e183]:
+          - generic [aria-hidden] [ref=f3e184]: 😴
+          - generic [ref=f3e185]: A night's rest
+          - generic [ref=f3e186]: +35⚡
+        - listitem [ref=f3e188]:
+          - generic [aria-hidden] [ref=f3e189]: 🧺
+          - generic [ref=f3e190]: Daily chores
+          - generic [ref=f3e191]: −10⚡
+        - listitem [ref=f3e193]:
+          - generic [aria-hidden] [ref=f3e194]: 😰
+          - generic [ref=f3e195]: Everyday pressure
+          - generic [ref=f3e196]: +5% stress
+        - listitem [ref=f3e198]:
+          - generic [aria-hidden] [ref=f3e199]: 🤝
+          - generic [ref=f3e200]: Neighbours you trust
+          - generic [ref=f3e201]: −2% stress
+        - listitem [ref=f3e203]:
+          - generic [aria-hidden] [ref=f3e204]: 🛏
+          - generic [ref=f3e205]: Slept rough
+          - generic [ref=f3e206]:
+            - generic [ref=f3e207]: −5⚡
+            - generic [ref=f3e208]: +2% stress

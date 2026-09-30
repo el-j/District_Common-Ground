@@ -29,13 +29,14 @@ test.describe('Gameplay HUD and Modals Flow', () => {
     await page.keyboard.press('Escape');
     await expect(page.locator('.district-builder-card')).toBeHidden();
 
-    // 4. Civic Journal Modal
+    // 4. Civic Journal — needs an account; an offline player gets a
+    // sign-in prompt instead of a panel that fails to reach the server.
     const journalBtn = page.locator('.journal-open-btn');
     await expect(journalBtn).toBeVisible();
     await journalBtn.click();
-    await expect(page.locator('.civic-journal-panel')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in or create account' })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.locator('.civic-journal-panel')).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Sign in or create account' })).toBeHidden();
 
     // 5. Radio Widget
     const radioBtn = page.locator('.radio-open-btn');

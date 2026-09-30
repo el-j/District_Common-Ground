@@ -1,6 +1,6 @@
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
-import { buildBroadsheetHTML, type BroadsheetData } from './broadsheetHTML';
+import { buildBroadsheetHTML, clueForDay, isClueAnswer, type BroadsheetData } from './broadsheetHTML';
 
 export { buildBroadsheetHTML, type BroadsheetData } from './broadsheetHTML';
 
@@ -42,20 +42,21 @@ export class BroadsheetModal {
     });
 
     this.paper.querySelector('.broadsheet-close')?.addEventListener('click', () => this.close());
-    this.wireCommonsClue();
+    this.wireCommonsClue(data.dayNumber);
   }
 
   private buildHTML(data: BroadsheetData): string {
     return buildBroadsheetHTML(data);
   }
 
-  private wireCommonsClue(): void {
+  private wireCommonsClue(day: number): void {
+    const clue = clueForDay(day);
     const input = this.paper.querySelector<HTMLInputElement>('.commons-clue-input');
     const feedback = this.paper.querySelector<HTMLElement>('.commons-clue-feedback');
     if (!input || !feedback) return;
 
     input.addEventListener('input', () => {
-      if (input.value.toLowerCase() === 'solidarity') {
+      if (isClueAnswer(clue, input.value)) {
         feedback.textContent = '✓ Correct! +5 Energy';
         feedback.style.color = '#66dd88';
         useGameStore.setState(state => ({

@@ -3,7 +3,7 @@
 // mount/unmount lifecycle test below genuinely needs one, so this file alone
 // opts into jsdom rather than changing the environment for the whole suite.
 import { describe, it, expect, vi } from 'vitest';
-import { MinigameLoader } from './MinigameLoader';
+import { MinigameTooTiredError, MinigameLoader } from './MinigameLoader';
 import { HostPlatformAPI } from './HostPlatformAPI';
 import type { MinigameManifest, MinigameInstance } from '@district-cg/shared-types';
 import { useGameStore } from '../state/useGameStore';
@@ -57,17 +57,19 @@ describe('Microkernel Minigame Engine', () => {
       energyDelta: -5,
     });
 
+    // 2026-09-29 audit: rewards are capped per run and the plugin's
+    // energy request is ignored (the host charges energy at launch).
     const updatedState = useGameStore.getState();
-    expect(updatedState.player.cash).toBe(35);
-    expect(updatedState.player.socialTrust).toBe(30);
-    expect(updatedState.player.energy).toBe(45);
+    expect(updatedState.player.cash).toBe(30);
+    expect(updatedState.player.socialTrust).toBe(23);
+    expect(updatedState.player.energy).toBe(50);
   });
 
   // M14 follow-up (audit 2026-09-15) Test 14.2 — Zero Memory Leaks.
   it('mounting and unmounting a minigame 10 times leaves no leaked DOM nodes or listeners', async () => {
     useGameStore.setState({
       player: {
-        classRole: 'pip', cash: 10, energy: 50, maxEnergy: 100,
+        classRole: 'pip', cash: 10, energy: 100, maxEnergy: 100,
         socialTrust: 20, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
         name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
       },
@@ -144,6 +146,7 @@ describe('Microkernel Minigame Engine', () => {
       await MinigameLoader.loadRemoteMinigame(manifest);
       expect(MinigameLoader.hasMinigame('remote-fixture-game')).toBe(true);
 
+      useGameStore.setState(s => ({ player: { ...s.player, energy: 100 } }));
       const parent = document.createElement('div');
       document.body.appendChild(parent);
       const { container } = await MinigameLoader.launchMinigame('remote-fixture-game', {}, parent);
@@ -197,5 +200,26 @@ describe('Microkernel Minigame Engine', () => {
       };
       await expect(MinigameLoader.loadRemoteMinigame(manifest)).resolves.toBeUndefined();
     });
+  });
+
+  // 2026-09-29 launch audit §1.3 — runs used to be free at 0 energy.
+  it('charges a run\'s energy at launch and refuses to launch when too tired', async () => {
+    const manifest: MinigameManifest = {
+      id: 'energy-gate-game', version: '1.0.0', title: 'Energy Gate', description: 'x',
+      category: 'puzzle', thumbnailUrl: '/t.png', entrypointUrl: 'x', targetHardware: 'canvas',
+    };
+    MinigameLoader.registerLocalMinigame('energy-gate-game', manifest, async () => ({
+      createMinigame: () => ({ mount: vi.fn(async () => {}), unmount: vi.fn(async () => {}) }),
+    }));
+    const parent = document.createElement('div');
+
+    useGameStore.setState(s => ({ player: { ...s.player, energy: 25 } }));
+    const { container } = await MinigameLoader.launchMinigame('energy-gate-game', {}, parent);
+    expect(useGameStore.getState().player.energy).toBe(15);
+    await container.unmount();
+
+    useGameStore.setState(s => ({ player: { ...s.player, energy: 5 } }));
+    await expect(MinigameLoader.launchMinigame('energy-gate-game', {}, parent)).rejects.toBeInstanceOf(MinigameTooTiredError);
+    expect(useGameStore.getState().player.energy).toBe(5);
   });
 });

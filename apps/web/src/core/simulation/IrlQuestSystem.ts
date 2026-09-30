@@ -1,4 +1,5 @@
 import { useGameStore, type QuestId, type QuestState } from '../state/useGameStore';
+import type { CraftDiscipline } from './Recipes';
 
 export interface QuestDefinition {
   questId: QuestId;
@@ -14,21 +15,21 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     title: 'Digital De-escalation',
     description: 'Step away from doom-scrolling for 30 minutes.',
     icon: '📵',
-    reward: 'Energy +25 (Refreshed Clarity)',
+    reward: 'Energy +10, Stress -5 (Refreshed Clarity)',
   },
   {
     questId: 'community-reconnect',
     title: 'Community Reconnect',
     description: 'Reach out to a neighbour, friend, or community group today.',
     icon: '🤝',
-    reward: 'Social Trust +15, Stress -10',
+    reward: 'Social Trust +8, Stress -8',
   },
   {
     questId: 'local-mutual-aid',
     title: 'Local Mutual Aid',
     description: 'Give or receive support through a local mutual aid network.',
     icon: '🥕',
-    reward: '+$30 (Raw Materials)',
+    reward: 'Raw materials: 2 mushroom, 1 cotton, 2 reclaimed wood',
   },
   // M23 §5 — 3 additional quests so the pool can rotate instead of offering
   // the same fixed trio every day.
@@ -37,21 +38,21 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
     title: 'Skill-Share Swap',
     description: 'Teach or learn a skill from someone nearby today.',
     icon: '🎓',
-    reward: '+$20 (Bartered Value)',
+    reward: '+1 mastery in your best craft (or Trust +5)',
   },
   {
     questId: 'green-space-tidy',
     title: 'Green Space Tidy-Up',
     description: 'Spend a few minutes tidying a shared or public green space.',
     icon: '🌳',
-    reward: 'Stress -15 (Fresh Air)',
+    reward: 'Stress -10 (Fresh Air)',
   },
   {
     questId: 'check-in-call',
     title: 'Check-In Call',
     description: "Call or message someone who's been isolated lately.",
     icon: '☎️',
-    reward: 'Social Trust +10, Energy +10',
+    reward: 'Social Trust +5, Energy +5',
   },
 ];
 
@@ -67,34 +68,54 @@ export function completeQuest(questId: QuestId): void {
 
   useGameStore.setState(store => {
     const player = { ...store.player };
+    let inventory = store.inventory;
+    let crafting = store.crafting;
+    const clamp = (v: number) => Math.max(0, Math.min(100, v));
 
+    // 2026-09-29 launch audit — these are self-attested, so they never pay
+    // cash (they used to be worth up to $50/day). Rewards stay small and
+    // flavoured by the real-world deed.
     switch (questId) {
       case 'digital-deescalation':
-        // M24 §3 — rebalanced from a 110%-of-max overflow (a wild outlier
-        // versus every other energy lever in the game) to a capped +25.
-        player.energy = Math.min(player.maxEnergy, player.energy + 25);
+        player.energy = Math.min(player.maxEnergy, player.energy + 10);
+        player.stressLevel = clamp(player.stressLevel - 5);
         break;
       case 'community-reconnect':
-        player.socialTrust = Math.min(100, player.socialTrust + 15);
-        player.stressLevel = Math.max(0, player.stressLevel - 10);
+        player.socialTrust = clamp(player.socialTrust + 8);
+        player.stressLevel = clamp(player.stressLevel - 8);
         break;
-      case 'local-mutual-aid':
-        player.cash = player.cash + 30;
+      case 'local-mutual-aid': {
+        const m = { ...store.inventory.materials };
+        m.MATERIAL_MUSHROOM = (m.MATERIAL_MUSHROOM ?? 0) + 2;
+        m.MATERIAL_COTTON = (m.MATERIAL_COTTON ?? 0) + 1;
+        m.MATERIAL_RECLAIMED_WOOD = (m.MATERIAL_RECLAIMED_WOOD ?? 0) + 2;
+        inventory = { ...store.inventory, materials: m };
         break;
-      case 'skillshare-swap':
-        player.cash = player.cash + 20;
+      }
+      case 'skillshare-swap': {
+        const best = (Object.entries(store.crafting.mastery) as [CraftDiscipline, number][])
+          .filter(([, v]) => v > 0 && v < 10)
+          .sort((a, b) => b[1] - a[1])[0];
+        if (best) {
+          crafting = { ...store.crafting, mastery: { ...store.crafting.mastery, [best[0]]: best[1] + 1 } };
+        } else {
+          player.socialTrust = clamp(player.socialTrust + 5);
+        }
         break;
+      }
       case 'green-space-tidy':
-        player.stressLevel = Math.max(0, player.stressLevel - 15);
+        player.stressLevel = clamp(player.stressLevel - 10);
         break;
       case 'check-in-call':
-        player.socialTrust = Math.min(100, player.socialTrust + 10);
-        player.energy = Math.min(player.maxEnergy, player.energy + 10);
+        player.socialTrust = clamp(player.socialTrust + 5);
+        player.energy = Math.min(player.maxEnergy, player.energy + 5);
         break;
     }
 
     return {
       player,
+      inventory,
+      crafting,
       quests: store.quests.map(q =>
         q.questId === questId ? { ...q, completedOnDay: currentDay } : q,
       ),

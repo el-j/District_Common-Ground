@@ -139,6 +139,10 @@ func (h *Handler) DispatchCaravan(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"cannot dispatch a caravan to yourself"}`, http.StatusBadRequest)
 		case errors.Is(err, ErrNotFriends):
 			http.Error(w, `{"error":"not friends with that user"}`, http.StatusForbidden)
+		case errors.Is(err, ErrAmountTooLarge):
+			http.Error(w, `{"error":"a single caravan can carry at most 25"}`, http.StatusBadRequest)
+		case errors.Is(err, ErrDailyGiftLimit):
+			http.Error(w, `{"error":"daily caravan limit reached — try again tomorrow"}`, http.StatusTooManyRequests)
 		default:
 			http.Error(w, `{"error":"failed to dispatch caravan"}`, http.StatusInternalServerError)
 		}
@@ -228,6 +232,8 @@ func (h *Handler) ProposeTrade(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"cannot propose a trade to yourself"}`, http.StatusBadRequest)
 		case errors.Is(err, ErrNotFriends):
 			http.Error(w, `{"error":"not friends with that user"}`, http.StatusForbidden)
+		case errors.Is(err, ErrAmountTooLarge):
+			http.Error(w, `{"error":"each side of a trade is limited to 25"}`, http.StatusBadRequest)
 		default:
 			http.Error(w, `{"error":"failed to propose trade"}`, http.StatusInternalServerError)
 		}

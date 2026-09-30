@@ -63,11 +63,11 @@ describe('housingOptionsForInterior', () => {
 describe('getHousingOption — every real option resolves with its own consequences', () => {
   it('block-b-private resolves with its own distinct, non-zero-everywhere deltas', () => {
     const option = getHousingOption('block-b-private');
-    expect(option?.consequences).toEqual({ cashDelta: -18, energyDelta: 2, stressDelta: -4 });
+    expect(option?.consequences).toEqual({ cashDelta: -15, energyDelta: 6, stressDelta: -5 });
   });
 
   it('block-b-shared resolves with its own distinct deltas', () => {
     const option = getHousingOption('block-b-shared');
-    expect(option?.consequences).toEqual({ cashDelta: -8, energyDelta: -1, stressDelta: 1 });
+    expect(option?.consequences).toEqual({ cashDelta: -7, energyDelta: 3, stressDelta: 0 });
   });
 });

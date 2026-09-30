@@ -145,9 +145,8 @@ describe('SolidarityLine Minigame Package', () => {
     (game as any).onGameOver();
 
     expect(sessionContext.host.grantRewards).toHaveBeenCalledWith({
-      cashDelta: 65, // 8 * 5 + 25
-      resilienceDelta: 8,
-      energyDelta: -5,
+      cashDelta: 20, // min(20, 8 * 2 + 4)
+      resilienceDelta: 2, // min(2, floor(8 / 4))
     });
     expect(sessionContext.host.notify).toHaveBeenCalled();
 

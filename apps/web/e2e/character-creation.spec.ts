@@ -12,7 +12,7 @@ test('a new player can create a character and land in a loaded world', async ({ 
 
   // Boot always shows AuthOverlay first when there's no saved token — use
   // the offline path so this doesn't depend on the Go API/Postgres being up.
-  await page.getByRole('button', { name: 'Play offline (no account)' }).click();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
 
   // Family step
   const familyCards = page.locator('[data-template]');

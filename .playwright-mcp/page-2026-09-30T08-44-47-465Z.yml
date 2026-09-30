@@ -1,0 +1,16 @@
+- generic [ref=f3e4]:
+  - paragraph [ref=f3e5]: A game about holding a neighbourhood together
+  - heading "District Common Ground" [level=1] [ref=f3e6]:
+    - text: District
+    - generic [ref=f3e7]: Common Ground
+  - paragraph [ref=f3e8]: Work the gig shifts. Make rent. Build the commons with your neighbours. And when the crisis comes — blame them, or stand with them?
+  - button "Play" [ref=f3e9] [cursor=pointer]: ▶ Play
+  - paragraph [ref=f3e10]: No account needed — your game saves on this device.
+  - group [ref=f3e11]:
+    - generic "☁️ Sign in to sync across devices" [ref=f3e12] [cursor=pointer]
+  - paragraph [ref=f3e13]:
+    - link "Privacy policy" [ref=f3e14] [cursor=pointer]:
+      - /url: /privacy.html
+    - text: ·
+    - link "Imprint" [ref=f3e15] [cursor=pointer]:
+      - /url: /imprint.html

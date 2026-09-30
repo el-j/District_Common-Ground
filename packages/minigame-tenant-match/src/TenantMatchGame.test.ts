@@ -153,9 +153,8 @@ describe('TenantMatch Minigame Package', () => {
     (game as any).onGameOver();
 
     expect(sessionContext.host.grantRewards).toHaveBeenCalledWith({
-      cashDelta: 36, // 6 * 6
-      trustDelta: 4, // 2 * 2
-      energyDelta: -5,
+      cashDelta: 12, // min(20, 6 * 2)
+      trustDelta: 2, // min(3, comboMax 2)
     });
     expect(sessionContext.host.notify).toHaveBeenCalled();
 

@@ -1,5 +1,6 @@
 import { useGameStore } from '../core/state/useGameStore';
-import { craftRecipe, sellItem } from '../core/state/actions';
+import { craftRecipe, sellItem, currentSellValue } from '../core/state/actions';
+import { craftEnergyCost } from '../core/simulation/EconomyRules';
 import {
   RECIPES, RECIPE_IDS, ITEM_DEFINITIONS, sellValueFor, stationSupportsRecipe,
   type Recipe, type ItemToken, type CraftFailureReason, type CraftingStation,
@@ -15,7 +16,8 @@ const FAILURE_LABEL: Record<CraftFailureReason, string> = {
   'insufficient-mastery': 'Needs more mastery',
   'missing-materials': 'Missing materials',
   'missing-item-inputs': 'Missing a crafted component',
-  'requires-crafting-station': 'Needs a real crafting station (coming soon)',
+  'requires-crafting-station': 'Craft this at a workshop station (South Canal)',
+  'too-tired': 'Too tired — rest first',
 };
 
 function materialLabel(token: MaterialToken): string {
@@ -108,7 +110,11 @@ export class CraftingModal {
     const mastery = state.crafting.mastery[def.discipline] ?? 0;
     const sellable = def.kinds.includes('sellable');
     const usable = def.kinds.includes('usable');
-    const value = sellable ? sellValueFor(token, mastery) : 0;
+    const value = sellable ? currentSellValue(token) : 0;
+    const full = sellable ? sellValueFor(token, mastery) : 0;
+    const demandNote = sellable && value < full
+      ? `<p class="shop-item-desc" title="Local demand recovers overnight">📉 Market saturated today — full price $${full} tomorrow</p>`
+      : '';
 
     return `
       <div class="shop-card">
@@ -117,6 +123,7 @@ export class CraftingModal {
           <span class="shop-item-category">${def.kinds.join(', ')}</span>
         </div>
         <p class="shop-item-desc">Held ${count}×</p>
+        ${demandNote}
         <div class="shop-confirm-row">
           ${usable ? `<button class="shop-buy-btn interactive" data-use="${token}" type="button">Use</button>` : ''}
           ${sellable ? `<button class="shop-buy-btn interactive" data-sell="${token}" type="button">Sell — $${value}</button>` : ''}
@@ -159,13 +166,16 @@ export class CraftingModal {
     const masteryOk = mastery >= recipe.minMastery;
     const atStation = !!this.station && stationSupportsRecipe(this.station, recipe);
     const stationOk = recipe.tier === 'basic' || atStation;
-    const canCraft = !missingMaterials && !missingItems && masteryOk && stationOk;
+    const energyCost = craftEnergyCost(recipe);
+    const rested = state.player.energy >= energyCost;
+    const canCraft = !missingMaterials && !missingItems && masteryOk && stationOk && rested;
 
     let blockedReason = '';
     if (!masteryOk) blockedReason = FAILURE_LABEL['insufficient-mastery'];
     else if (!stationOk) blockedReason = FAILURE_LABEL['requires-crafting-station'];
     else if (missingItems) blockedReason = FAILURE_LABEL['missing-item-inputs'];
     else if (missingMaterials) blockedReason = FAILURE_LABEL['missing-materials'];
+    else if (!rested) blockedReason = FAILURE_LABEL['too-tired'];
 
     return `
       <div class="shop-card">
@@ -174,9 +184,9 @@ export class CraftingModal {
           <span class="shop-item-category">${recipe.discipline}${recipe.tier === 'advanced' ? ' · advanced' : ''}</span>
         </div>
         <p class="shop-item-desc">Mastery ${mastery}/10${recipe.minMastery > 0 ? ` (needs ${recipe.minMastery})` : ''} · crafted ${craftedCount}×</p>
-        <div class="crisis-btn-deltas">${materialChips}${itemChips}</div>
+        <div class="crisis-btn-deltas">${materialChips}${itemChips}<span class="delta-chip ${rested ? 'delta--pos' : 'delta--neg'}">⚡ ${energyCost} energy</span></div>
         ${canCraft
-          ? `<button class="shop-buy-btn interactive" data-craft="${recipe.id}" type="button">Craft</button>`
+          ? `<button class="shop-buy-btn interactive" data-craft="${recipe.id}" type="button">Craft (⚡${energyCost})</button>`
           : `<span class="shop-item-owned" style="color:#c79a4a">${blockedReason}</span>`}
       </div>
     `;

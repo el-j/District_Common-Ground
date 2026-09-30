@@ -52,7 +52,7 @@ export class CivicTickerWidget {
       return;
     }
     const text = this.items
-      .map(a => `📣 ${a.title} — ${a.organizer} · ${formatRelative(a.startTime)} · ${a.locationSummary}`)
+      .map(a => `${a.inFiction ? '🎮 In the game:' : '📣'} ${a.title} — ${a.organizer} · ${formatRelative(a.startTime)} · ${a.locationSummary}`)
       .join('   •••   ');
     this.el.innerHTML = `
       <div class="civic-ticker-track">
@@ -69,7 +69,7 @@ export class CivicTickerWidget {
 
   /** Condensed headline strings for embedding in the morning broadsheet. */
   getHeadlines(): string[] {
-    return this.items.slice(0, 3).map(a => `${a.title} (${a.organizer}) — ${formatRelative(a.startTime)}`);
+    return this.items.slice(0, 3).map(a => `${a.inFiction ? '🎮 ' : ''}${a.title} (${a.organizer}) — ${formatRelative(a.startTime)}`);
   }
 
   destroy(): void {

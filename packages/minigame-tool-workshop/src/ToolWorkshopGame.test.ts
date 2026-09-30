@@ -155,9 +155,8 @@ describe('ToolWorkshop Minigame Package', () => {
     (game as any).onGameOver();
 
     expect(sessionContext.host.grantRewards).toHaveBeenCalledWith({
-      cashDelta: 50, // 10 * 5
-      trustDelta: 6, // Math.min(18, 3 * 2) = 6
-      energyDelta: -5,
+      cashDelta: 20, // min(20, 10 * 2)
+      trustDelta: 3, // min(3, comboMax 3)
     });
     expect(sessionContext.host.notify).toHaveBeenCalled();
 

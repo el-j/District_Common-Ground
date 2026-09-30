@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 2
+          - generic "20% resilience"
+          - generic: 20%
+        - generic:
+          - generic: 💰 $27
+          - generic: ⚡100
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 65%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=e105] [cursor=pointer]: ⚙
+    - generic:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=e122] [cursor=pointer]: 📡
+    - button "End day and view morning dispatch" [ref=e123] [cursor=pointer]: End Day
+    - button "Read cookbook 📖 E" [ref=e17]:
+      - generic [ref=e162]: Read cookbook 📖
+      - generic [ref=e163]: E

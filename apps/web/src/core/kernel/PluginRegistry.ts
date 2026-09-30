@@ -7,6 +7,7 @@ import type {
 } from '@district-cg/shared-types';
 import { listGames, type ServerGameManifest } from '../../api/endpoints/games';
 import { inspectBundleManifest } from './PluginSandbox';
+import { chargeMinigameRun } from './MinigameLoader';
 import { SandboxedPluginRuntime } from './SandboxedPluginRuntime';
 import type { HostPlatformCallbacks } from './HostPlatformAPI';
 import { useGameStore } from '../state/useGameStore';
@@ -402,6 +403,7 @@ export async function launchInstalledPlugin(
     throw new Error(`Plugin bundle for "${id}" is unavailable.`);
   }
 
+  chargeMinigameRun();
   const state = useGameStore.getState();
   const runtime = new SandboxedPluginRuntime({
     manifest: {

@@ -38,9 +38,25 @@ function serveMinigamePluginBundlesInDev(): Plugin {
   };
 }
 
+// Launch audit Phase 6 — link previews (og:image / og:url) need absolute
+// URLs, which only the deployment knows. Set VITE_PUBLIC_ORIGIN at build time
+// (e.g. https://play.example.eu); without it the relative icon path is kept.
+function absoluteSocialUrls(): Plugin {
+  return {
+    name: 'absolute-social-urls',
+    transformIndexHtml(html) {
+      const origin = process.env.VITE_PUBLIC_ORIGIN?.replace(/\/+$/, '');
+      if (!origin) return html;
+      return html
+        .replace('<meta property="og:image" content="icon-512.png" />', `<meta property="og:image" content="${origin}/icon-512.png" />\n    <meta property="og:url" content="${origin}/" />`);
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
+    absoluteSocialUrls(),
     serveMinigamePluginBundlesInDev(),
     VitePWA({
       registerType: 'autoUpdate',

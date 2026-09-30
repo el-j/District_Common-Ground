@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  simulatePlaythrough,
   runSolvencySweep,
   UNBUILT_COMMONS,
   FULLY_BUILT_COMMONS,
@@ -22,7 +23,7 @@ const seedFor = (role: 'pip' | 'morgan' | 'arthur') => {
 describe('runSolvencySweep — Test 13.1 baseline solvency (unbuilt commons)', () => {
   it('Pip: energy caps out fast, cash grows linearly, stress saturates at 100', () => {
     const snaps = runSolvencySweep('pip', 90, seedFor('pip'));
-    expect(snaps[3]!.energy).toBe(100); // regen 15 - upkeep 10 = +5/day from 80, caps day 4
+    expect(snaps[0]!.energy).toBe(100); // regen 35 - upkeep 10 = +25/day from 80, caps day 1
     expect(snaps[89]!.energy).toBe(100);
     expect(snaps[29]!.cash).toBe(25 + 2 * 30); // cashDelta = earning(5) - foodCost(3) = +2/day
     expect(snaps[89]!.cash).toBe(25 + 2 * 90);
@@ -30,18 +31,20 @@ describe('runSolvencySweep — Test 13.1 baseline solvency (unbuilt commons)', (
     expect(snaps[89]!.stress).toBe(100);
   });
 
-  it('Morgan: energy craters to 0 quickly even though cash keeps growing', () => {
+  // 2026-09-29 audit §1.6: Morgan used to hit 0 energy on day 8 and stay
+  // there forever (regen 5 − upkeep 10). Energy now recovers overnight.
+  it('Morgan: energy recovers overnight instead of cratering (no death spiral)', () => {
     const snaps = runSolvencySweep('morgan', 90, seedFor('morgan'));
-    expect(snaps[7]!.energy).toBe(0); // regen 5 - upkeep 10 = -5/day from 40, hits 0 day 8
-    expect(snaps[89]!.energy).toBe(0);
+    expect(snaps[0]!.energy).toBe(60); // regen 30 - upkeep 10 = +20/day from 40
+    expect(snaps[89]!.energy).toBe(100);
     expect(snaps[89]!.cash).toBe(240 + 3 * 90); // cashDelta = earning(8-2) - foodCost(3) = +3/day
     expect(snaps[13]!.stress).toBe(100); // stressDelta = 5 - trustRelief(1) = +4/day from 45, caps day ~14
   });
 
-  it('Arthur: energy stays flat, cash grows fastest, stress still saturates', () => {
+  it('Arthur: energy recovers, cash grows fastest, stress still saturates', () => {
     const snaps = runSolvencySweep('arthur', 90, seedFor('arthur'));
-    expect(snaps[0]!.energy).toBe(65); // regen 10 - upkeep 10 = 0/day, never moves
-    expect(snaps[89]!.energy).toBe(65);
+    expect(snaps[0]!.energy).toBe(85); // regen 30 - upkeep 10 = +20/day from 65
+    expect(snaps[89]!.energy).toBe(100);
     expect(snaps[89]!.cash).toBe(1200 + 9 * 90); // cashDelta = earning(12) - foodCost(3) = +9/day
     expect(snaps[13]!.stress).toBe(100); // stressDelta = 5 - trustRelief(0) = +5/day from 30, hits 100 exactly day 14
   });
@@ -135,5 +138,63 @@ describe('runSolvencySweep — loop shape', () => {
     const snaps = runSolvencySweep('pip', 10, { ...seedFor('pip'), maxEnergy: 60 });
     snaps.forEach(s => expect(s.energy).toBeLessThanOrEqual(60));
     expect(snaps[9]!.energy).toBe(60); // still caps, just at the lower ceiling
+  });
+});
+
+// ── 2026-09-29 launch audit §1.6 / D4 — pacing targets for a whole run ─────
+//
+// A "normal" player: rents the cheapest fitting flat, works daily, plays one
+// minigame, feeds Scraps, picks solidarity when they can pay for it, and
+// puts spare cash and energy into the next unfinished build.
+describe('simulatePlaythrough — pacing targets (D4)', () => {
+  const HOMES = { pip: 'pips-courier-room', morgan: 'block-b-shared', arthur: 'block-b-private' } as const;
+  const run = (role: 'pip' | 'morgan' | 'arthur', extra = {}) =>
+    simulatePlaythrough(role, seedFor(role), { housingId: HOMES[role], ...extra });
+
+  for (const role of ['pip', 'morgan'] as const) {
+    it(`${role}: first build around day 10–18, Safe Haven around day 45–65`, () => {
+      const r = run(role);
+      expect(r.firstNodeDay).toBeGreaterThanOrEqual(10);
+      expect(r.firstNodeDay).toBeLessThanOrEqual(18);
+      expect(r.safeHavenDay).toBeGreaterThanOrEqual(45);
+      expect(r.safeHavenDay).toBeLessThanOrEqual(65);
+    });
+
+    it(`${role}: a normal run never starves or breaks down`, () => {
+      const r = run(role);
+      expect(r.starvingDays).toBe(0);
+      expect(r.breakdowns).toBe(0);
+    });
+  }
+
+  it('arthur is faster (starting wealth) but cannot finish a node on day 1', () => {
+    const arthur = run('arthur');
+    const pip = run('pip');
+    expect(arthur.firstNodeDay).toBeGreaterThanOrEqual(5);
+    expect(arthur.safeHavenDay!).toBeLessThan(pip.safeHavenDay!);
+  });
+
+  it('playing minigames never slows a run down', () => {
+    for (const role of ['pip', 'morgan', 'arthur'] as const) {
+      const none = run(role, { minigameRunsPerDay: 0 });
+      const some = run(role, { minigameRunsPerDay: 2 });
+      expect(some.safeHavenDay!, role).toBeLessThanOrEqual(none.safeHavenDay!);
+    }
+  });
+
+  it('scapegoating makes the whole run much slower than solidarity', () => {
+    for (const role of ['pip', 'morgan', 'arthur'] as const) {
+      const solidarity = run(role);
+      const scapegoat = run(role, { crisisChoice: 'scapegoat' });
+      const slower = scapegoat.safeHavenDay ?? Number.POSITIVE_INFINITY;
+      expect(slower, role).toBeGreaterThan(solidarity.safeHavenDay! * 1.5);
+    }
+  });
+
+  it('neglect (no home, no self-care, scapegoating) leads to breakdowns (D2)', () => {
+    for (const role of ['pip', 'morgan'] as const) {
+      const r = run(role, { housingId: null, feedsScraps: false, crisisChoice: 'scapegoat' });
+      expect(r.breakdowns, role).toBeGreaterThan(0);
+    }
   });
 });

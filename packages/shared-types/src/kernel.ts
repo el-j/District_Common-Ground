@@ -47,7 +47,9 @@ export interface GameSessionResult {
 
 export interface GameSessionHostAPI {
   playSFX(sfxId: string): void;
-  grantRewards(rewards: Partial<Omit<ResourceGrant, never>>): Promise<void>;
+  /** Resolves with what the host actually granted — hosts cap and
+   *  normalise rewards, so plugins should display this, not their request. */
+  grantRewards(rewards: Partial<Omit<ResourceGrant, never>>): Promise<ResourceGrant | void>;
   notify(message: string, type: 'info' | 'success' | 'warning'): void;
   closeMinigame(result?: { score: number; completed: boolean }): void;
 }

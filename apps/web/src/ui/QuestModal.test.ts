@@ -37,12 +37,12 @@ describe('QuestModal', () => {
     document.body.appendChild(root);
     new QuestModal(root);
 
-    // Day 1's window starts at 'digital-deescalation' (energy +25, capped at maxEnergy).
+    // Day 1's window starts at 'digital-deescalation' (energy +10, capped at maxEnergy).
     const btn = root.querySelector<HTMLButtonElement>('[data-quest="digital-deescalation"]')!;
     btn.click();
 
     expect(playUIClick).toHaveBeenCalledTimes(1);
-    expect(useGameStore.getState().player.energy).toBe(25);
+    expect(useGameStore.getState().player.energy).toBe(10);
     expect(useGameStore.getState().quests.find(q => q.questId === 'digital-deescalation')!.completedOnDay).toBe(1);
 
     const rerendered = root.querySelector<HTMLButtonElement>('[data-quest="digital-deescalation"]')!;

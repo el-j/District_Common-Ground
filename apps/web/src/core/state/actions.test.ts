@@ -1,35 +1,24 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameStore } from './useGameStore';
+import { useGameStore, INITIAL_STATE } from './useGameStore';
 import {
   setArchetype, spendCash, gainCash, spendEnergy, advanceDay, updateCommonsProgress, collectMaterial, buyMaterial,
   learnRecipe, collectCookbook, craftRecipe, sellItem, rentFlat, moveOut, placeFurniture, removeFurniture, travelToRegion,
   sanitizePlayerName, setPlayerName, setPlayerGender, setPlayerAppearance, beginFromFamilyTemplate, setHousingVisitable,
+  adjustResilience, contributeToNode, feedScraps, startMinigameRun, abandonWorldQuest, assignWorldQuest,
 } from './actions';
+import {
+  CASH_PER_PCT, DAILY_PLAYER_CONTRIBUTION_CAP_PCT, MINIGAME_LIMITS, communityContributionPct, craftEnergyCost, saleMultiplier,
+} from '../simulation/EconomyRules';
+import { BASE_RESILIENCE, STARVING, BREAKDOWN } from '../simulation/EconomyMath';
+import { RECIPES, sellValueFor } from '../simulation/Recipes';
 import { FAMILY_TEMPLATES } from '../simulation/FamilyTemplates';
 
 function resetStore() {
-  useGameStore.setState({
-    meta: { day: 1, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
-    player: { classRole: null, cash: 0, energy: 0, maxEnergy: 100, socialTrust: 0, stressLevel: 0, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null, name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1' },
-    commons: { resilienceScore: 0, solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0, landTrustProgress: 0, constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false },
-    crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
-    // M38 — explicit reset so collectMaterial's tests below never inherit
-    // leftover material counts from test ordering elsewhere in the suite.
-    inventory: { materials: {}, collectedScavengePoints: [] },
-    // M39 — same explicit-reset rationale, one slice up.
-    crafting: { knownRecipes: [], mastery: {}, craftedItems: {}, collectedCookbookPoints: [] },
-    // M43 — same explicit-reset rationale, one slice up again.
-    housing: { currentFlatId: null, movedInOnDay: null, furniture: [], visitable: false },
-    // M44 — same explicit-reset rationale, one slice up again.
-    world: { currentRegionId: 'REGION_COMMON_GROUND' },
-    // M47 — same explicit-reset rationale, one slice up again.
-    origin: { familyTemplateId: null },
-    // M35 — same explicit-reset rationale, one slice up again: without this,
-    // a leaked `activeId` from a WorldQuest test elsewhere in this file
-    // could make an unrelated updateCommonsProgress() call here silently
-    // complete a quest and mutate player stats.
-    worldQuests: { activeId: null, completedIds: [] },
-  });
+  // Full reset from INITIAL_STATE so no slice (inventory, crafting, housing,
+  // worldQuests, economy, …) can leak between tests.
+  const fresh = structuredClone(INITIAL_STATE);
+  fresh.meta.activeSkin = 'default';
+  useGameStore.setState(fresh, true);
 }
 
 describe('setArchetype', () => {
@@ -240,7 +229,11 @@ describe('collectCookbook', () => {
 });
 
 describe('craftRecipe', () => {
-  beforeEach(resetStore);
+  beforeEach(() => {
+    resetStore();
+    // crafting costs energy since the 2026-09-29 audit
+    setPlayer({ energy: 100 });
+  });
 
   it('fails with unknown-recipe when the recipe has not been learned', () => {
     collectMaterial('mat-1', 'MATERIAL_SCRAP_METAL', 2);
@@ -617,5 +610,252 @@ describe('beginFromFamilyTemplate', () => {
     const after = useGameStore.getState();
     expect(after.player).toEqual(before.player);
     expect(after.origin).toEqual(before.origin);
+  });
+});
+
+// ── 2026-09-29 launch audit, Phase 1 — economy integrity ─────────────────────
+
+function setPlayer(patch: Partial<ReturnType<typeof useGameStore.getState>['player']>) {
+  useGameStore.setState(s => ({ player: { ...s.player, ...patch } }));
+}
+
+describe('resilience has one owner (audit §1.4)', () => {
+  beforeEach(resetStore);
+
+  it('the first build contribution never drops resilience below its starting value', () => {
+    updateCommonsProgress('kitchenProgress', 1);
+    expect(useGameStore.getState().commons.resilienceScore).toBeGreaterThanOrEqual(BASE_RESILIENCE);
+  });
+
+  it('adjustResilience() persists a modifier that later contributions keep', () => {
+    adjustResilience(10);
+    expect(useGameStore.getState().commons.resilienceScore).toBe(BASE_RESILIENCE + 10);
+    updateCommonsProgress('kitchenProgress', 5);
+    expect(useGameStore.getState().commons.resilienceScore).toBeGreaterThanOrEqual(BASE_RESILIENCE + 10);
+    expect(useGameStore.getState().commons.resilienceModifier).toBe(10);
+  });
+
+  it('adjustResilience() never touches build progress', () => {
+    adjustResilience(15);
+    const c = useGameStore.getState().commons;
+    expect(c.kitchenProgress + c.solarGridProgress + c.legalFundProgress + c.toolLibraryProgress + c.landTrustProgress).toBe(0);
+  });
+});
+
+describe('contributeToNode', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 1000, energy: 100 });
+  });
+
+  it('spends exactly what the plan says and adds progress', () => {
+    const r = contributeToNode('kitchenProgress', { cash: 30, energy: 0 });
+    expect(r.ok).toBe(true);
+    const s = useGameStore.getState();
+    expect(s.player.cash).toBe(970);
+    expect(s.commons.kitchenProgress).toBeCloseTo(30 / CASH_PER_PCT);
+  });
+
+  it('does not overcharge near completion', () => {
+    useGameStore.setState(s => ({ commons: { ...s.commons, kitchenProgress: 99 } }));
+    contributeToNode('kitchenProgress', { cash: 500, energy: 0 });
+    const s = useGameStore.getState();
+    expect(s.commons.kitchenProgress).toBe(100);
+    expect(s.player.cash).toBe(1000 - CASH_PER_PCT);
+  });
+
+  it('enforces the daily cap across several contributions, and resets it the next day', () => {
+    contributeToNode('kitchenProgress', { cash: 60, energy: 0 });
+    contributeToNode('kitchenProgress', { cash: 500, energy: 0 });
+    expect(useGameStore.getState().commons.kitchenProgress).toBeCloseTo(DAILY_PLAYER_CONTRIBUTION_CAP_PCT);
+    useGameStore.setState(s => ({ meta: { ...s.meta, day: s.meta.day + 1 } }));
+    contributeToNode('kitchenProgress', { cash: 50, energy: 0 });
+    expect(useGameStore.getState().commons.kitchenProgress).toBeCloseTo(DAILY_PLAYER_CONTRIBUTION_CAP_PCT + 5);
+  });
+
+  it('the cap is per node', () => {
+    contributeToNode('kitchenProgress', { cash: 500, energy: 0 });
+    const r = contributeToNode('solarGridProgress', { cash: 50, energy: 0 });
+    expect(r.ok).toBe(true);
+    expect(useGameStore.getState().commons.solarGridProgress).toBeCloseTo(5);
+  });
+
+  it('makes the node the neighbours\' focus build', () => {
+    contributeToNode('legalFundProgress', { cash: 10, energy: 0 });
+    expect(useGameStore.getState().economy.focusNode).toBe('legalFundProgress');
+  });
+
+  it('reports nothing-to-do when nothing can be added', () => {
+    expect(contributeToNode('kitchenProgress', { cash: 0, energy: 0 }).ok).toBe(false);
+    useGameStore.setState(s => ({ commons: { ...s.commons, kitchenProgress: 100 } }));
+    expect(contributeToNode('kitchenProgress', { cash: 50, energy: 0 }).ok).toBe(false);
+    expect(useGameStore.getState().player.cash).toBe(1000);
+  });
+});
+
+describe('advanceDay — D2 consequences and community help', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 0, energy: 50, stressLevel: 40, socialTrust: 40 });
+    rentFlat('block-b-private');
+  });
+
+  it('being unable to pay rent makes the player starve instead of being forgiven', () => {
+    advanceDay();
+    const s = useGameStore.getState();
+    expect(s.economy.starvingDays).toBe(1);
+    expect(s.economy.lastDayReport?.starving).toBe(true);
+    expect(s.economy.lastDayReport?.unpaid).toBeGreaterThan(0);
+
+    // Same night with enough money: stress is exactly STARVING.stressPerDay lower.
+    const starvedStress = s.player.stressLevel;
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 500, energy: 50, stressLevel: 40, socialTrust: 40 });
+    rentFlat('block-b-private');
+    advanceDay();
+    expect(starvedStress).toBe(useGameStore.getState().player.stressLevel + STARVING.stressPerDay);
+  });
+
+  it('100% stress causes a breakdown that costs a day', () => {
+    setPlayer({ cash: 500, stressLevel: 100 });
+    advanceDay();
+    const s = useGameStore.getState();
+    expect(s.meta.day).toBe(3);
+    expect(s.player.stressLevel).toBe(BREAKDOWN.stressAfter);
+    expect(s.economy.breakdowns).toBe(1);
+    expect(s.economy.lastDayReport?.breakdown).toBe(true);
+  });
+
+  it('the report carries the itemised night and the real before/after stats', () => {
+    setPlayer({ cash: 500, energy: 50, stressLevel: 40, socialTrust: 40 });
+    const report = advanceDay();
+    const s = useGameStore.getState();
+    expect(report.before).toEqual({ cash: 500, energy: 50, stress: 40, trust: 40 });
+    expect(report.after).toEqual({ cash: s.player.cash, energy: s.player.energy, stress: s.player.stressLevel, trust: s.player.socialTrust });
+    const cashSum = report.lines.reduce((t, l) => t + (l.cash ?? 0), 0);
+    expect(cashSum).toBe(report.after.cash - report.before.cash);
+    expect(report.lines.some(l => l.label === 'Your flat')).toBe(true);
+  });
+
+  it('neighbours add progress to the focus build overnight, scaled by trust', () => {
+    useGameStore.setState(s => ({ economy: { ...s.economy, focusNode: 'kitchenProgress' } }));
+    setPlayer({ cash: 500 });
+    advanceDay();
+    const s = useGameStore.getState();
+    expect(s.commons.kitchenProgress).toBeCloseTo(communityContributionPct(40, 0));
+    expect(s.economy.lastDayReport?.communityPct).toBeCloseTo(communityContributionPct(40, 0));
+  });
+
+  it('the focus moves on once its build is finished', () => {
+    useGameStore.setState(s => ({
+      economy: { ...s.economy, focusNode: 'kitchenProgress' },
+      commons: { ...s.commons, kitchenProgress: 99.5 },
+    }));
+    setPlayer({ cash: 500 });
+    advanceDay();
+    expect(useGameStore.getState().commons.kitchenProgress).toBe(100);
+    expect(useGameStore.getState().economy.focusNode).toBeNull();
+  });
+});
+
+describe('crafting costs energy and local demand drops (audit §1.2)', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 0, energy: 100 });
+    learnRecipe('RECIPE_SCRAP_STOOL');
+    useGameStore.setState(s => ({ inventory: { ...s.inventory, materials: { MATERIAL_SCRAP_METAL: 20, MATERIAL_IRON: 10 } } }));
+  });
+
+  it('crafting spends energy', () => {
+    craftRecipe('RECIPE_SCRAP_STOOL');
+    expect(useGameStore.getState().player.energy).toBe(100 - craftEnergyCost(RECIPES.RECIPE_SCRAP_STOOL));
+  });
+
+  it('crafting is refused when too tired, and nothing is consumed', () => {
+    setPlayer({ energy: craftEnergyCost(RECIPES.RECIPE_SCRAP_STOOL) - 1 });
+    const r = craftRecipe('RECIPE_SCRAP_STOOL');
+    expect(r).toEqual({ ok: false, reason: 'too-tired' });
+    expect(useGameStore.getState().inventory.materials.MATERIAL_SCRAP_METAL).toBe(20);
+  });
+
+  it('each unit sold the same day fetches less; demand recovers the next day', () => {
+    craftRecipe('RECIPE_SCRAP_STOOL');
+    craftRecipe('RECIPE_SCRAP_STOOL');
+    craftRecipe('RECIPE_SCRAP_STOOL');
+    const mastery = useGameStore.getState().crafting.mastery.metalwork ?? 0;
+    const full = sellValueFor('ITEM_SCRAP_STOOL', mastery);
+    expect(sellItem('ITEM_SCRAP_STOOL').amount).toBe(full);
+    expect(sellItem('ITEM_SCRAP_STOOL').amount).toBe(Math.round(full * saleMultiplier(1)));
+    useGameStore.setState(s => ({ meta: { ...s.meta, day: s.meta.day + 1 } }));
+    expect(sellItem('ITEM_SCRAP_STOOL').amount).toBe(full);
+  });
+});
+
+describe('feedScraps', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 10, stressLevel: 50 });
+  });
+
+  it('costs $1, relieves stress, and works once per day', () => {
+    expect(feedScraps()).toBe(true);
+    expect(useGameStore.getState().player.cash).toBe(9);
+    expect(useGameStore.getState().player.stressLevel).toBeLessThan(50);
+    const after = useGameStore.getState().player.stressLevel;
+    expect(feedScraps()).toBe(false);
+    expect(useGameStore.getState().player.stressLevel).toBe(after);
+  });
+
+  it('needs at least $1', () => {
+    setPlayer({ cash: 0 });
+    expect(feedScraps()).toBe(false);
+  });
+});
+
+describe('startMinigameRun (audit §1.3)', () => {
+  beforeEach(resetStore);
+
+  it('charges the run\'s energy up front', () => {
+    setPlayer({ energy: 50 });
+    expect(startMinigameRun()).toEqual({ ok: true });
+    expect(useGameStore.getState().player.energy).toBe(50 - MINIGAME_LIMITS.energyCost);
+  });
+
+  it('refuses to start when too tired', () => {
+    setPlayer({ energy: MINIGAME_LIMITS.energyCost - 1 });
+    expect(startMinigameRun()).toEqual({ ok: false, reason: 'too-tired' });
+    expect(useGameStore.getState().player.energy).toBe(MINIGAME_LIMITS.energyCost - 1);
+  });
+});
+
+describe('abandonWorldQuest (audit §1.6)', () => {
+  beforeEach(resetStore);
+
+  it('frees the quest slot without completing the quest, so it can be picked up again', () => {
+    assignWorldQuest('fund-the-kitchen');
+    abandonWorldQuest();
+    expect(useGameStore.getState().worldQuests.activeId).toBeNull();
+    expect(useGameStore.getState().worldQuests.completedIds).toEqual([]);
+    assignWorldQuest('scout-the-transit-hub');
+    expect(useGameStore.getState().worldQuests.activeId).toBe('scout-the-transit-hub');
+  });
+});
+
+describe('the Land Trust unlocks last', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 1000, energy: 100 });
+  });
+
+  it('cannot be funded before the other four commons are built', () => {
+    const r = contributeToNode('landTrustProgress', { cash: 50, energy: 0 });
+    expect(r.ok).toBe(false);
+    expect(useGameStore.getState().player.cash).toBe(1000);
+    expect(useGameStore.getState().commons.landTrustProgress).toBe(0);
+  });
+
+  it('can be funded once they are', () => {
+    useGameStore.setState(s => ({ commons: { ...s.commons, kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100, toolLibraryProgress: 100 } }));
+    expect(contributeToNode('landTrustProgress', { cash: 50, energy: 0 }).ok).toBe(true);
   });
 });

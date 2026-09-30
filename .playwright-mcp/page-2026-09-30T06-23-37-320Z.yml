@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - button "Read cookbook 📖 E" [ref=e17]:
+      - generic [ref=e18]: Read cookbook 📖
+      - generic [ref=e19]: E
+    - generic [ref=e21]:
+      - 'heading "District: Common Ground" [level=1] [ref=e22]'
+      - paragraph [ref=e23]: You were born into one of these families. Choose where your story begins.
+      - generic [ref=e24]:
+        - button [ref=e25] [cursor=pointer]:
+          - heading "The Alvarez Family" [level=2] [ref=e26]
+          - paragraph [ref=e27]: Starting circumstance
+          - paragraph [ref=e28]: Raised in a third-floor walkup where the whole block knew your name before you could walk. Money came in gig shifts and favors traded hand to hand — never much of either, but never truly alone either.
+          - generic [ref=e29]:
+            - term [ref=e30]: Cash
+            - definition [ref=e31]: $25
+            - term [ref=e32]: Energy
+            - definition [ref=e33]: 80/100
+            - term [ref=e34]: Trust
+            - definition [ref=e35]: 40/100
+            - term [ref=e36]: Stress
+            - definition [ref=e37]: 60%
+        - button [ref=e38] [cursor=pointer]:
+          - heading "The Chen Family" [level=2] [ref=e39]
+          - paragraph [ref=e40]: Starting circumstance
+          - paragraph [ref=e41]: "A household built around the clock: alarms before dawn, a two-hour commute each way, dinner reheated after the kids were already asleep. Steady, but stretched thin enough that the neighbors stayed strangers."
+          - generic [ref=e42]:
+            - term [ref=e43]: Cash
+            - definition [ref=e44]: $240
+            - term [ref=e45]: Energy
+            - definition [ref=e46]: 40/100
+            - term [ref=e47]: Trust
+            - definition [ref=e48]: 25/100
+            - term [ref=e49]: Stress
+            - definition [ref=e50]: 45%
+        - button [ref=e51] [cursor=pointer]:
+          - heading "The Whitfield Family" [level=2] [ref=e52]
+          - paragraph [ref=e53]: Starting circumstance
+          - paragraph [ref=e54]: Old money, older habits. A property portfolio built by a grandfather who never once introduced himself to a tenant, and a family that inherited the buildings along with the distance.
+          - generic [ref=e55]:
+            - term [ref=e56]: Cash
+            - definition [ref=e57]: $1200
+            - term [ref=e58]: Energy
+            - definition [ref=e59]: 65/100
+            - term [ref=e60]: Trust
+            - definition [ref=e61]: 10/100
+            - term [ref=e62]: Stress
+            - definition [ref=e63]: 30%

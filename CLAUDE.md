@@ -43,7 +43,6 @@ district-common-ground/             ← workspace root
 │       ├── internal/
 │       │   ├── auth/               register, login, JWT token
 │       │   ├── save/               GET/PUT game state (pgx, JSONB)
-│       │   ├── gamedata/           crisis scenarios (embedded JSON)
 │       │   ├── config/             env config (fail-fast)
 │       │   ├── db/                 pgxpool + golang-migrate
 │       │   │   └── migrations/     001–003 SQL files
@@ -88,7 +87,6 @@ POST /api/v1/auth/register   → {token, userId}
 POST /api/v1/auth/login      → {token, userId}
 GET  /api/v1/save            → GameState JSON       (auth required)
 PUT  /api/v1/save            → 204 No Content       (auth required)
-GET  /api/v1/data/crises     → CrisisScenario[]     (public)
 GET  /health                 → {"status":"ok"}
 ```
 

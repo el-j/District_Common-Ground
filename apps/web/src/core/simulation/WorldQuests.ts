@@ -1,4 +1,4 @@
-import type { GameState, WorldQuestId } from '../state/useGameStore';
+import type { GameState, WorldQuestId, BuildNodeKey } from '../state/useGameStore';
 
 /**
  * M35 — EPIC-31 §1/§2. A new, state-verified objective type, kept
@@ -75,7 +75,7 @@ export const ZONE_BUILD_NODE: Record<WorldZoneId, keyof GameState['commons']> = 
 export type WorldQuestTarget =
   | { kind: 'reach-zone'; zone: WorldZoneId }
   | { kind: 'talk-to-npc'; npcId: string }
-  | { kind: 'build-node-threshold'; node: keyof GameState['commons']; threshold: number };
+  | { kind: 'build-node-threshold'; node: BuildNodeKey; threshold: number };
 
 export interface WorldQuestReward {
   cashDelta?: number;
@@ -86,7 +86,7 @@ export interface WorldQuestReward {
    *  field, where relevant" — applied via the real `updateCommonsProgress()`
    *  every build-node contribution already goes through, not a bespoke
    *  commons-mutation path (see `actions.ts`'s `completeActiveWorldQuest()`). */
-  commonsBonusNode?: keyof GameState['commons'];
+  commonsBonusNode?: BuildNodeKey;
   commonsBonusAmount?: number;
 }
 

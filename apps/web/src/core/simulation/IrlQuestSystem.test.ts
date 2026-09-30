@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useGameStore } from '../state/useGameStore';
-import { isQuestAvailable, completeQuest, getQuestsForToday } from './IrlQuestSystem';
+import { useGameStore, INITIAL_STATE } from '../state/useGameStore';
+import { isQuestAvailable, completeQuest, getQuestsForToday, QUEST_DEFINITIONS } from './IrlQuestSystem';
 
 function resetStore(day = 1) {
+  useGameStore.setState(structuredClone(INITIAL_STATE), true);
   useGameStore.setState({
-    meta: { day, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+    meta: { day, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC', saveVersion: 2, savedAt: 0 },
     player: {
       classRole: 'pip', cash: 50, energy: 80, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
@@ -14,9 +15,9 @@ function resetStore(day = 1) {
       resilienceScore: 0,
       solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0,
       toolLibraryProgress: 0, landTrustProgress: 0,
-      constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false,
+      constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false, resilienceModifier: 0,
     },
-    crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
+    crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [], lastCrisisDay: 0, scapegoatStreak: 0, worldSaturation: 1 },
     quests: [
       { questId: 'digital-deescalation', completedOnDay: null },
       { questId: 'community-reconnect',  completedOnDay: null },
@@ -47,31 +48,44 @@ describe('IrlQuestSystem', () => {
   });
 
   // M24 Test 24.3 — rebalanced from a 110%-of-max overflow to a capped +25.
-  it('completeQuest digital-deescalation grants +25 energy when not near the cap', () => {
+  it('completeQuest digital-deescalation grants +10 energy when not near the cap', () => {
     useGameStore.setState(state => ({ player: { ...state.player, energy: 50 } }));
     completeQuest('digital-deescalation');
     const { player } = useGameStore.getState();
-    expect(player.energy).toBe(75); // 50 + 25, well under maxEnergy
+    expect(player.energy).toBe(60); // 50 + 10, well under maxEnergy
   });
 
   it('completeQuest digital-deescalation caps at maxEnergy when near full', () => {
     useGameStore.setState(state => ({ player: { ...state.player, energy: 90 } }));
     completeQuest('digital-deescalation');
     const { player } = useGameStore.getState();
-    expect(player.energy).toBe(player.maxEnergy); // 90 + 25 = 115, capped to 100
+    expect(player.energy).toBe(player.maxEnergy); // 90 + 10 = 100, capped
   });
 
   it('completeQuest community-reconnect adds trust and reduces stress', () => {
     completeQuest('community-reconnect');
     const { player } = useGameStore.getState();
-    expect(player.socialTrust).toBe(55); // 40 + 15
-    expect(player.stressLevel).toBe(20); // 30 - 10
+    expect(player.socialTrust).toBe(48); // 40 + 8
+    expect(player.stressLevel).toBe(22); // 30 - 8
   });
 
-  it('completeQuest local-mutual-aid adds $30', () => {
+  // 2026-09-29 launch audit — self-attested quests paid up to $50/day of
+  // free cash. They now give real-world-flavoured, non-cash rewards.
+  it('completeQuest local-mutual-aid gives raw materials, not cash', () => {
     completeQuest('local-mutual-aid');
-    const { player } = useGameStore.getState();
-    expect(player.cash).toBe(80); // 50 + 30
+    const s = useGameStore.getState();
+    expect(s.player.cash).toBe(50);
+    expect(s.inventory.materials.MATERIAL_MUSHROOM).toBe(2);
+    expect(s.inventory.materials.MATERIAL_COTTON).toBe(1);
+    expect(s.inventory.materials.MATERIAL_RECLAIMED_WOOD).toBe(2);
+  });
+
+  it('no self-attested quest grants cash', () => {
+    for (const def of QUEST_DEFINITIONS) {
+      useGameStore.setState(st => ({ player: { ...st.player, cash: 50 } }));
+      completeQuest(def.questId);
+      expect(useGameStore.getState().player.cash, def.questId).toBe(50);
+    }
   });
 
   it('completeQuest marks quest as completedOnDay', () => {
@@ -115,14 +129,22 @@ describe('IrlQuestSystem', () => {
   // 3 of 6 completeQuest() switch cases had zero test coverage, and
   // questWindowForDay()'s exact modulo/wraparound arithmetic was only
   // checked indirectly (via "is different", never against known values).
-  it('completeQuest skillshare-swap adds $20', () => {
+  it('completeQuest skillshare-swap raises your best craft discipline by 1', () => {
+    useGameStore.setState(st => ({ crafting: { ...st.crafting, mastery: { woodwork: 2, metalwork: 4 } } }));
     completeQuest('skillshare-swap');
-    expect(useGameStore.getState().player.cash).toBe(70); // 50 + 20
+    expect(useGameStore.getState().crafting.mastery.metalwork).toBe(5);
+    expect(useGameStore.getState().crafting.mastery.woodwork).toBe(2);
   });
 
-  it('completeQuest green-space-tidy reduces stress by 15, floored at 0', () => {
+  it('completeQuest skillshare-swap gives trust instead when you have no craft skills yet', () => {
+    useGameStore.setState(st => ({ crafting: { ...st.crafting, mastery: {} } }));
+    completeQuest('skillshare-swap');
+    expect(useGameStore.getState().player.socialTrust).toBe(45);
+  });
+
+  it('completeQuest green-space-tidy reduces stress by 10, floored at 0', () => {
     completeQuest('green-space-tidy');
-    expect(useGameStore.getState().player.stressLevel).toBe(15); // 30 - 15
+    expect(useGameStore.getState().player.stressLevel).toBe(20); // 30 - 10
     useGameStore.setState(s => ({ player: { ...s.player, stressLevel: 5 } }));
     completeQuest('green-space-tidy');
     expect(useGameStore.getState().player.stressLevel).toBe(0); // floored, not -10
@@ -131,8 +153,8 @@ describe('IrlQuestSystem', () => {
   it('completeQuest check-in-call adds trust and energy, both capped', () => {
     completeQuest('check-in-call');
     const { player } = useGameStore.getState();
-    expect(player.socialTrust).toBe(50); // 40 + 10
-    expect(player.energy).toBe(90); // 80 + 10
+    expect(player.socialTrust).toBe(45); // 40 + 5
+    expect(player.energy).toBe(85); // 80 + 5
 
     useGameStore.setState(s => ({ player: { ...s.player, socialTrust: 95, energy: 95 } }));
     completeQuest('check-in-call');

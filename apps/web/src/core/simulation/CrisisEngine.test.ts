@@ -12,19 +12,19 @@ import {
 
 function resetStore() {
   useGameStore.setState({
-    meta: { day: 1, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+    meta: { day: 1, tick: 0, activeSkin: 'default', skinRevision: 0, phase: 'playing', lastAssemblyDay: 0, regionCode: 'GENERIC', saveVersion: 2, savedAt: 0 },
     player: {
       classRole: 'pip', cash: 100, energy: 80, maxEnergy: 100,
       socialTrust: 40, stressLevel: 30, position: { x: 0, y: 0 }, facing: 'down', lastWorkedDay: null,
         name: '', gender: 'prefer-not-to-say', appearance: 'APPEARANCE_TONE_1',
     },
     commons: {
-      resilienceScore: 50,
+      resilienceScore: 20,
       solarGridProgress: 0, kitchenProgress: 0, legalFundProgress: 0,
       toolLibraryProgress: 0, landTrustProgress: 0,
-      constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false,
+      constructionSpeedBuff: 0, greenhouseUnlocked: false, safeHavenUnlocked: false, resilienceModifier: 0,
     },
-    crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [] },
+    crisisState: { activeCrisisId: null, pendingQueue: [], historyLog: [], lastCrisisDay: 0, scapegoatStreak: 0, worldSaturation: 1 },
   });
 }
 
@@ -117,9 +117,10 @@ describe('CrisisEngine', () => {
     expect(getScapegoatStreak()).toBeGreaterThan(before);
   });
 
-  it('resolveCrisis reports the choice to the Global Solidarity Pool when authenticated', () => {
+  it('resolveCrisis reports the choice to the Global Solidarity Pool when authenticated and opted in', () => {
+    const stored: Record<string, string> = { 'dcg-token': 'test-token', 'dcg-telemetry-consent': 'granted' };
     vi.stubGlobal('localStorage', {
-      getItem: (key: string) => (key === 'dcg-token' ? 'test-token' : null),
+      getItem: (key: string) => stored[key] ?? null,
       setItem: () => {},
       removeItem: () => {},
     });
@@ -157,6 +158,8 @@ describe('CrisisEngine', () => {
     let queue = useGameStore.getState().crisisState.pendingQueue;
     while (queue.length > 0) {
       triggerCrisis(queue[0]!);
+      // keep every choice affordable so each crisis actually resolves
+      useGameStore.setState(s => ({ player: { ...s.player, cash: 1000, energy: 100 } }));
       resolveCrisis('B');
       queue = useGameStore.getState().crisisState.pendingQueue;
     }

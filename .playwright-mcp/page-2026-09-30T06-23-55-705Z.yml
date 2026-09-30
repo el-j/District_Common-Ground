@@ -1,0 +1,20 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - button "Read cookbook 📖 E" [ref=e17]:
+      - generic [ref=e88]: Read cookbook 📖
+      - generic [ref=e89]: E
+    - generic [ref=e90]:
+      - heading "Pip, of The Alvarez Family" [level=1] [ref=e91]
+      - paragraph [ref=e92]: Raised in a third-floor walkup where the whole block knew your name before you could walk. Money came in gig shifts and favors traded hand to hand — never much of either, but never truly alone either.
+      - generic [ref=e93]:
+        - generic [ref=e94]:
+          - generic [ref=e95]: Marisol Alvarez
+          - generic [ref=e96]: Mother
+          - paragraph [ref=e97]: Works two delivery-app shifts a day and still shows up to every stoop meeting on the block.
+        - generic [ref=e98]:
+          - generic [ref=e99]: Teo Alvarez
+          - generic [ref=e100]: Younger brother
+          - paragraph [ref=e101]: Twelve years old, already fixing neighbors' bikes for tips out of the courtyard.
+      - generic [ref=e102]:
+        - button "← Edit name & identity" [ref=e103] [cursor=pointer]
+        - button "Begin Your Story" [ref=e104] [cursor=pointer]

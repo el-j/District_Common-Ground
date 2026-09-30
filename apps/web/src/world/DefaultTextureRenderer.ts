@@ -22,6 +22,10 @@ export function shadeColor(hex: string, percent: number): string {
 }
 
 export function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
+  // M30 — guarded the same way createPlayerTexture()/createNPCTextures() are:
+  // reuse the existing canvas texture on a re-render (skin switch) instead of
+  // always creating fresh, since Phaser's TextureManager rejects a second
+  // createCanvas() call for a key that already exists.
   const tex = scene.textures.exists('tileset')
     ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
     : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
@@ -74,123 +78,92 @@ export function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorld
     });
   })();
 
-  // T.ROAD (3): asphalt with dashed centerline
+  // T.ROAD (3): paved
   (() => {
     const ox = TS * 3;
     ctx.fillStyle = palette.worldRoad;
     ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = shadeColor(palette.worldRoad, -8);
-    [[1,2],[7,4],[13,1],[4,9],[11,8],[2,14],[9,13],[14,15]].forEach(([sx, sy]) => {
-      ctx.fillRect(ox + sx, sy, 1, 1);
-    });
-    ctx.fillStyle = palette.worldRoadMarking;
-    ctx.fillRect(ox + 7, 2, 2, 4);
-    ctx.fillRect(ox + 7, 10, 2, 4);
+    ctx.fillStyle = palette.worldRoadBorder; ctx.fillRect(ox, 0, TS, 1); ctx.fillRect(ox, TS - 1, TS, 1);
+    ctx.fillStyle = shadeColor(palette.worldRoad, 10); ctx.fillRect(ox + 1, 1, TS - 2, 1);
+    ctx.fillStyle = shadeColor(palette.worldRoad, 20); ctx.fillRect(ox + 2, 7, 3, 2); ctx.fillRect(ox + 9, 7, 3, 2);
   })();
 
-  // T.DOOR (4): warm wood doorframe
+  // T.PLAZA (4): stone tiles with subtle grid
   (() => {
     const ox = TS * 4;
-    ctx.fillStyle = palette.worldDoor;
+    ctx.fillStyle = palette.worldPlaza;
     ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = shadeColor(palette.worldDoor, -18);
-    ctx.fillRect(ox, 0, 2, TS);
-    ctx.fillRect(ox + TS - 2, 0, 2, TS);
-    ctx.fillRect(ox, 0, TS, 2);
-    ctx.fillStyle = shadeColor(palette.worldDoor, -8);
-    ctx.fillRect(ox + 3, 3, 4, 10);
-    ctx.fillRect(ox + 9, 3, 4, 10);
-    ctx.fillStyle = palette.worldDoorKnob;
-    ctx.fillRect(ox + 10, 8, 2, 2);
+    ctx.strokeStyle = shadeColor(palette.worldPlaza, 5); ctx.lineWidth = 0.75;
+    const h = TS / 2;
+    [[0,0],[h,0],[0,h],[h,h]].forEach(([dx, dy]) => ctx.strokeRect(ox + dx + 0.5, dy + 0.5, h - 1, h - 1));
+    ctx.fillStyle = shadeColor(palette.worldPlaza, -8);
+    [[1,1],[h+1,1],[1,h+1],[h+1,h+1]].forEach(([dx, dy]) => ctx.fillRect(ox + dx, dy, 2, 1));
   })();
 
-  // T.BUILT (5): polished wood parquet
+  // T.DOOR (5): entrance
   (() => {
     const ox = TS * 5;
-    ctx.fillStyle = palette.worldBuilt;
-    ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = shadeColor(palette.worldBuilt, 10);
-    ctx.fillRect(ox, 0, 8, 8);
-    ctx.fillRect(ox + 8, 8, 8, 8);
-    ctx.fillStyle = shadeColor(palette.worldBuilt, -8);
-    ctx.fillRect(ox + 8, 0, 8, 8);
-    ctx.fillRect(ox, 8, 8, 8);
-    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= TS; i += 4) {
-      ctx.beginPath(); ctx.moveTo(ox + i, 0); ctx.lineTo(ox + i, TS); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(ox, i); ctx.lineTo(ox + TS, i); ctx.stroke();
-    }
+    ctx.fillStyle = shadeColor(palette.worldGrass, -15); ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = palette.worldDoor; ctx.fillRect(ox + 3, 1, 10, 14);
+    ctx.fillStyle = shadeColor(palette.worldDoor, -35); ctx.fillRect(ox + 5, 2, 6, 11);
+    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 9, 7, 2, 3);
+    ctx.fillStyle = shadeColor(palette.worldDoor, -45); ctx.fillRect(ox + 3, 14, 10, 2);
   })();
 
-  // T.SIDEWALK (6): pale concrete paving stones with joint lines
+  // T.BUILT (6): completed build
   (() => {
     const ox = TS * 6;
-    ctx.fillStyle = palette.worldSidewalk;
-    ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = shadeColor(palette.worldSidewalk, -14);
-    ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(ox, 8); ctx.lineTo(ox + TS, 8); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ox + 8, 0); ctx.lineTo(ox + 8, 8); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ox + 4, 8); ctx.lineTo(ox + 4, TS); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ox + 12, 8); ctx.lineTo(ox + 12, TS); ctx.stroke();
-    ctx.fillStyle = shadeColor(palette.worldSidewalk, -6);
-    [[2, 3], [10, 5], [5, 11], [13, 13]].forEach(([sx, sy]) => {
-      ctx.fillRect(ox + sx, sy, 1, 1);
-    });
+    ctx.fillStyle = shadeColor(palette.worldGrass, -30); ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = palette.worldHighlight; ctx.lineWidth = 1.5;
+    ctx.strokeRect(ox + 2, 2, TS - 4, TS - 4);
+    ctx.fillStyle = shadeColor(palette.worldHighlight, -25);
+    ctx.fillRect(ox + 6, 4, 4, 8); ctx.fillRect(ox + 4, 6, 8, 4);
+    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 7, 7, 2, 2);
   })();
 
-  // T.DIRT_PATH (7): warm brown trodden earth with subtle stone speckle
+  // T.TREE (7): ground + a round canopy blob — blocks movement like WALL
   (() => {
     const ox = TS * 7;
-    ctx.fillStyle = palette.worldDirt;
-    ctx.fillRect(ox, 0, TS, TS);
-    const darkDirt = shadeColor(palette.worldDirt, -10);
-    const lightDirt = shadeColor(palette.worldDirt, 8);
-    [[1, 3], [6, 1], [11, 4], [4, 7], [13, 9], [8, 11], [2, 13], [10, 14]].forEach(([dx, dy]) => {
-      ctx.fillStyle = darkDirt;
-      ctx.fillRect(ox + dx, dy, 1, 1);
-    });
-    [[3, 5], [9, 3], [14, 6], [7, 8], [1, 10], [12, 12], [5, 14]].forEach(([dx, dy]) => {
-      ctx.fillStyle = lightDirt;
-      ctx.fillRect(ox + dx, dy, 1, 1);
-    });
+    ctx.fillStyle = palette.worldGrass; ctx.fillRect(ox, 0, TS, TS);
+    ctx.fillStyle = shadeColor(palette.worldTree, -20); ctx.fillRect(ox + 6, 10, 4, 6); // trunk
+    ctx.fillStyle = palette.worldTree;
+    ctx.beginPath(); ctx.arc(ox + 8, 7, 6.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = shadeColor(palette.worldTree, 18);
+    ctx.beginPath(); ctx.arc(ox + 6, 5, 2.5, 0, Math.PI * 2); ctx.fill();
   })();
 
-  // T.WATER (8): deep reflective blue with bright surface shimmer lines
+  // T.WATER (8): flat fill + horizontal ripple lines — blocks movement (no bridge tile yet)
   (() => {
     const ox = TS * 8;
-    ctx.fillStyle = palette.worldWater;
-    ctx.fillRect(ox, 0, TS, TS);
-    const rippleA = shadeColor(palette.worldWater, 28);
-    const rippleB = shadeColor(palette.worldWater, 14);
-    ctx.fillStyle = rippleA;
-    ctx.fillRect(ox + 2, 4, 5, 1);
-    ctx.fillRect(ox + 9, 10, 5, 1);
-    ctx.fillStyle = rippleB;
-    ctx.fillRect(ox + 7, 5, 3, 1);
-    ctx.fillRect(ox + 1, 11, 4, 1);
-    ctx.fillRect(ox + 10, 3, 4, 1);
+    ctx.fillStyle = palette.worldWater; ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = shadeColor(palette.worldWater, 16); ctx.lineWidth = 0.75;
+    [3, 7, 11].forEach((y, i) => {
+      ctx.beginPath();
+      ctx.moveTo(ox + (i % 2 === 0 ? 1 : 3), y);
+      ctx.lineTo(ox + TS - (i % 2 === 0 ? 3 : 1), y);
+      ctx.stroke();
+    });
+    ctx.fillStyle = shadeColor(palette.worldWater, -14); ctx.fillRect(ox, TS - 2, TS, 2);
   })();
 
-  // T.TREE_CANOPY (9): lush leafy green canopy with shadow and highlight clusters
+  // T.DIRT_PATH (9): walkable, like FLOOR/ROAD — speckled tan-brown track
   (() => {
     const ox = TS * 9;
-    ctx.fillStyle = palette.worldTreeCanopy;
-    ctx.fillRect(ox, 0, TS, TS);
-    const darkLeaf = shadeColor(palette.worldTreeCanopy, -16);
-    const brightLeaf = shadeColor(palette.worldTreeCanopy, 18);
-    ctx.fillStyle = darkLeaf;
-    ctx.fillRect(ox, 12, TS, 4);
-    ctx.fillRect(ox + 12, 0, 4, TS);
-    [[1, 2], [2, 1], [5, 3], [8, 2], [3, 6], [9, 5], [6, 9], [2, 10]].forEach(([lx, ly]) => {
-      ctx.fillStyle = brightLeaf;
-      ctx.fillRect(ox + lx, ly, 2, 2);
+    ctx.fillStyle = palette.worldDirtPath; ctx.fillRect(ox, 0, TS, TS);
+    const shades = [shadeColor(palette.worldDirtPath, 10), shadeColor(palette.worldDirtPath, -10)];
+    [[2,3],[6,1],[10,6],[13,3],[4,9],[9,11],[12,13],[1,12]].forEach(([gx, gy], i) => {
+      ctx.fillStyle = shades[i % shades.length];
+      ctx.fillRect(ox + gx, gy, 1, 1);
     });
-    [[10, 8], [7, 11], [11, 12], [4, 13], [12, 5]].forEach(([lx, ly]) => {
-      ctx.fillStyle = darkLeaf;
-      ctx.fillRect(ox + lx, ly, 2, 2);
-    });
+  })();
+
+  // T.SIDEWALK (10): walkable — flat concrete slabs with a thin grid seam
+  (() => {
+    const ox = TS * 10;
+    ctx.fillStyle = palette.worldSidewalk; ctx.fillRect(ox, 0, TS, TS);
+    ctx.strokeStyle = shadeColor(palette.worldSidewalk, -10); ctx.lineWidth = 0.75;
+    ctx.beginPath(); ctx.moveTo(ox + TS / 2, 0); ctx.lineTo(ox + TS / 2, TS); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, TS / 2); ctx.lineTo(ox + TS, TS / 2); ctx.stroke();
   })();
 
   tex.refresh();

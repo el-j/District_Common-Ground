@@ -384,3 +384,69 @@ func repoResolve(ctx context.Context, pool *pgxpool.Pool, handle string) (id, re
 	err = pool.QueryRow(ctx, `SELECT id, handle FROM users WHERE handle = $1`, handle).Scan(&id, &resolvedHandle)
 	return id, resolvedHandle, err
 }
+
+// 2026-09-29 launch audit §1.8 — caravan and trade amounts come from the
+// client and can't be checked against the sender's (client-held) save, so
+// the server caps them: per gift, and per day sent and received.
+func TestCaravan_AmountAndDailyLimits(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+
+	aID, _ := seedUser(t, ctx, pool, "gift-a@example.com")
+	_, bHandle := seedUser(t, ctx, pool, "gift-b@example.com")
+	cID, _ := seedUser(t, ctx, pool, "gift-c@example.com")
+	for _, from := range []string{aID, cID} {
+		if _, err := repo.AddFriend(ctx, from, bHandle); err != nil {
+			t.Fatalf("AddFriend: %v", err)
+		}
+	}
+
+	if _, err := repo.DispatchCaravan(ctx, aID, bHandle, "cash", social.MaxGiftAmount+1, ""); !errors.Is(err, social.ErrAmountTooLarge) {
+		t.Fatalf("oversized gift: got %v, want ErrAmountTooLarge", err)
+	}
+
+	// Sender limit per day, per resource.
+	sent := int64(0)
+	for sent+social.MaxGiftAmount <= social.DailyGiftLimit {
+		if _, err := repo.DispatchCaravan(ctx, aID, bHandle, "cash", social.MaxGiftAmount, ""); err != nil {
+			t.Fatalf("gift within limit: %v", err)
+		}
+		sent += social.MaxGiftAmount
+	}
+	if _, err := repo.DispatchCaravan(ctx, aID, bHandle, "cash", social.MaxGiftAmount, ""); !errors.Is(err, social.ErrDailyGiftLimit) {
+		t.Fatalf("over sender limit: got %v, want ErrDailyGiftLimit", err)
+	}
+
+	// Recipient limit: another friend can't top B up past the daily limit.
+	if _, err := repo.DispatchCaravan(ctx, cID, bHandle, "cash", 1, ""); !errors.Is(err, social.ErrDailyGiftLimit) {
+		t.Fatalf("over recipient limit: got %v, want ErrDailyGiftLimit", err)
+	}
+	// Other resource types have their own allowance.
+	if _, err := repo.DispatchCaravan(ctx, cID, bHandle, "energy", 5, ""); err != nil {
+		t.Fatalf("energy gift: %v", err)
+	}
+}
+
+func TestTrade_AmountLimit(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := social.NewRepository(pool)
+	ctx := context.Background()
+	pID, _ := seedUser(t, ctx, pool, "trade-cap-p@example.com")
+	_, rHandle := seedUser(t, ctx, pool, "trade-cap-r@example.com")
+	if _, err := repo.AddFriend(ctx, pID, rHandle); err != nil {
+		t.Fatalf("AddFriend: %v", err)
+	}
+	if _, err := repo.ProposeTrade(ctx, pID, rHandle, "cash", social.MaxGiftAmount+1, "energy", 5, ""); !errors.Is(err, social.ErrAmountTooLarge) {
+		t.Fatalf("oversized offer: got %v", err)
+	}
+	if _, err := repo.ProposeTrade(ctx, pID, rHandle, "cash", 5, "energy", social.MaxGiftAmount+1, ""); !errors.Is(err, social.ErrAmountTooLarge) {
+		t.Fatalf("oversized request: got %v", err)
+	}
+}

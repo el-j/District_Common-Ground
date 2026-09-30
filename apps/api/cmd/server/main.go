@@ -4,16 +4,17 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/district-cg/api/internal/account"
 	"github.com/district-cg/api/internal/auth"
 	"github.com/district-cg/api/internal/civic"
 	"github.com/district-cg/api/internal/config"
 	"github.com/district-cg/api/internal/db"
-	"github.com/district-cg/api/internal/gamedata"
 	"github.com/district-cg/api/internal/irl"
 	"github.com/district-cg/api/internal/kernel"
 	"github.com/district-cg/api/internal/middleware"
@@ -65,7 +66,6 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenSer
 	solidarityHandler := save.NewSolidarityHandler(pool)
 	economicSnapshotHandler := save.NewEconomicSnapshotHandler(pool)
 
-	gamedataHandler := gamedata.NewHandler()
 	narrativeHandler := narrative.NewHandler(pool)
 
 	kernelRepo := kernel.NewRepository(pool)
@@ -76,11 +76,18 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenSer
 	civicHandler := civic.NewHandler(civic.NewRepository(pool))
 	irlHandler := irl.NewHandler(irl.NewRepository(pool))
 	syncHandler := sync.NewHandler(sync.NewRepository(pool))
+	accountHandler := account.NewHandler(account.NewRepository(pool))
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Recoverer)
 	r.Use(chimiddleware.Logger)
 	r.Use(middleware.CORS(cfg.ViteOrigin))
+	// 2026-09-29 launch audit §1.8 — body size and rate limits.
+	r.Use(middleware.MaxBody(2 << 20)) // saves are the biggest bodies
+	r.Use(middleware.NewRateLimiter(600, time.Minute).Middleware(middleware.ByIP(cfg.TrustProxy)))
+	authLimit := middleware.NewRateLimiter(10, time.Minute).Middleware(middleware.ByIP(cfg.TrustProxy))
+	writeLimit := middleware.NewRateLimiter(30, time.Minute).Middleware(middleware.ByUser(cfg.TrustProxy))
+	smallBody := middleware.MaxBody(8 << 10)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -90,11 +97,13 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenSer
 	requireAuth := middleware.RequireAuth(tokenSvc)
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/auth/register", authHandler.Register)
-		r.Post("/auth/login", authHandler.Login)
+		r.With(authLimit, smallBody).Post("/auth/register", authHandler.Register)
+		r.With(authLimit, smallBody).Post("/auth/login", authHandler.Login)
+		// GDPR data rights (2026-09-29 launch audit §4.3)
+		r.With(requireAuth, writeLimit).Get("/account/export", accountHandler.Export)
+		r.With(requireAuth, writeLimit).Delete("/account", accountHandler.Delete)
 		r.With(requireAuth).Get("/save", saveHandler.Load)
 		r.With(requireAuth).Put("/save", saveHandler.Upsert)
-		r.Get("/data/crises", gamedataHandler.Crises)
 		r.Get("/pulse/economy", pulse.HandleEconomy)
 		r.Get("/pulse/climate", pulse.HandleClimate)
 		r.Get("/pulse/news", pulse.HandleNews)
@@ -110,15 +119,15 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenSer
 		r.Get("/shop/catalog", shopHandler.Catalog)
 		r.With(requireAuth).Get("/shop/wallet", shopHandler.Wallet)
 		r.With(requireAuth).Get("/shop/inventory", shopHandler.Inventory)
-		r.With(requireAuth).Post("/shop/purchase", shopHandler.Purchase)
+		r.With(requireAuth, writeLimit).Post("/shop/purchase", shopHandler.Purchase)
 		r.With(requireAuth).Get("/social/me", socialHandler.Me)
 		r.With(requireAuth).Get("/social/friends", socialHandler.Friends)
-		r.With(requireAuth).Post("/social/friends/add", socialHandler.AddFriend)
+		r.With(requireAuth, writeLimit).Post("/social/friends/add", socialHandler.AddFriend)
 		r.With(requireAuth).Get("/social/district/{userId}", socialHandler.District)
-		r.With(requireAuth).Post("/social/caravan/dispatch", socialHandler.DispatchCaravan)
+		r.With(requireAuth, writeLimit).Post("/social/caravan/dispatch", socialHandler.DispatchCaravan)
 		r.With(requireAuth).Get("/social/caravan/inbox", socialHandler.Inbox)
-		r.With(requireAuth).Post("/social/caravan/{id}/claim", socialHandler.ClaimCaravan)
-		r.With(requireAuth).Post("/social/trade/propose", socialHandler.ProposeTrade)
+		r.With(requireAuth, writeLimit).Post("/social/caravan/{id}/claim", socialHandler.ClaimCaravan)
+		r.With(requireAuth, writeLimit).Post("/social/trade/propose", socialHandler.ProposeTrade)
 		r.With(requireAuth).Get("/social/trade/inbox", socialHandler.TradeInbox)
 		r.With(requireAuth).Get("/social/trade/outbox", socialHandler.TradeOutbox)
 		r.With(requireAuth).Post("/social/trade/{id}/accept", socialHandler.AcceptTrade)
@@ -127,7 +136,7 @@ func buildRouter(cfg *config.Config, pool *pgxpool.Pool, tokenSvc *auth.TokenSer
 		r.With(requireAuth).Post("/social/trade/{id}/settle", socialHandler.SettleTrade)
 		r.Get("/civic/ticker", civicHandler.Ticker)
 		r.Get("/civic/chapters", civicHandler.Chapters)
-		r.With(requireAuth).Post("/irl/deeds", irlHandler.LogDeed)
+		r.With(requireAuth, writeLimit).Post("/irl/deeds", irlHandler.LogDeed)
 		r.With(requireAuth).Get("/irl/deeds", irlHandler.ListDeeds)
 		r.With(requireAuth).Post("/sync/deltas", syncHandler.Exchange)
 		r.With(requireAuth).Post("/plugins/verification-requests", kernelHandler.SubmitVerificationRequest)

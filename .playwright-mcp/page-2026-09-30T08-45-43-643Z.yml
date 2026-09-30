@@ -1,0 +1,67 @@
+- generic [ref=f3e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 2
+          - generic "36% resilience"
+          - generic: 36%
+        - generic:
+          - generic: 💰 $27
+          - generic: ⚡100
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 65%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=f3e105] [cursor=pointer]: ⚙
+    - generic [ref=f3e211]:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=f3e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=f3e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=f3e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=f3e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=f3e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=f3e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=f3e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=f3e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=f3e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=f3e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=f3e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=f3e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=f3e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=f3e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=f3e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=f3e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=f3e122] [cursor=pointer]: 📡
+    - dialog [ref=f3e134]:
+      - generic [ref=f3e135]:
+        - generic [ref=f3e212]:
+          - heading "The Daily District Ground" [level=1] [ref=f3e213]
+          - generic [ref=f3e214]: Day 2 · Evening Edition — Your Neighbourhood Matters
+        - generic [ref=f3e215]:
+          - generic [ref=f3e216]:
+            - heading "District Holds Steady Amid Economic Pressure" [level=2] [ref=f3e217]
+            - paragraph [ref=f3e218]: Neighbours, we weather this together. Every act of solidarity counts.
+            - blockquote [ref=f3e219]:
+              - text: "\"My bike needs fixing. Community tool library would help.\""
+              - generic [ref=f3e220]: — Mira
+          - generic [ref=f3e221]:
+            - generic [ref=f3e222]:
+              - heading "District Barometer" [level=3] [ref=f3e223]
+              - generic [ref=f3e224]:
+                - generic [ref=f3e225]: 🧺 Food
+                - generic [ref=f3e226]: +0%
+              - generic [ref=f3e227]:
+                - generic [ref=f3e228]: ⚡ Energy
+                - generic [ref=f3e229]: +0%
+            - generic [ref=f3e230]:
+              - heading "Commons Clue (+5 Energy)" [level=3] [ref=f3e231]
+              - paragraph [ref=f3e232]: "Across: Resources a community holds and shares (7)"
+              - textbox "Commons Clue answer" [ref=f3e233]:
+                - /placeholder: _______
+        - button "Begin the Day →" [ref=f3e235] [cursor=pointer]
+    - button "End day and view morning dispatch" [active] [ref=f3e123] [cursor=pointer]: End Day
+    - button "Read cookbook 📖 E" [ref=f3e17]:
+      - generic [ref=f3e236]: Read cookbook 📖
+      - generic [ref=f3e237]: E

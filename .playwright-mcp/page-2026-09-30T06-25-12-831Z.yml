@@ -1,0 +1,123 @@
+- generic [active] [ref=e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 2
+          - generic "20% resilience"
+          - generic: 20%
+        - generic:
+          - generic: 💰 $27
+          - generic: ⚡100
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 65%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=e105] [cursor=pointer]: ⚙
+    - generic:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=e122] [cursor=pointer]: 📡
+    - button "End day and view morning dispatch" [ref=e123] [cursor=pointer]: End Day
+    - button "Read cookbook 📖 E" [ref=e17]:
+      - generic [ref=e251]: Read cookbook 📖
+      - generic [ref=e252]: E
+    - generic [ref=e253]:
+      - generic [ref=e254]:
+        - generic [ref=e255]: ⚙ Settings
+        - button "Close" [ref=e256] [cursor=pointer]: ×
+      - generic [ref=e257]:
+        - button "🎨 Appearance" [ref=e258] [cursor=pointer]
+        - button "🔊 Audio" [ref=e259] [cursor=pointer]
+        - button "🌐 Region & Privacy" [ref=e260] [cursor=pointer]
+        - button "👤 Account" [ref=e261] [cursor=pointer]
+      - generic [ref=e263]:
+        - button "▓ ▒ ░ Solarpunk Saturated cream, green & gold — glassy and vivid" [ref=e264] [cursor=pointer]:
+          - generic [ref=e265]:
+            - generic [ref=e266]: ▓
+            - generic [ref=e267]: ▒
+            - generic [ref=e268]: ░
+          - generic [ref=e269]:
+            - generic [ref=e270]: Solarpunk
+            - generic [ref=e271]: Saturated cream, green & gold — glassy and vivid
+        - button "▓ ▒ ░ Retro GB 4-shade Game Boy monochrome" [ref=e272] [cursor=pointer]:
+          - generic [ref=e273]:
+            - generic [ref=e274]: ▓
+            - generic [ref=e275]: ▒
+            - generic [ref=e276]: ░
+          - generic [ref=e277]:
+            - generic [ref=e278]: Retro GB
+            - generic [ref=e279]: 4-shade Game Boy monochrome
+        - button "▓ ▒ ░ 1930s Labor Woodcut 1930s protest-poster woodcut" [ref=e280] [cursor=pointer]:
+          - generic [ref=e281]:
+            - generic [ref=e282]: ▓
+            - generic [ref=e283]: ▒
+            - generic [ref=e284]: ░
+          - generic [ref=e285]:
+            - generic [ref=e286]: 1930s Labor Woodcut
+            - generic [ref=e287]: 1930s protest-poster woodcut
+        - button "▓ ▒ ░ Aurora Glass Jewel-toned indigo, violet & cyan glass" [ref=e288] [cursor=pointer]:
+          - generic [ref=e289]:
+            - generic [ref=e290]: ▓
+            - generic [ref=e291]: ▒
+            - generic [ref=e292]: ░
+          - generic [ref=e293]:
+            - generic [ref=e294]: Aurora Glass
+            - generic [ref=e295]: Jewel-toned indigo, violet & cyan glass
+        - button "▓ ▒ ░ Sunset Commons Warm coral, plum & amber golden hour" [ref=e296] [cursor=pointer]:
+          - generic [ref=e297]:
+            - generic [ref=e298]: ▓
+            - generic [ref=e299]: ▒
+            - generic [ref=e300]: ░
+          - generic [ref=e301]:
+            - generic [ref=e302]: Sunset Commons
+            - generic [ref=e303]: Warm coral, plum & amber golden hour
+        - button "▓ ▒ ░ Diorama Glow Hi-Fi — warm lit diorama, soft shadows & glow" [ref=e304] [cursor=pointer]:
+          - generic [ref=e305]:
+            - generic [ref=e306]: ▓
+            - generic [ref=e307]: ▒
+            - generic [ref=e308]: ░
+          - generic [ref=e309]:
+            - generic [ref=e310]: Diorama Glow
+            - generic [ref=e311]: Hi-Fi — warm lit diorama, soft shadows & glow
+        - button "▓ ▒ ░ Flat Vector Minimal Hi-Fi — bold flat vector shapes, minimal grain" [ref=e312] [cursor=pointer]:
+          - generic [ref=e313]:
+            - generic [ref=e314]: ▓
+            - generic [ref=e315]: ▒
+            - generic [ref=e316]: ░
+          - generic [ref=e317]:
+            - generic [ref=e318]: Flat Vector Minimal
+            - generic [ref=e319]: Hi-Fi — bold flat vector shapes, minimal grain
+        - button "▓ ▒ ░ Neon Night-City Hi-Fi — near-black neon glow, angular silhouettes" [ref=e320] [cursor=pointer]:
+          - generic [ref=e321]:
+            - generic [ref=e322]: ▓
+            - generic [ref=e323]: ▒
+            - generic [ref=e324]: ░
+          - generic [ref=e325]:
+            - generic [ref=e326]: Neon Night-City
+            - generic [ref=e327]: Hi-Fi — near-black neon glow, angular silhouettes
+        - button "▓ ▒ ░ Painterly Depth Hi-Fi — painted gradients, soft depth & rim light Active" [ref=e328] [cursor=pointer]:
+          - generic [ref=e329]:
+            - generic [ref=e330]: ▓
+            - generic [ref=e331]: ▒
+            - generic [ref=e332]: ░
+          - generic [ref=e333]:
+            - generic [ref=e334]: Painterly Depth
+            - generic [ref=e335]: Hi-Fi — painted gradients, soft depth & rim light
+            - generic [ref=e336]: Active

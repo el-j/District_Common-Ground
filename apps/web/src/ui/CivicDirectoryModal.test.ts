@@ -118,4 +118,23 @@ describe('CivicDirectoryModal', () => {
     expect(paragraphs.some(p => p.includes('Tool Drive'))).toBe(true);
     expect(downloadPdf).toHaveBeenCalledWith('found-a-commons-starter-kit.pdf', expect.any(Blob));
   });
+
+  // 2026-09-29 launch audit §3.12 — fictional places were shown as real listings.
+  it('labels in-game places as such and never links them, while real listings keep their link', async () => {
+    getLocalChapters.mockResolvedValueOnce([
+      { id: 'f', name: 'Old Warehouse Tool Library', type: 'tool_library', distanceKm: 0.6, address: '12 Foundry Row', websiteUrl: '', inFiction: true },
+      { id: 'r', name: 'Real Tool Share', type: 'tool_library', distanceKm: 1, address: '1 Main St', websiteUrl: 'https://tools.example.com', inFiction: false },
+    ]);
+    getCivicTicker.mockResolvedValueOnce([]);
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new CivicDirectoryModal(root);
+    await flush();
+
+    const [fiction, real] = [...root.querySelectorAll('.civic-chapter-row')];
+    expect(fiction!.textContent).toContain('In the game world');
+    expect(fiction!.querySelector('a')).toBeNull();
+    expect(real!.querySelector('a')!.getAttribute('href')).toBe('https://tools.example.com');
+    expect(root.querySelectorAll('.civic-real-links a').length).toBeGreaterThan(0);
+  });
 });

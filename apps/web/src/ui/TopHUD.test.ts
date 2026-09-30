@@ -258,3 +258,46 @@ describe('TopHUD context action and interactive flows', () => {
   });
 });
 
+
+// 2026-09-29 launch audit §1.6 — the active quest can be dropped (two-step).
+describe('TopHUD objective chip', () => {
+  beforeEach(() => resetStore());
+
+  it('drops the active quest only after a confirming second click', () => {
+    useGameStore.setState(s => ({ worldQuests: { ...s.worldQuests, activeId: 'fund-the-kitchen' } }));
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+    const drop = () => root.querySelector<HTMLButtonElement>('.hud-objective-drop')!;
+    drop().click();
+    expect(useGameStore.getState().worldQuests.activeId).toBe('fund-the-kitchen');
+    expect(drop().textContent).toContain('Drop quest?');
+    drop().click();
+    expect(useGameStore.getState().worldQuests.activeId).toBeNull();
+  });
+
+  it('shows consequence warnings such as sleeping rough', () => {
+    useGameStore.setState(s => ({ housing: { ...s.housing, currentFlatId: null } }));
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+    expect(root.querySelector('#hud-status')!.textContent).toMatch(/sleeping rough/i);
+  });
+});
+
+// 2026-09-29 launch audit §3.5 — online-only features used to open and fail
+// with "Could not reach…" for players without an account.
+describe('TopHUD online-only features without an account', () => {
+  beforeEach(() => {
+    resetStore();
+    try { localStorage.removeItem('dcg-token'); } catch { /* no storage */ }
+  });
+
+  it('shows a sign-in prompt instead of Common Grounds', () => {
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new TopHUD(root, makeKernel(root));
+    root.querySelector<HTMLButtonElement>('.social-open-btn')!.click();
+    expect(root.textContent).toContain('Sign in or create account');
+  });
+});

@@ -90,9 +90,12 @@ describe('InputManager', () => {
     expect(listeners['pointermove']).toBeDefined();
     expect(listeners['pointerup']).toBeDefined();
 
-    // Test pointer events
+    // A mouse click never starts the thumbstick (audit §3.8)
+    listeners['pointerdown']({ id: 1, x: 200, y: 300, wasTouch: false });
+    expect(inputManager.isUsingTouch()).toBe(false);
+
     // Touch on left half of screen initiates thumbstick
-    listeners['pointerdown']({ id: 1, x: 200, y: 300 });
+    listeners['pointerdown']({ id: 1, x: 200, y: 300, wasTouch: true });
     expect(inputManager.isUsingTouch()).toBe(true);
     expect(inputManager.getThumbstickOrigin()).toEqual({ x: 200, y: 300 });
 

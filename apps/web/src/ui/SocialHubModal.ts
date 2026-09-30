@@ -201,7 +201,7 @@ export class SocialHubModal {
 				<select class="social-dispatch-resource">
 					${(Object.keys(RESOURCE_LABELS) as CaravanResourceType[]).map(r => `<option value="${r}" ${r === this.dispatchResource ? 'selected' : ''}>${RESOURCE_LABELS[r]}</option>`).join('')}
 				</select>
-				<input class="social-dispatch-amount" type="number" min="1" value="${this.dispatchAmount}" />
+				<input class="social-dispatch-amount" type="number" min="1" max="25" value="${this.dispatchAmount}" />
 				<input class="social-dispatch-note" type="text" placeholder="Note (optional)" value="${this.dispatchNote}" />
 				<button class="social-dispatch-btn interactive" type="button" ${this.friends.length === 0 ? 'disabled' : ''}>Dispatch Caravan</button>
 			</div>
@@ -228,14 +228,14 @@ export class SocialHubModal {
 				</select>
 				<div class="social-trade-row-inputs">
 					<span>Offer</span>
-					<input class="social-trade-offer-amount" type="number" min="1" value="${this.tradeOfferAmount}" />
+					<input class="social-trade-offer-amount" type="number" min="1" max="25" value="${this.tradeOfferAmount}" />
 					<select class="social-trade-offer-resource">
 						${(Object.keys(RESOURCE_LABELS) as CaravanResourceType[]).map(r => `<option value="${r}" ${r === this.tradeOfferResource ? 'selected' : ''}>${RESOURCE_LABELS[r]}</option>`).join('')}
 					</select>
 				</div>
 				<div class="social-trade-row-inputs">
 					<span>For</span>
-					<input class="social-trade-request-amount" type="number" min="1" value="${this.tradeRequestAmount}" />
+					<input class="social-trade-request-amount" type="number" min="1" max="25" value="${this.tradeRequestAmount}" />
 					<select class="social-trade-request-resource">
 						${(Object.keys(RESOURCE_LABELS) as CaravanResourceType[]).map(r => `<option value="${r}" ${r === this.tradeRequestResource ? 'selected' : ''}>${RESOURCE_LABELS[r]}</option>`).join('')}
 					</select>
@@ -419,7 +419,7 @@ export class SocialHubModal {
 			this.statusMessage = 'Caravan dispatched.';
 			playSolidarityChime();
 		} catch (err) {
-			this.statusMessage = err instanceof ApiError ? 'Could not dispatch that caravan.' : 'Dispatch failed. Try again later.';
+			this.statusMessage = err instanceof ApiError ? serverMessage(err, 'Could not dispatch that caravan.') : 'Dispatch failed. Try again later.';
 		}
 		this.render();
 	}
@@ -463,8 +463,8 @@ export class SocialHubModal {
 			this.statusMessage = 'Trade offer sent.';
 			playSolidarityChime();
 		} catch (err) {
-			this.statusMessage = err instanceof ApiError && err.status === 400
-				? "You can't propose a trade to yourself."
+			this.statusMessage = err instanceof ApiError
+				? serverMessage(err, 'Could not send that trade offer.')
 				: 'Could not send that trade offer. Try again later.';
 		}
 		this.render();
@@ -545,5 +545,16 @@ export class SocialHubModal {
 			this.el.remove();
 			this.onClose?.();
 		}, 200);
+	}
+}
+
+/** The server's own explanation (e.g. "daily caravan limit reached"), when
+ *  it sent one, otherwise a fallback. */
+function serverMessage(err: ApiError, fallback: string): string {
+	try {
+		const parsed = JSON.parse(err.message) as { error?: unknown };
+		return typeof parsed.error === 'string' ? parsed.error.charAt(0).toUpperCase() + parsed.error.slice(1) + '.' : fallback;
+	} catch {
+		return fallback;
 	}
 }

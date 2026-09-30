@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { clueForDay, COMMONS_CLUES } from './broadsheetHTML';
 import { BroadsheetModal, buildBroadsheetHTML, type BroadsheetData } from './BroadsheetModal';
 import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
@@ -180,6 +181,18 @@ describe('BroadsheetModal Class', () => {
     expect(feedback?.textContent).toContain('Correct!');
     expect(useGameStore.getState().player.energy).toBe(55);
     expect(clueInput?.disabled).toBe(true);
+    modal.destroy();
+  });
+
+  it('the clue rotates by day and accepts spaced/capitalised answers', () => {
+    expect(clueForDay(1).answer).not.toBe(clueForDay(2).answer);
+    const modal = new BroadsheetModal(root);
+    const day = COMMONS_CLUES.findIndex(c => c.answer === 'mutualaid') + 1;
+    modal.open({ ...BASE_DATA, dayNumber: day });
+    const input = root.querySelector<HTMLInputElement>('.commons-clue-input')!;
+    input.value = 'Mutual Aid';
+    input.dispatchEvent(new Event('input'));
+    expect(root.querySelector('.commons-clue-feedback')!.textContent).toContain('Correct!');
     modal.destroy();
   });
 });

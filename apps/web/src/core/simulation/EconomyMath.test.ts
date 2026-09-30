@@ -1,22 +1,40 @@
 import { describe, it, expect } from 'vitest';
-import { computeResilienceScore, getBuildBuffState, applyDailyTick, resilienceTier, DEFAULT_MULTIPLIERS } from './EconomyMath';
+import {
+  computeResilienceScore, getBuildBuffState, applyDailyTick, resilienceTier, settleDay, DEFAULT_MULTIPLIERS,
+  BASE_RESILIENCE, STARVING, BREAKDOWN, ROUGH_SLEEPING, HIGH_STRESS, type DayInput, type LedgerLine,
+} from './EconomyMath';
 import { getSeasonalMultipliers } from './SeasonalWave';
 
 describe('computeResilienceScore', () => {
-  it('returns 0 when all progress is 0', () => {
-    expect(computeResilienceScore({ kitchenProgress: 0, solarGridProgress: 0, legalFundProgress: 0 })).toBe(0);
+  const none = { kitchenProgress: 0, solarGridProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0, landTrustProgress: 0, resilienceModifier: 0 };
+  const all = { kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100, toolLibraryProgress: 100, landTrustProgress: 100, resilienceModifier: 0 };
+
+  it('starts at the base score with nothing built (a fresh game is in "crisis", not "emergency")', () => {
+    expect(computeResilienceScore(none)).toBe(BASE_RESILIENCE);
   });
 
-  it('returns 100 when all progress is 100', () => {
-    expect(computeResilienceScore({ kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100 })).toBe(100);
+  it('reaches 100 when all five nodes are built', () => {
+    expect(computeResilienceScore(all)).toBe(100);
   });
 
-  it('clamps to 0 for negative values', () => {
-    expect(computeResilienceScore({ kitchenProgress: -10, solarGridProgress: 0, legalFundProgress: 0 })).toBe(0);
+  it('never drops below the base when the first contribution lands (audit §1.4 #2)', () => {
+    expect(computeResilienceScore({ ...none, kitchenProgress: 1 })).toBeGreaterThanOrEqual(BASE_RESILIENCE);
   });
 
-  it('clamps to 100 for values exceeding 100', () => {
-    expect(computeResilienceScore({ kitchenProgress: 200, solarGridProgress: 200, legalFundProgress: 200 })).toBe(100);
+  it('counts every build node, not only the first three', () => {
+    expect(computeResilienceScore({ ...none, landTrustProgress: 100 })).toBeGreaterThan(BASE_RESILIENCE);
+    expect(computeResilienceScore({ ...none, toolLibraryProgress: 100 })).toBeGreaterThan(BASE_RESILIENCE);
+  });
+
+  it('adds the persisted modifier from crises, votes and minigames on top of build progress', () => {
+    expect(computeResilienceScore({ ...none, resilienceModifier: 10 })).toBe(BASE_RESILIENCE + 10);
+    expect(computeResilienceScore({ ...none, kitchenProgress: 50, resilienceModifier: -5 }))
+      .toBe(computeResilienceScore({ ...none, kitchenProgress: 50 }) - 5);
+  });
+
+  it('clamps to 0..100', () => {
+    expect(computeResilienceScore({ ...none, resilienceModifier: -500 })).toBe(0);
+    expect(computeResilienceScore({ ...all, resilienceModifier: 500 })).toBe(100);
   });
 });
 
@@ -82,14 +100,14 @@ describe('applyDailyTick', () => {
   it('tool library built reduces energy upkeep', () => {
     const commons = { ...baseCommons, toolLibraryProgress: 100 };
     const result = applyDailyTick('pip', commons, 0);
-    // pip regen 15, upkeep reduced to 8 (was 10) → energyDelta = +7
-    expect(result.energyDelta).toBe(7);
+    // pip regen 35, upkeep reduced to 8 (was 10) → energyDelta = +27
+    expect(result.energyDelta).toBe(27);
   });
 
   it('energy upkeep 10 without tool library', () => {
     const result = applyDailyTick('pip', baseCommons, 0);
-    // pip regen 15, upkeep 10 → energyDelta = +5
-    expect(result.energyDelta).toBe(5);
+    // pip regen 35, upkeep 10 → energyDelta = +25
+    expect(result.energyDelta).toBe(25);
   });
 
   // M24 Test 24.1 — energy upkeep now scales with multipliers.energy
@@ -98,8 +116,8 @@ describe('applyDailyTick', () => {
     const defaultResult = applyDailyTick('pip', baseCommons, 0);
     const multipliers = { food: 1.0, energy: 1.75, wage: 1.0, transit: 1.0, heat: 1.0, migrant: 1.0 };
     const inflatedResult = applyDailyTick('pip', baseCommons, 0, multipliers);
-    // upkeep 10 * 1.75 = 17.5 → round 18; regen 15 → energyDelta = -3
-    expect(inflatedResult.energyDelta).toBe(-3);
+    // upkeep 10 * 1.75 = 17.5 → round 18; regen 35 → energyDelta = 17
+    expect(inflatedResult.energyDelta).toBe(17);
     expect(inflatedResult.energyDelta).toBeLessThan(defaultResult.energyDelta);
   });
 
@@ -143,9 +161,9 @@ describe('applyDailyTick', () => {
       expect(result.cashDelta).toBe(0);
     });
 
-    it('morgan regenerates energy at the commuter rate (5/day), distinct from pip', () => {
+    it('morgan regenerates energy at the commuter rate (30/day), distinct from pip', () => {
       const result = applyDailyTick('morgan', baseCommons, 0);
-      expect(result.energyDelta).toBe(-5); // regen 5 - upkeep 10
+      expect(result.energyDelta).toBe(20); // regen 30 - upkeep 10 (no more energy death spiral)
     });
 
     it('arthur earns a flat 12 regardless of wage or transit multipliers', () => {
@@ -155,20 +173,20 @@ describe('applyDailyTick', () => {
       expect(extreme.cashDelta).toBe(baseline.cashDelta); // genuinely unaffected, not coincidentally equal
     });
 
-    it('arthur regenerates energy at the landlord rate (10/day), netting exactly 0 by default', () => {
+    it('arthur regenerates energy at the landlord rate (30/day)', () => {
       const result = applyDailyTick('arthur', baseCommons, 0);
-      expect(result.energyDelta).toBe(0); // regen 10 - upkeep 10
+      expect(result.energyDelta).toBe(20); // regen 30 - upkeep 10
     });
 
-    it('a null classRole (pre-character-select) falls back to 8 regen and 0 earning', () => {
+    it('a null classRole (pre-character-select) falls back to 28 regen and 0 earning', () => {
       const result = applyDailyTick(null, baseCommons, 0);
-      expect(result.energyDelta).toBe(-2); // regen 8 - upkeep 10
+      expect(result.energyDelta).toBe(18); // regen 28 - upkeep 10
       expect(result.cashDelta).toBe(-3); // earning 0 - foodCost 3
     });
 
-    it('an unrecognized classRole string also falls back to the 8-regen/0-earning default', () => {
+    it('an unrecognized classRole string also falls back to the 28-regen/0-earning default', () => {
       const result = applyDailyTick('not-a-real-archetype', baseCommons, 0);
-      expect(result.energyDelta).toBe(-2);
+      expect(result.energyDelta).toBe(18);
       expect(result.cashDelta).toBe(-3);
     });
   });
@@ -201,6 +219,173 @@ describe('applyDailyTick', () => {
       expect(just_below.stressDelta).toBe(5); // floor(19/20)=0, no relief yet
       expect(at.stressDelta).toBe(4); // floor(20/20)=1 -> 5-1
     });
+  });
+});
+
+describe('settleDay (D2: starving and breakdown)', () => {
+  const commons = { kitchenProgress: 0, solarGridProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0 };
+  const base: DayInput = {
+    classRole: 'pip', cash: 100, energy: 50, maxEnergy: 100, stress: 40, trust: 0,
+    starvingDays: 0, commons, multipliers: DEFAULT_MULTIPLIERS,
+    housing: { cashDelta: 0, energyDelta: 0, stressDelta: 0 }, furnitureCount: 0,
+  };
+
+  it('a normal day applies the tick and advances one day', () => {
+    const out = settleDay(base);
+    const tick = applyDailyTick('pip', commons, 0);
+    expect(out.cash).toBe(100 + tick.cashDelta);
+    expect(out.energy).toBe(50 + tick.energyDelta);
+    expect(out.stress).toBe(40 + tick.stressDelta);
+    expect(out.daysElapsed).toBe(1);
+    expect(out.starving).toBe(false);
+    expect(out.breakdown).toBe(false);
+  });
+
+  it('unpaid rent and food are not forgiven: the player starves and stress rises', () => {
+    const rent = { cashDelta: -18, energyDelta: 0, stressDelta: 0 };
+    const out = settleDay({ ...base, cash: 0, housing: rent });
+    const fed = settleDay({ ...base, cash: 1000, housing: rent });
+    expect(out.starving).toBe(true);
+    expect(out.cash).toBe(0);
+    expect(out.unpaid).toBeGreaterThan(0);
+    expect(out.starvingDays).toBe(1);
+    expect(out.stress).toBe(fed.stress + STARVING.stressPerDay);
+    expect(out.energy).toBe(fed.energy - STARVING.regenPenalty);
+  });
+
+  it('starving stress grows the longer it lasts', () => {
+    const rent = { cashDelta: -18, energyDelta: 0, stressDelta: 0 };
+    const day1 = settleDay({ ...base, cash: 0, housing: rent, starvingDays: 0 });
+    const day4 = settleDay({ ...base, cash: 0, housing: rent, starvingDays: 3 });
+    expect(day4.stress).toBeGreaterThan(day1.stress);
+  });
+
+  it('eating again resets the starving counter', () => {
+    expect(settleDay({ ...base, cash: 500, starvingDays: 4 }).starvingDays).toBe(0);
+  });
+
+  it('sleeping rough (no home) costs energy and adds stress', () => {
+    const housed = settleDay(base);
+    const rough = settleDay({ ...base, housing: null });
+    expect(rough.energy).toBe(housed.energy - ROUGH_SLEEPING.regenPenalty);
+    expect(rough.stress).toBe(housed.stress + ROUGH_SLEEPING.stressPerDay);
+  });
+
+  it('high stress makes sleep restless (less energy back)', () => {
+    const calm = settleDay({ ...base, stress: HIGH_STRESS.threshold - 20 });
+    const tense = settleDay({ ...base, stress: HIGH_STRESS.threshold });
+    expect(tense.energy).toBe(calm.energy - HIGH_STRESS.regenPenalty);
+  });
+
+  it('furniture in a rented home relieves stress, up to a cap', () => {
+    const bare = settleDay(base);
+    const cosy = settleDay({ ...base, furnitureCount: 1 });
+    const packed = settleDay({ ...base, furnitureCount: 50 });
+    expect(cosy.stress).toBe(bare.stress - 1);
+    expect(packed.stress).toBe(bare.stress - 3);
+    expect(settleDay({ ...base, housing: null, furnitureCount: 3 }).stress)
+      .toBe(settleDay({ ...base, housing: null }).stress);
+  });
+
+  it('reaching 100% stress causes a breakdown: a lost day, stress and energy reset, trust hit', () => {
+    const out = settleDay({ ...base, stress: 99 });
+    expect(out.breakdown).toBe(true);
+    expect(out.daysElapsed).toBe(2);
+    expect(out.stress).toBe(BREAKDOWN.stressAfter);
+    expect(out.energy).toBeGreaterThanOrEqual(BREAKDOWN.minEnergyAfter);
+    expect(out.trustDelta).toBe(-BREAKDOWN.trustLoss);
+  });
+
+  it('ending the day already at 100% stress is a breakdown even if tonight would relieve some', () => {
+    const relief = { cashDelta: 0, energyDelta: 0, stressDelta: -20 };
+    expect(settleDay({ ...base, stress: 100, housing: relief }).breakdown).toBe(true);
+  });
+
+  it('bills still come due on the lost day of a breakdown', () => {
+    const normal = settleDay({ ...base, stress: 10 });
+    const broke = settleDay({ ...base, stress: 99 });
+    const perDay = normal.cash - base.cash;
+    expect(broke.cash).toBe(base.cash + 2 * perDay);
+  });
+
+  it('keeps every stat inside its bounds', () => {
+    const out = settleDay({ ...base, cash: 0, energy: 0, stress: 0, housing: null });
+    expect(out.cash).toBeGreaterThanOrEqual(0);
+    expect(out.energy).toBeGreaterThanOrEqual(0);
+    expect(out.energy).toBeLessThanOrEqual(100);
+    expect(out.stress).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('the morning ledger explains every overnight change', () => {
+  const sum = (lines: LedgerLine[], k: 'cash' | 'energy' | 'stress') => lines.reduce((s, l) => s + (l[k] ?? 0), 0);
+  const noneBuilt = { kitchenProgress: 0, solarGridProgress: 0, legalFundProgress: 0, toolLibraryProgress: 0 };
+  const allBuilt = { kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100, toolLibraryProgress: 100 };
+  const flat = { cashDelta: -9, energyDelta: 4, stressDelta: -2 };
+
+  it.each([
+    ['pip', noneBuilt, 0, undefined],
+    ['morgan', noneBuilt, 45, flat],
+    ['arthur', allBuilt, 100, flat],
+    [null, allBuilt, 10, undefined],
+  ] as const)('the tick lines of %s add up to the tick itself', (role, commons, trust, housing) => {
+    const tick = applyDailyTick(role, commons, trust, { ...DEFAULT_MULTIPLIERS, food: 1.4, energy: 1.3, wage: 0.8, transit: 1.5 }, housing);
+    expect(sum(tick.lines, 'cash')).toBe(tick.cashDelta);
+    expect(sum(tick.lines, 'energy')).toBe(tick.energyDelta);
+    expect(sum(tick.lines, 'stress')).toBe(tick.stressDelta);
+  });
+
+  it('names the sources a player cares about', () => {
+    const labels = applyDailyTick('pip', noneBuilt, 40, DEFAULT_MULTIPLIERS, flat).lines.map(l => l.label).join(' | ');
+    expect(labels).toMatch(/gig/i);
+    expect(labels).toMatch(/groceries/i);
+    expect(labels).toMatch(/rest/i);
+    expect(labels).toMatch(/flat/i);
+    expect(labels).toMatch(/trust/i);
+  });
+
+  it('shows a built kitchen as free food rather than hiding the line', () => {
+    const food = applyDailyTick('pip', allBuilt, 0).lines.find(l => /kitchen/i.test(l.label) && l.note);
+    expect(food?.note).toMatch(/free/i);
+    expect(food?.cash).toBeUndefined();
+  });
+
+  it('never lists a line that changes nothing and has no note', () => {
+    const lines = applyDailyTick('pip', noneBuilt, 0).lines;
+    for (const l of lines) expect(Boolean(l.cash || l.energy || l.stress || l.note)).toBe(true);
+  });
+
+  const day: DayInput = {
+    classRole: 'pip', cash: 100, energy: 40, maxEnergy: 100, stress: 40, trust: 20,
+    starvingDays: 0, commons: noneBuilt, multipliers: DEFAULT_MULTIPLIERS,
+    housing: flat, furnitureCount: 2,
+  };
+
+  it('a settled day\'s lines add up to the real change when nothing is clamped', () => {
+    const out = settleDay(day);
+    expect(sum(out.lines, 'cash')).toBe(out.cash - day.cash);
+    expect(sum(out.lines, 'energy')).toBe(out.energy - day.energy);
+    expect(sum(out.lines, 'stress')).toBe(out.stress - day.stress);
+    expect(out.lines.map(l => l.label).join(' ')).toMatch(/home/i);
+  });
+
+  it('rough sleeping, restless sleep and hunger each get their own line', () => {
+    // No archetype income, so groceries can't be covered.
+    const out = settleDay({ ...day, classRole: null, cash: 0, housing: null, stress: HIGH_STRESS.threshold });
+    const labels = out.lines.map(l => l.label).join(' | ');
+    expect(labels).toMatch(/slept rough/i);
+    expect(labels).toMatch(/restless/i);
+    expect(labels).toMatch(/hungry/i);
+    expect(sum(out.lines, 'energy')).toBe(out.energy - day.energy);
+    expect(sum(out.lines, 'stress')).toBe(out.stress - HIGH_STRESS.threshold);
+  });
+
+  it('a breakdown is explained, including the lost day\'s bills', () => {
+    const out = settleDay({ ...day, stress: 100 });
+    const labels = out.lines.map(l => l.label).join(' | ');
+    expect(labels).toMatch(/breakdown/i);
+    expect(labels).toMatch(/lost day/i);
+    expect(sum(out.lines, 'cash')).toBe(out.cash - day.cash);
   });
 });
 

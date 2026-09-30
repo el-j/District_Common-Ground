@@ -1,0 +1,108 @@
+- generic [active] [ref=f3e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 3
+          - generic "36% resilience"
+          - generic: 36%
+        - generic:
+          - generic: 💰 $32
+          - generic: ⚡100
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 67%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=f3e105] [cursor=pointer]: ⚙
+    - generic [ref=f3e211]:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=f3e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=f3e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=f3e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=f3e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=f3e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=f3e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=f3e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=f3e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=f3e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=f3e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=f3e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=f3e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=f3e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=f3e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=f3e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=f3e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=f3e122] [cursor=pointer]: 📡
+    - button "End day and view morning dispatch" [ref=f3e123] [cursor=pointer]: End Day
+    - generic [aria-hidden]: +$5
+    - generic [aria-hidden]: +2% stress
+    - status "Morning ledger, day 3" [ref=f3e238]:
+      - banner [ref=f3e239]:
+        - heading "☀️ Day 3" [level=2] [ref=f3e240]
+        - button "Close the morning ledger" [ref=f3e241] [cursor=pointer]: Start the day →
+      - generic [ref=f3e242]:
+        - generic [ref=f3e243]: 💰 $27 → $32
+        - generic [ref=f3e244]: ⚡ 100 → 100
+        - generic [ref=f3e245]: 😰 65% → 67%
+      - list [ref=f3e246]:
+        - listitem [ref=f3e247]:
+          - generic [aria-hidden] [ref=f3e248]: 🚲
+          - generic [ref=f3e249]: Gig shifts
+          - generic [ref=f3e250]: +$5
+        - listitem [ref=f3e252]:
+          - generic [aria-hidden] [ref=f3e253]: 🍲
+          - generic [ref=f3e254]: Meals at the Community Kitchen
+          - generic [ref=f3e255]:
+            - generic [ref=f3e256]: −3% stress
+            - generic [ref=f3e257]: free food
+        - listitem [ref=f3e258]:
+          - generic [aria-hidden] [ref=f3e259]: 😴
+          - generic [ref=f3e260]: A night's rest
+          - generic [ref=f3e261]: +35⚡
+        - listitem [ref=f3e263]:
+          - generic [aria-hidden] [ref=f3e264]: 🧺
+          - generic [ref=f3e265]: Daily chores
+          - generic [ref=f3e266]: −10⚡
+        - listitem [ref=f3e268]:
+          - generic [aria-hidden] [ref=f3e269]: 😰
+          - generic [ref=f3e270]: Everyday pressure
+          - generic [ref=f3e271]: +5% stress
+        - listitem [ref=f3e273]:
+          - generic [aria-hidden] [ref=f3e274]: 🤝
+          - generic [ref=f3e275]: Neighbours you trust
+          - generic [ref=f3e276]: −2% stress
+        - listitem [ref=f3e278]:
+          - generic [aria-hidden] [ref=f3e279]: 🛏
+          - generic [ref=f3e280]: Slept rough
+          - generic [ref=f3e281]:
+            - generic [ref=f3e282]: −5⚡
+            - generic [ref=f3e283]: +2% stress
+    - dialog [ref=f3e285]:
+      - generic [ref=f3e286]:
+        - generic [ref=f3e287]: 🧺 Food
+        - generic [ref=f3e288]: ⚡ BREAKING
+      - heading "The Last Affordable Grocer" [level=2] [ref=f3e289]
+      - paragraph [ref=f3e290]: Sal's Corner Store — the last affordable grocer in a half-mile radius — has posted a closure notice. Sal says the commercial rent tripled after the building sold to a national property group. Without Sal's, residents relying on cash and foot travel have no food access.
+      - generic [ref=f3e291]:
+        - 'button "Accept it and start driving further for groceries: You adjust your routine and drive to a big-box store. Families without cars have no good option. Two households start skipping meals. The community fridge becomes the only food resource." [ref=f3e292] [cursor=pointer]':
+          - generic [ref=f3e293]: Authoritarian path
+          - generic [ref=f3e294]: Accept it and start driving further for groceries
+          - generic [ref=f3e295]: You adjust your routine and drive to a big-box store. Families without cars have no good option. Two households start skipping meals. The community fridge becomes the only food resource.
+          - generic [ref=f3e296]:
+            - generic [ref=f3e297]: 💸 -8 Cash
+            - generic [ref=f3e298]: 😓 -5 Energy
+            - generic [ref=f3e299]: 💔 -25 Trust
+            - generic [ref=f3e300]: ⬇ -15 Resilience
+            - generic [ref=f3e301]: 😟 +8 Stress
+        - 'button "Organise a food cooperative buyout: You mobilize 60 residents to pledge a buy-in and convert Sal''s to a co-operative. Sal stays on as manager. The co-op fixes prices at cost. The property group couldn''t outbid a community that pooled its resources." [ref=f3e302] [cursor=pointer]':
+          - generic [ref=f3e303]: Solidarity path
+          - generic [ref=f3e304]: Organise a food cooperative buyout
+          - generic [ref=f3e305]: You mobilize 60 residents to pledge a buy-in and convert Sal's to a co-operative. Sal stays on as manager. The co-op fixes prices at cost. The property group couldn't outbid a community that pooled its resources.
+          - generic [ref=f3e306]:
+            - generic [ref=f3e307]: 💸 -15 Cash
+            - generic [ref=f3e308]: 😓 -15 Energy
+            - generic [ref=f3e309]: 🤝 +25 Trust
+            - generic [ref=f3e310]: 🛡 +25 Resilience
+            - generic [ref=f3e311]: 🌱 +30% build speed
+      - paragraph [ref=f3e312]: Choose before the day continues — this shapes the district.

@@ -27,12 +27,16 @@ const { resolveCrisis, getScenario, testScenario } = vi.hoisted(() => {
     },
   };
   return {
-    resolveCrisis: vi.fn(),
+    resolveCrisis: vi.fn(() => true),
     getScenario: vi.fn(() => scenario),
     testScenario: scenario,
   };
 });
-vi.mock('../core/simulation/CrisisEngine', () => ({ resolveCrisis, getScenario }));
+vi.mock('../core/simulation/CrisisEngine', async (importActual) => ({
+  ...(await importActual<typeof import('../core/simulation/CrisisEngine')>()),
+  resolveCrisis,
+  getScenario,
+}));
 
 const { playStageCompleteChime } = vi.hoisted(() => ({
   playStageCompleteChime: vi.fn(),
@@ -42,6 +46,7 @@ vi.mock('../builder/TactileEffects', () => ({
 }));
 
 import { CrisisWireModal } from './CrisisWireModal';
+import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 
 function clickChoice(root: HTMLElement, choice: 'A' | 'B') {
   const btn = root.querySelector<HTMLButtonElement>(`[data-choice="${choice}"]`)!;
@@ -54,6 +59,7 @@ describe('CrisisWireModal celebratory feedback', () => {
   beforeEach(() => {
     playStageCompleteChime.mockClear();
     resolveCrisis.mockClear();
+    useGameStore.setState(s => ({ player: { ...s.player, cash: 50, energy: 50 } }));
     // jsdom has no requestAnimationFrame; the constructor's fade-in uses it.
     vi.stubGlobal('requestAnimationFrame', (cb: () => void) => { cb(); return 0; });
   });
@@ -78,5 +84,60 @@ describe('CrisisWireModal celebratory feedback', () => {
 
     expect(resolveCrisis).toHaveBeenCalledWith('A');
     expect(playStageCompleteChime).not.toHaveBeenCalled();
+  });
+});
+
+// 2026-09-29 launch audit §1.5 / §3.4 — the card must show what a choice
+// really does, colour stress correctly, show the whole story, and not let
+// the player pick something they can't pay for.
+describe('CrisisWireModal shows honest, complete choices', () => {
+  beforeEach(() => {
+    resolveCrisis.mockClear();
+    vi.stubGlobal('requestAnimationFrame', (cb: () => void) => { cb(); return 0; });
+    const fresh = structuredClone(INITIAL_STATE);
+    fresh.player = { ...fresh.player, cash: 50, energy: 50 };
+    useGameStore.setState(fresh, true);
+  });
+
+  const mount = () => {
+    const root = document.createElement('div');
+    new CrisisWireModal(root, testScenario.id, () => {});
+    return root;
+  };
+
+  it('shows the scapegoat trust penalty in the trust chip', () => {
+    const root = mount();
+    const a = root.querySelector('[data-choice="A"]')!;
+    expect(a.textContent).toContain('-20 Trust'); // -5 shown + -15 penalty
+  });
+
+  it('colours more stress as bad and less stress as good', () => {
+    const root = mount();
+    const aStress = [...root.querySelectorAll('[data-choice="A"] .delta-chip')].find(c => c.textContent!.includes('Stress'))!;
+    const bStress = [...root.querySelectorAll('[data-choice="B"] .delta-chip')].find(c => c.textContent!.includes('Stress'))!;
+    expect(aStress.classList.contains('delta--neg')).toBe(true);
+    expect(bStress.classList.contains('delta--pos')).toBe(true);
+  });
+
+  it('shows the full context and descriptions without truncation', () => {
+    const root = mount();
+    expect(root.textContent).toContain(testScenario.context);
+    expect(root.textContent).toContain(testScenario.choiceB.description);
+    expect(root.textContent).not.toContain('…');
+  });
+
+  it('shows the solidarity build bonus on the solidarity card', () => {
+    const root = mount();
+    expect(root.querySelector('[data-choice="B"]')!.textContent).toMatch(/build speed/i);
+  });
+
+  it('disables a choice the player cannot pay for and says why', () => {
+    useGameStore.setState(s => ({ player: { ...s.player, energy: 3 } }));
+    const root = mount();
+    const b = root.querySelector<HTMLButtonElement>('[data-choice="B"]')!;
+    expect(b.disabled).toBe(true);
+    expect(b.textContent).toMatch(/needs ⚡10/i);
+    b.click();
+    expect(resolveCrisis).not.toHaveBeenCalled();
   });
 });

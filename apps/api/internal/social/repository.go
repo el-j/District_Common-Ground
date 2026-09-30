@@ -24,6 +24,9 @@ var (
 	ErrNotTradeProposer    = errors.New("not the proposer of that trade offer")
 	ErrTradeNotPending     = errors.New("trade offer is no longer pending")
 	ErrTradeAlreadySettled = errors.New("trade offer already settled")
+
+	ErrAmountTooLarge = errors.New("amount is above the per-gift limit")
+	ErrDailyGiftLimit = errors.New("daily gift limit reached")
 )
 
 // FriendProfile mirrors packages/shared-types/src/social.ts's FriendProfile,
@@ -297,12 +300,27 @@ func (r *Repository) DistrictSnapshot(ctx context.Context, requesterID, targetUs
 	return snap, nil
 }
 
+// Gift and trade amounts come from the client and can't be checked against
+// the sender's save (which is client-held), so the server caps them
+// (2026-09-29 launch audit §1.8 — any amount used to be accepted, letting a
+// second account funnel unlimited cash or energy into a main one).
+const (
+	// MaxGiftAmount caps a single caravan and each side of a trade offer.
+	MaxGiftAmount int64 = 25
+	// DailyGiftLimit caps the caravan total per resource type, per UTC day,
+	// both for what one player sends and for what one player receives.
+	DailyGiftLimit int64 = 50
+)
+
 // DispatchCaravan records a mutual aid caravan from senderID to the friend
 // identified by handle or invite code. The sender's own resources are
 // decremented client-side (they live in game_saves' opaque JSONB, which is
 // the client's domain — see internal/kernel's reward-settlement pattern);
 // this call is the server-side record of the transfer and its recipient gate.
 func (r *Repository) DispatchCaravan(ctx context.Context, senderID, identifier, resourceType string, amount int64, note string) (Caravan, error) {
+	if amount > MaxGiftAmount {
+		return Caravan{}, ErrAmountTooLarge
+	}
 	recipientID, _, err := r.resolveUser(ctx, identifier)
 	if err != nil {
 		return Caravan{}, err
@@ -319,8 +337,37 @@ func (r *Repository) DispatchCaravan(ctx context.Context, senderID, identifier, 
 		return Caravan{}, ErrNotFriends
 	}
 
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return Caravan{}, fmt.Errorf("begin dispatch: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// Lock both parties (in a stable order) so concurrent gifts can't both
+	// slip under a daily limit.
+	for _, id := range sortedPair(senderID, recipientID) {
+		if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1))`, "caravans:"+id); err != nil {
+			return Caravan{}, fmt.Errorf("lock caravans: %w", err)
+		}
+	}
+	var sentToday, receivedToday int64
+	if err := tx.QueryRow(ctx,
+		`SELECT
+		   COALESCE(SUM(amount) FILTER (WHERE sender_id = $1), 0),
+		   COALESCE(SUM(amount) FILTER (WHERE recipient_id = $2), 0)
+		 FROM mutual_aid_caravans
+		 WHERE resource_type = $3
+		   AND created_at >= date_trunc('day', NOW() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC'
+		   AND (sender_id = $1 OR recipient_id = $2)`,
+		senderID, recipientID, resourceType,
+	).Scan(&sentToday, &receivedToday); err != nil {
+		return Caravan{}, fmt.Errorf("sum today's caravans: %w", err)
+	}
+	if sentToday+amount > DailyGiftLimit || receivedToday+amount > DailyGiftLimit {
+		return Caravan{}, ErrDailyGiftLimit
+	}
+
 	var c Caravan
-	err = r.db.QueryRow(ctx,
+	err = tx.QueryRow(ctx,
 		`INSERT INTO mutual_aid_caravans (sender_id, recipient_id, resource_type, amount, note)
 		 VALUES ($1, $2, $3, $4, $5)
 		 RETURNING id, resource_type, amount, note, claimed`,
@@ -328,6 +375,9 @@ func (r *Repository) DispatchCaravan(ctx context.Context, senderID, identifier, 
 	).Scan(&c.ID, &c.ResourceType, &c.Amount, &c.Note, &c.Claimed)
 	if err != nil {
 		return Caravan{}, fmt.Errorf("dispatch caravan: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return Caravan{}, fmt.Errorf("commit dispatch: %w", err)
 	}
 
 	var senderHandle string
@@ -439,6 +489,9 @@ func (r *Repository) ProposeTrade(
 	requestResourceType string, requestAmount int64,
 	note string,
 ) (TradeOffer, error) {
+	if offerAmount > MaxGiftAmount || requestAmount > MaxGiftAmount {
+		return TradeOffer{}, ErrAmountTooLarge
+	}
 	recipientID, _, err := r.resolveUser(ctx, identifier)
 	if err != nil {
 		return TradeOffer{}, err
@@ -660,4 +713,11 @@ func (r *Repository) SettleTrade(ctx context.Context, proposerID, tradeID string
 		return TradeSettleResult{Status: status, ResourceType: requestResourceType, Amount: requestAmount}, nil
 	}
 	return TradeSettleResult{Status: status, ResourceType: offerResourceType, Amount: offerAmount}, nil
+}
+
+func sortedPair(a, b string) [2]string {
+	if a < b {
+		return [2]string{a, b}
+	}
+	return [2]string{b, a}
 }

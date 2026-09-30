@@ -1,0 +1,28 @@
+- generic [active] [ref=f3e1]:
+  - generic:
+    - button "Read cookbook 📖 E" [ref=f3e17]:
+      - generic [ref=f3e64]: Read cookbook 📖
+      - generic [ref=f3e65]: E
+    - generic [ref=f3e66]:
+      - heading "Who are you?" [level=1] [ref=f3e67]
+      - paragraph [ref=f3e68]: Make this character yours.
+      - generic [ref=f3e69]:
+        - generic [ref=f3e70]: Name
+        - textbox "Name" [ref=f3e71]:
+          - /placeholder: Pip
+        - generic [ref=f3e72]: Gender identity
+        - generic [ref=f3e73]:
+          - button "Woman" [ref=f3e74] [cursor=pointer]
+          - button "Man" [ref=f3e75] [cursor=pointer]
+          - button "Non-binary" [ref=f3e76] [cursor=pointer]
+          - button "Self-describe" [ref=f3e77] [cursor=pointer]
+          - button "Prefer not to say" [ref=f3e78] [cursor=pointer]
+        - generic [ref=f3e79]: Appearance
+        - generic [ref=f3e80]:
+          - button "Choose this appearance" [ref=f3e81] [cursor=pointer]
+          - button "Choose this appearance" [ref=f3e82] [cursor=pointer]
+          - button "Choose this appearance" [ref=f3e83] [cursor=pointer]
+          - button "Choose this appearance" [ref=f3e84] [cursor=pointer]
+      - generic [ref=f3e85]:
+        - button "← Choose a different family" [ref=f3e86] [cursor=pointer]
+        - button "Continue" [ref=f3e87] [cursor=pointer]

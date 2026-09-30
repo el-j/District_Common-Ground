@@ -43,13 +43,16 @@ func TestBuildRouter_Routes(t *testing.T) {
 		}
 	})
 
-	t.Run("GET /api/v1/data/crises", func(t *testing.T) {
+	// 2026-09-29 launch audit §4.6 — the unused, drifted crisis endpoint
+	// (5 scenarios vs the client's 23) was removed; the client's bundled
+	// data is the single source of truth.
+	t.Run("GET /api/v1/data/crises is gone", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/data/crises", nil)
 		rec := httptest.NewRecorder()
 		r.ServeHTTP(rec, req)
 
-		if rec.Code != http.StatusOK {
-			t.Fatalf("expected 200, got %d", rec.Code)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("expected 404, got %d", rec.Code)
 		}
 	})
 

@@ -1,5 +1,6 @@
 import type { GameSessionHostAPI, ResourceGrant } from '@district-cg/shared-types';
-import { gainCash, spendCash, addTrust, loseTrust, spendEnergy, regenEnergy, updateCommonsProgress } from '../state/actions';
+import { gainCash, addTrust, adjustResilience } from '../state/actions';
+import { clampMinigameGrant, type MinigameGrant } from '../simulation/EconomyRules';
 
 export interface HostPlatformCallbacks {
   onPlaySFX?: (sfxId: string) => void;
@@ -20,22 +21,21 @@ export class HostPlatformAPI implements GameSessionHostAPI {
     }
   }
 
-  async grantRewards(rewards: Partial<ResourceGrant>): Promise<void> {
-    if (rewards.cashDelta) {
-      if (rewards.cashDelta > 0) gainCash(rewards.cashDelta);
-      else spendCash(Math.abs(rewards.cashDelta));
-    }
-    if (rewards.trustDelta) {
-      if (rewards.trustDelta > 0) addTrust(rewards.trustDelta);
-      else loseTrust(Math.abs(rewards.trustDelta));
-    }
-    if (rewards.energyDelta) {
-      if (rewards.energyDelta > 0) regenEnergy(rewards.energyDelta);
-      else spendEnergy(Math.abs(rewards.energyDelta));
-    }
-    if (rewards.resilienceDelta) {
-      updateCommonsProgress('resilienceScore', rewards.resilienceDelta);
-    }
+  private rewardsGranted = false;
+
+  /** One HostPlatformAPI instance = one minigame run. The run's energy was
+   *  already charged at launch (`startMinigameRun()`), so the plugin can
+   *  only add a capped reward, once (see `clampMinigameGrant()`). Returns
+   *  what was actually granted so the plugin can show the real numbers. */
+  async grantRewards(rewards: Partial<ResourceGrant>): Promise<MinigameGrant> {
+    const none: MinigameGrant = { cashDelta: 0, trustDelta: 0, energyDelta: 0, resilienceDelta: 0 };
+    if (this.rewardsGranted) return none;
+    this.rewardsGranted = true;
+    const grant = clampMinigameGrant(rewards ?? {});
+    if (grant.cashDelta > 0) gainCash(grant.cashDelta);
+    if (grant.trustDelta > 0) addTrust(grant.trustDelta);
+    if (grant.resilienceDelta > 0) adjustResilience(grant.resilienceDelta);
+    return grant;
   }
 
   notify(message: string, type: 'info' | 'success' | 'warning' = 'info'): void {

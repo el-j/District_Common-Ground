@@ -366,13 +366,14 @@ export class CourierGame {
   }
 
   private onGameOver(): void {
-    const cashEarned = this.deliveries * 8;
-    const trustEarned = this.deliveries >= 3 ? 5 + this.deliveries : this.deliveries;
+    // Scaled to the host's per-run caps (2026-09-29 launch audit: $20,
+    // 3 trust; the run's energy is charged by the host at launch).
+    const cashEarned = Math.min(20, this.deliveries * 3);
+    const trustEarned = this.deliveries >= 3 ? Math.min(3, 1 + Math.floor(this.deliveries / 3)) : 0;
 
     void this.context.host.grantRewards({
       cashDelta: cashEarned,
       trustDelta: trustEarned,
-      energyDelta: -5,
     });
 
     this.context.host.notify(

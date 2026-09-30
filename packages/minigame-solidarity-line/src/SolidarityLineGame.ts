@@ -394,13 +394,14 @@ export class SolidarityLineGame {
 
   private onGameOver(): void {
     const completed = this.lives > 0;
-    const cashEarned = this.defeated * 5 + (completed ? 25 : 0);
-    const resilienceEarned = Math.min(15, this.defeated);
+    // Scaled to the host's per-run caps (2026-09-29 launch audit: $20,
+    // 2 resilience; the run's energy is charged by the host at launch).
+    const cashEarned = Math.min(20, this.defeated * 2 + (completed ? 4 : 0));
+    const resilienceEarned = Math.min(2, Math.floor(this.defeated / 4));
 
     void this.context.host.grantRewards({
       cashDelta: cashEarned,
       resilienceDelta: resilienceEarned,
-      energyDelta: -5,
     });
 
     this.context.host.notify(

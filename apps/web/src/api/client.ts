@@ -15,9 +15,12 @@ export async function request<T>(
   path: string,
   body?: unknown,
   token?: string,
+  init: { keepalive?: boolean } = {},
 ): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method,
+    // lets a save started while the page is closing finish in the background
+    keepalive: init.keepalive,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),

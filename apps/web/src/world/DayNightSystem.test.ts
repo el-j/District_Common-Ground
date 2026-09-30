@@ -1,4 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
+
+// DayNightSystem.ts imports the real `phaser` module for `Phaser.BlendModes.ADD`
+// (a runtime enum value, not just a type) — Phaser's real ESM entry point does
+// canvas feature-detection at import time that neither plain node nor jsdom
+// (without the optional `canvas` package) can satisfy, so it's mocked here the
+// same way InputManager.test.ts already mocks it, rather than reached for real.
+vi.mock('phaser', () => ({
+  default: {
+    BlendModes: { ADD: 1 },
+  },
+}));
+
 import { DayNightSystem } from './DayNightSystem';
 
 vi.mock('../core/audio/SoundSynth', () => ({

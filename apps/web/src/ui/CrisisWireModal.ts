@@ -1,5 +1,8 @@
-import { resolveCrisis, getScenario } from '../core/simulation/CrisisEngine';
-import type { CrisisScenario, CrisisConsequences } from '../core/simulation/CrisisEngine';
+import {
+  resolveCrisis, getScenario, effectiveConsequences, choiceAvailability, choiceCost, SOLIDARITY_BUILD_BUFF,
+} from '../core/simulation/CrisisEngine';
+import type { CrisisScenario, CrisisConsequences, CrisisChoice } from '../core/simulation/CrisisEngine';
+import { useGameStore } from '../core/state/useGameStore';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
 import { TactileEffects } from '../builder/TactileEffects';
@@ -36,18 +39,43 @@ export class CrisisWireModal {
 
   private statChips(c: CrisisConsequences): string {
     const chips: string[] = [];
-    const chip = (val: number, pos: string, neg: string, label: string) => {
+    // `goodWhenUp` — more cash/energy/trust/resilience is good, more stress
+    // is bad. (Stress used to be coloured backwards.)
+    const chip = (val: number, up: string, down: string, label: string, goodWhenUp = true) => {
       if (val === 0) return;
-      const cls = val > 0 ? 'delta--pos' : 'delta--neg';
+      const good = goodWhenUp ? val > 0 : val < 0;
       const sign = val > 0 ? `+${val}` : `${val}`;
-      chips.push(`<span class="delta-chip ${cls}">${val > 0 ? pos : neg} ${sign} ${label}</span>`);
+      chips.push(`<span class="delta-chip ${good ? 'delta--pos' : 'delta--neg'}">${val > 0 ? up : down} ${sign} ${label}</span>`);
     };
     chip(c.cashDelta,       '💰', '💸', 'Cash');
     chip(c.energyDelta,     '⚡', '😓', 'Energy');
     chip(c.trustDelta,      '🤝', '💔', 'Trust');
     chip(c.resilienceDelta, '🛡', '⬇', 'Resilience');
-    chip(c.stressDelta,     '😟', '😌', 'Stress');
+    chip(c.stressDelta,     '😟', '😌', 'Stress', false);
     return chips.join('');
+  }
+
+  private choiceButton(key: 'A' | 'B', choice: CrisisChoice, available: boolean, forced: boolean): string {
+    const solidarity = choice.type === 'solidarity';
+    const cost = choiceCost(choice);
+    const need = [cost.cash > 0 ? `$${cost.cash}` : '', cost.energy > 0 ? `⚡${cost.energy}` : ''].filter(Boolean).join(' and ');
+    const bonus = solidarity
+      ? `<span class="delta-chip delta--pos">🌱 +${Math.round(SOLIDARITY_BUILD_BUFF * 100)}% build speed</span>`
+      : '';
+    const note = !available
+      ? `<span class="crisis-btn-blocked">You can't do this — needs ${need}</span>`
+      : forced && need
+        ? `<span class="crisis-btn-blocked">You can't fully pay ${need} — what you can't pay becomes stress</span>`
+        : '';
+    return `
+          <button class="crisis-btn crisis-btn--${solidarity ? 'solidarity' : 'scapegoat'} interactive" data-choice="${key}" type="button"${available ? '' : ' disabled aria-disabled="true"'}
+            aria-label="${escapeAttr(`${choice.label}: ${choice.description}`)}">
+            <span class="crisis-btn-eyebrow">${solidarity ? 'Solidarity path' : 'Authoritarian path'}</span>
+            <span class="crisis-btn-label">${choice.label}</span>
+            <span class="crisis-btn-desc">${choice.description}</span>
+            <span class="crisis-btn-deltas">${this.statChips(effectiveConsequences(choice))}${bonus}</span>
+            ${note}
+          </button>`;
   }
 
   private archetypeBadge(archetype: string | undefined): string {
@@ -65,7 +93,7 @@ export class CrisisWireModal {
   }
 
   private buildHTML(s: CrisisScenario): string {
-    const context = s.context.length > 220 ? s.context.slice(0, 217) + '…' : s.context;
+    const avail = choiceAvailability(s, useGameStore.getState().player);
     return `
       <div class="crisis-panel" role="dialog" aria-modal="true" aria-labelledby="crisis-title-label">
         <div class="crisis-header-row">
@@ -73,22 +101,10 @@ export class CrisisWireModal {
           <div class="crisis-ticker">⚡ BREAKING</div>
         </div>
         <h2 id="crisis-title-label" class="crisis-title">${s.title}</h2>
-        <p class="crisis-context">${context}</p>
+        <p class="crisis-context">${s.context}</p>
         <div class="crisis-choices">
-          <button class="crisis-btn crisis-btn--scapegoat interactive" data-choice="A" type="button"
-            aria-label="${s.choiceA.label}: ${s.choiceA.description.slice(0, 80)}">
-            <span class="crisis-btn-eyebrow">Authoritarian path</span>
-            <span class="crisis-btn-label">${s.choiceA.label}</span>
-            <span class="crisis-btn-desc">${s.choiceA.description.slice(0, 100)}…</span>
-            <span class="crisis-btn-deltas">${this.statChips(s.choiceA.consequences)}</span>
-          </button>
-          <button class="crisis-btn crisis-btn--solidarity interactive" data-choice="B" type="button"
-            aria-label="${s.choiceB.label}: ${s.choiceB.description.slice(0, 80)}">
-            <span class="crisis-btn-eyebrow">Solidarity path</span>
-            <span class="crisis-btn-label">${s.choiceB.label}</span>
-            <span class="crisis-btn-desc">${s.choiceB.description.slice(0, 100)}…</span>
-            <span class="crisis-btn-deltas">${this.statChips(s.choiceB.consequences)}</span>
-          </button>
+          ${this.choiceButton('A', s.choiceA, avail.A, avail.forced)}
+          ${this.choiceButton('B', s.choiceB, avail.B, avail.forced)}
         </div>
         <p class="crisis-note">Choose before the day continues — this shapes the district.</p>
       </div>
@@ -98,10 +114,11 @@ export class CrisisWireModal {
   private bindEvents(): void {
     this.el.querySelectorAll<HTMLButtonElement>('[data-choice]').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (btn.disabled) return;
         const choice = btn.dataset['choice'] as 'A' | 'B';
         const chosen = choice === 'A' ? this.scenario.choiceA : this.scenario.choiceB;
         playUIClick();
-        resolveCrisis(choice);
+        if (!resolveCrisis(choice)) return;
         // M23 §2 — same celebration chime already used for a completed build
         // stage; the authoritarian path stays silent on purpose.
         if (chosen.type === 'solidarity') {
@@ -121,4 +138,8 @@ export class CrisisWireModal {
       this.onClose();
     }, 300);
   }
+}
+
+function escapeAttr(v: string): string {
+  return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }

@@ -82,7 +82,8 @@ describe('API Endpoints Wrappers', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
     vi.stubGlobal('localStorage', {
-      getItem: vi.fn().mockReturnValue('mock-token-xyz'),
+      // signed in and opted in to telemetry (see district.test.ts for the gating)
+      getItem: vi.fn((key: string) => (key === 'dcg-telemetry-consent' ? 'granted' : 'mock-token-xyz')),
       setItem: vi.fn(),
       removeItem: vi.fn(),
     });

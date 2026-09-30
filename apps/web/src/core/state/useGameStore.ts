@@ -1,8 +1,9 @@
 import { createStore } from 'zustand/vanilla';
-import type { DistrictPulseState } from '@district-cg/shared-types';
+import type { DistrictPulseState, DistrictParcelState, DistrictBuildingType } from '@district-cg/shared-types';
 import type { MaterialToken } from '../simulation/Materials';
 import type { RecipeId, CraftDiscipline, ItemToken } from '../simulation/Recipes';
 import type { FamilyTemplateId } from '../simulation/FamilyTemplates';
+import type { LedgerLine } from '../simulation/EconomyMath';
 
 export type ClassRole = 'pip' | 'morgan' | 'arthur';
 export type Facing = 'down' | 'up' | 'left' | 'right';
@@ -99,6 +100,11 @@ export interface GameState {
     /** Coarse, user-chosen region bucket (e.g. "GENERIC", "US-WEST") used to
      *  filter the civic ticker/directory. Never derived from GPS or IP. */
     regionCode: string;
+    /** Save-format version; bumped when a load needs a migration step. */
+    saveVersion: number;
+    /** Epoch ms of the last save — on load, the newest of the local and
+     *  server saves wins. 0 = never saved. */
+    savedAt: number;
   };
   player: {
     classRole: ClassRole | null;
@@ -134,11 +140,20 @@ export interface GameState {
     constructionSpeedBuff: number;
     greenhouseUnlocked: boolean;
     safeHavenUnlocked: boolean;
+    /** Persisted nudges from crises, votes, minigames and parcels. The
+     *  score itself is always recomputed by `computeResilienceScore()`. */
+    resilienceModifier: number;
   };
   crisisState: {
     activeCrisisId: string | null;
     pendingQueue: string[];
     historyLog: CrisisLogEntry[];
+    /** Persisted so a reload can't reset the crisis cooldown or streak. */
+    lastCrisisDay: number;
+    scapegoatStreak: number;
+    /** World colour saturation from crisis outcomes (1 = normal), saved so
+     *  a reload keeps the look the player's choices produced. */
+    worldSaturation: number;
   };
   quests: QuestState[];
   pulseState: DistrictPulseState | null;
@@ -211,10 +226,62 @@ export interface GameState {
    *  `inventory`'s comment above) — safe against old saves with no
    *  migration code needed. */
   worldQuests: WorldQuestState;
+  /** 2026-09-29 launch audit — day-scoped economy bookkeeping (see
+   *  `core/simulation/EconomyRules.ts`). */
+  economy: EconomyState;
+  /** Commons Bazaar items this account owns (server is the source of truth;
+   *  refreshed on boot and after a purchase). See core/shop/ShopEffects.ts. */
+  shop: { owned: string[] };
+  /** First-day guide progress (ui/TutorialCoach.ts). */
+  tutorial: { step: number; done: boolean };
+  /** District Builder parcels (audit §2.2 — they used to be rebuilt from
+   *  defaults every time the builder opened). Empty until first opened. */
+  district: {
+    parcels: DistrictParcelState[];
+    /** Building types already harvested on `day` (one harvest per type). */
+    harvestedToday: { day: number; types: DistrictBuildingType[] };
+  };
+}
+
+export type BuildNodeKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress' | 'toolLibraryProgress' | 'landTrustProgress';
+
+export interface DayReport {
+  day: number;
+  starving: boolean;
+  unpaid: number;
+  breakdown: boolean;
+  communityNode: BuildNodeKey | null;
+  communityPct: number;
+  /** The night itemised (morning ledger). Absent on reports saved before it existed. */
+  lines?: LedgerLine[];
+  before?: DayStats;
+  after?: DayStats;
+}
+
+export interface DayStats { cash: number; energy: number; stress: number; trust: number }
+
+/** What `advanceDay()` returns: always fully itemised. */
+export type SettledDayReport = DayReport & Required<Pick<DayReport, 'lines' | 'before' | 'after'>>;
+
+export interface EconomyState {
+  /** The build neighbours pitch in on overnight: the last node the player
+   *  contributed to that isn't finished yet. */
+  focusNode: BuildNodeKey | null;
+  /** Base % the player added per node on `day` (daily contribution cap). */
+  contributionsToday: { day: number; byNode: Partial<Record<BuildNodeKey, number>> };
+  /** Units sold per item on `day` (local demand). */
+  salesToday: { day: number; byItem: Partial<Record<ItemToken, number>> };
+  starvingDays: number;
+  lastScrapsDay: number | null;
+  breakdowns: number;
+  /** What happened overnight, for the HUD to explain. */
+  lastDayReport: DayReport | null;
+  /** The Safe Haven ending screen has been shown for this save. */
+  endingSeen: boolean;
 }
 
 export const INITIAL_STATE: GameState = {
-  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', skinRevision: 0, phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC' },
+  meta: { day: 1, tick: 0, activeSkin: 'solarpunk', skinRevision: 0, phase: 'select', lastAssemblyDay: 0, regionCode: 'GENERIC', saveVersion: 2, savedAt: 0 },
   player: {
     classRole: null,
     cash: 0,
@@ -230,9 +297,8 @@ export const INITIAL_STATE: GameState = {
     appearance: 'APPEARANCE_TONE_1',
   },
   commons: {
-    // Starts mid-"crisis" tier (ResilienceDressing.ts: <15 emergency, <30
-    // crisis), not 0/"emergency" — a fresh game should open under visible
-    // economic stress, not full-collapse imagery on day one.
+    // = BASE_RESILIENCE (EconomyMath.ts): mid-"crisis" tier, not
+    // "emergency" — a fresh game opens under visible economic stress.
     resilienceScore: 20,
     solarGridProgress: 0,
     kitchenProgress: 0,
@@ -242,11 +308,15 @@ export const INITIAL_STATE: GameState = {
     constructionSpeedBuff: 0,
     greenhouseUnlocked: false,
     safeHavenUnlocked: false,
+    resilienceModifier: 0,
   },
   crisisState: {
     activeCrisisId: null,
     pendingQueue: [],
     historyLog: [],
+    lastCrisisDay: 0,
+    scapegoatStreak: 0,
+    worldSaturation: 1,
   },
   quests: [
     { questId: 'digital-deescalation', completedOnDay: null },
@@ -282,6 +352,22 @@ export const INITIAL_STATE: GameState = {
   worldQuests: {
     activeId: null,
     completedIds: [],
+  },
+  economy: {
+    focusNode: null,
+    contributionsToday: { day: 0, byNode: {} },
+    salesToday: { day: 0, byItem: {} },
+    starvingDays: 0,
+    lastScrapsDay: null,
+    breakdowns: 0,
+    lastDayReport: null,
+    endingSeen: false,
+  },
+  shop: { owned: [] },
+  tutorial: { step: 0, done: false },
+  district: {
+    parcels: [],
+    harvestedToday: { day: 0, types: [] },
   },
 };
 

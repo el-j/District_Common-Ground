@@ -10,7 +10,8 @@ import { defineConfig, devices } from '@playwright/test';
 // character creation through to a loaded, playable world).
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  // the Vite dev server is slow under parallel load; 30s was flaky
+  timeout: 60_000,
   expect: { timeout: 5_000 },
   fullyParallel: false,
   retries: 0,
@@ -20,7 +21,14 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 800 } } },
+    // Phone-sized run of the core loop (audit §3.1: the toolbar used to
+    // cover End Day on phones).
+    {
+      name: 'mobile',
+      use: { ...devices['Pixel 5'], viewport: { width: 390, height: 844 } },
+      testMatch: /launch-loop\.spec\.ts/,
+    },
   ],
   webServer: {
     command: 'npm run dev',

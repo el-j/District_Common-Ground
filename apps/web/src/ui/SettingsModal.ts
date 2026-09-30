@@ -2,11 +2,14 @@ import { getActiveSkinId } from '../skins/ThemeManager';
 import { getThemeCatalog, applyTheme, type ThemeCatalogEntry } from '../skins/ThemePluginManager';
 import { inputManager } from '../world/InputManager';
 import { playUIClick } from '../core/audio/SoundSynth';
-import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
-import { clearSave, saveToDB } from '../core/state/persistence';
+import { useGameStore } from '../core/state/useGameStore';
+import { startNewGame, saveToDB, getToken, clearToken, rememberOfflineChoice } from '../core/state/persistence';
+import { openSignIn } from './SignInPrompt';
 import { setRegionCode, setHousingVisitable } from '../core/state/actions';
 import { bindEscapeClose } from './modalDismiss';
 import { setBGMMuted, isBGMMuted } from '../core/audio/SoundSynth';
+import { hasTelemetryConsent, setTelemetryConsent } from '../core/privacy/consent';
+import { downloadMyData, deleteAccount } from '../api/endpoints/account';
 
 const REGION_OPTIONS: { code: string; label: string }[] = [
   { code: 'GENERIC', label: 'Generic / Unspecified' },
@@ -60,6 +63,8 @@ export class SettingsModal {
   private scene?: Phaser.Scene;
   private activeTab: SettingsTab = 'appearance';
   private confirmNewGame = false;
+  private confirmDeleteAccount = false;
+  private accountMessage = '';
   private catalog: ThemeCatalogEntry[] = [
     { id: 'solarpunk', title: 'Neon Solarpunk', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/solarpunk/skin.manifest.json' },
     { id: 'retro_gb', title: 'Retro GB', author: 'District Commons', builtIn: true, entrypoint: 'assets/skins/retro_gb/skin.manifest.json' },
@@ -123,13 +128,31 @@ export class SettingsModal {
     switch (this.activeTab) {
       case 'appearance': return this.renderSkins(getActiveSkinId());
       case 'audio': return this.renderAudio();
-      case 'region': return `${this.renderRegion()}${this.renderProximityVisiting()}`;
+      case 'region': return `${this.renderRegion()}${this.renderProximityVisiting()}${this.renderPrivacy()}`;
       case 'account': return this.renderAccount();
     }
   }
 
   private renderAccount(): string {
+    const signedIn = !!getToken();
     return `
+      <div class="settings-account">
+        ${this.accountMessage ? `<p class="shop-status account-message" role="status">${this.accountMessage}</p>` : ''}
+        ${signedIn
+          ? `<p class="shop-status">✅ Signed in — your game is backed up to your account.</p>
+             <button class="auth-btn auth-btn--secondary sign-out-btn" type="button">Sign out</button>
+             <button class="auth-btn auth-btn--secondary export-data-btn" type="button">⬇ Download my data</button>
+             ${this.confirmDeleteAccount
+               ? `<p class="new-game-confirm-text">This permanently deletes your account, cloud save, tokens, friends and deed history. The game saved on this device stays. Are you sure?</p>
+                  <div class="new-game-confirm-btns">
+                    <button class="construction-submit delete-account-yes" type="button">Yes, delete my account</button>
+                    <button class="auth-btn auth-btn--secondary delete-account-cancel" type="button">Cancel</button>
+                  </div>`
+               : `<button class="auth-btn auth-btn--secondary delete-account-btn" type="button">🗑 Delete my account</button>`}`
+          : `<p class="shop-status">Playing offline. Your game is saved on this device only.</p>
+             <button class="auth-btn auth-btn--primary sign-in-btn" type="button">Sign in or create account</button>`}
+        <p class="shop-status"><a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a> · <a href="/imprint.html" target="_blank" rel="noopener">Imprint</a></p>
+      </div>
       <div class="settings-new-game">
         ${this.confirmNewGame
           ? `<p class="new-game-confirm-text">All progress will be lost. Are you sure?</p>
@@ -211,6 +234,19 @@ export class SettingsModal {
     `;
   }
 
+  // Launch audit Phase 6 (GDPR) — anonymous statistics are opt-in, off by default.
+  private renderPrivacy(): string {
+    return `
+      <div class="settings-privacy">
+        <label class="settings-telemetry-label">
+          <input class="settings-telemetry-toggle" type="checkbox"${hasTelemetryConsent() ? ' checked' : ''} />
+          Share anonymous gameplay statistics (crisis choices, daily cash &amp; energy) to help balance the game. Only sent while signed in.
+        </label>
+        <p class="settings-proximity-hint"><a href="/privacy.html" target="_blank" rel="noopener">Privacy policy</a> — what is stored and why.</p>
+      </div>
+    `;
+  }
+
   private renderRegion(): string {
     const current = useGameStore.getState().meta.regionCode ?? 'GENERIC';
     return `
@@ -234,6 +270,8 @@ export class SettingsModal {
         playUIClick();
         this.activeTab = btn.dataset['tab'] as SettingsTab;
         this.confirmNewGame = false;
+        this.confirmDeleteAccount = false;
+        this.accountMessage = '';
         this.render();
       });
     });
@@ -270,6 +308,74 @@ export class SettingsModal {
         void saveToDB(useGameStore.getState());
       });
 
+    this.el.querySelector<HTMLButtonElement>('.sign-in-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        const root = this.el.parentElement ?? document.body;
+        this.close();
+        openSignIn(root);
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.sign-out-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        // keeps the local save; only this device stops syncing
+        clearToken();
+        rememberOfflineChoice();
+        this.render();
+      });
+
+    this.el.querySelector<HTMLInputElement>('.settings-telemetry-toggle')
+      ?.addEventListener('change', e => {
+        setTelemetryConsent((e.target as HTMLInputElement).checked);
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.export-data-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        const token = getToken();
+        if (!token) return;
+        void downloadMyData(token).catch(() => {
+          this.accountMessage = "Your data couldn't be downloaded right now. Please try again.";
+          this.render();
+        });
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.delete-account-btn')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        this.confirmDeleteAccount = true;
+        this.render();
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.delete-account-cancel')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        this.confirmDeleteAccount = false;
+        this.render();
+      });
+
+    this.el.querySelector<HTMLButtonElement>('.delete-account-yes')
+      ?.addEventListener('click', () => {
+        playUIClick();
+        const token = getToken();
+        if (!token) return;
+        void deleteAccount(token).then(
+          () => {
+            // the local save stays; the game simply continues offline
+            clearToken();
+            rememberOfflineChoice();
+            this.accountMessage = 'Your account was deleted. You keep playing offline on this device.';
+          },
+          () => {
+            this.accountMessage = "Your account couldn't be deleted right now. Please try again.";
+          },
+        ).finally(() => {
+          this.confirmDeleteAccount = false;
+          this.render();
+        });
+      });
+
     this.el.querySelector<HTMLButtonElement>('.new-game-btn')
       ?.addEventListener('click', () => {
         playUIClick();
@@ -280,10 +386,9 @@ export class SettingsModal {
     this.el.querySelector<HTMLButtonElement>('.new-game-yes')
       ?.addEventListener('click', () => {
         playUIClick();
-        void clearSave().then(() => {
-          useGameStore.setState(INITIAL_STATE);
-          this.close();
-        });
+        // Replaces the local and server save, then reloads so the world,
+        // crisis visuals and every scene start completely fresh (audit §2.3/§2.4).
+        void startNewGame().finally(() => window.location.reload());
       });
 
     this.el.querySelector<HTMLButtonElement>('.new-game-cancel')

@@ -11,7 +11,7 @@
  */
 
 export const DEFAULT_TILES_WIDE = 12;
-export const DEFAULT_TILES_TALL = 10;
+export const DEFAULT_TILES_TALL = 13;
 
 export function computeViewportZoom(
   viewportW: number,

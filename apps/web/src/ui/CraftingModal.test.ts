@@ -13,7 +13,8 @@ import { useGameStore, INITIAL_STATE } from '../core/state/useGameStore';
 import { playSolidarityChime } from '../core/audio/SoundSynth';
 
 function resetStore(overrides: Partial<typeof INITIAL_STATE> = {}) {
-  useGameStore.setState({ ...INITIAL_STATE, ...overrides });
+  // crafting costs energy since the 2026-09-29 audit — start rested
+  useGameStore.setState({ ...INITIAL_STATE, player: { ...INITIAL_STATE.player, energy: 100 }, ...overrides });
 }
 
 describe('CraftingModal', () => {
@@ -120,6 +121,21 @@ describe('CraftingModal', () => {
     new CraftingModal(root); // no station passed
 
     expect(root.querySelector('[data-craft="RECIPE_UPCYCLED_WORKBENCH"]')).toBeNull();
-    expect(root.textContent).toContain('Needs a real crafting station');
+    expect(root.textContent).toContain('Craft this at a workshop station');
+  });
+
+  it('shows each recipe\'s energy cost and blocks crafting when too tired', () => {
+    resetStore({
+      player: { ...INITIAL_STATE.player, energy: 1 },
+      crafting: { ...INITIAL_STATE.crafting, knownRecipes: ['RECIPE_SCRAP_STOOL'] },
+      inventory: { ...INITIAL_STATE.inventory, materials: { MATERIAL_SCRAP_METAL: 5, MATERIAL_IRON: 5 } },
+    });
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    new CraftingModal(root);
+
+    expect(root.textContent).toContain('⚡ 4 energy');
+    expect(root.querySelector('[data-craft="RECIPE_SCRAP_STOOL"]')).toBeNull();
+    expect(root.textContent).toContain('Too tired');
   });
 });

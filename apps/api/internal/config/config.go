@@ -13,6 +13,9 @@ type Config struct {
 	PluginOwnerUserID string
 	GoEnv             string
 	ViteOrigin        string
+	// TrustProxy: take the client IP from X-Real-IP (set by our nginx) for
+	// rate limiting. Only enable when the API is reachable solely via the proxy.
+	TrustProxy bool
 }
 
 func Load() (*Config, error) {
@@ -21,6 +24,7 @@ func Load() (*Config, error) {
 		GoEnv:             getEnv("GO_ENV", "production"),
 		ViteOrigin:        getEnv("VITE_ORIGIN", "http://localhost:9300"),
 		PluginOwnerUserID: getEnv("PLUGIN_OWNER_USER_ID", ""),
+		TrustProxy:        getEnv("TRUST_PROXY", "false") == "true",
 	}
 
 	cfg.DatabaseURL = os.Getenv("DATABASE_URL")

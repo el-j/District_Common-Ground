@@ -13,10 +13,14 @@ COPY apps/web/package.json ./apps/web/
 # Install dependencies using lockfile
 RUN npm ci --ignore-scripts
 
-# Copy web source and build
+# Copy web source and build. The root `build` script builds the minigame and
+# skin plugin bundles into apps/web/public/plugins/ first (they are
+# gitignored and dockerignored, so a clean checkout has none), then the web app.
+COPY scripts ./scripts
 COPY apps/web ./apps/web
-WORKDIR /app/apps/web
-RUN npm run build
+ARG VITE_PUBLIC_ORIGIN=""
+ENV VITE_PUBLIC_ORIGIN=$VITE_PUBLIC_ORIGIN
+RUN apk add --no-cache bash && npm run build
 
 # Stage 2: serve
 FROM nginx:1.27-alpine

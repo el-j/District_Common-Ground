@@ -8,6 +8,7 @@ const { playStageCompleteChime, spawnCelebrationParticles } = vi.hoisted(() => (
   playStageCompleteChime: vi.fn(),
   spawnCelebrationParticles: vi.fn(),
 }));
+vi.mock('../core/state/persistence', () => ({ startNewGame: vi.fn(() => Promise.resolve()) }));
 vi.mock('../builder/TactileEffects', () => ({ TactileEffects: { playStageCompleteChime, spawnCelebrationParticles } }));
 
 import { SafeHavenBanner } from './SafeHavenBanner';
@@ -50,5 +51,25 @@ describe('SafeHavenBanner', () => {
       new SafeHavenBanner(root);
       root.querySelector<HTMLButtonElement>('.safe-haven-close')!.click();
     }).not.toThrow();
+  });
+});
+
+describe('Safe Haven ending summary', () => {
+  it('summarises the run and is only shown once per save', async () => {
+    const { useGameStore, INITIAL_STATE } = await import('../core/state/useGameStore');
+    const { runSummary } = await import('./SafeHavenBanner');
+    const s = structuredClone(INITIAL_STATE);
+    s.meta.day = 52;
+    s.crisisState.historyLog = [
+      { id: 'a', day: 3, choice: 'solidarity', summary: '' },
+      { id: 'b', day: 9, choice: 'scapegoat', summary: '' },
+      { id: 'assembly-rent-control', day: 30, choice: 'solidarity', summary: '' },
+    ];
+    useGameStore.setState(s, true);
+    expect(runSummary(useGameStore.getState())).toMatchObject({ days: 52, solidarityChoices: 1, scapegoatChoices: 1 });
+    const root = document.createElement('div');
+    new SafeHavenBanner(root);
+    expect(root.textContent).toContain('52 days');
+    expect(useGameStore.getState().economy.endingSeen).toBe(true);
   });
 });

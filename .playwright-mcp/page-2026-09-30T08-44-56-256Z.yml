@@ -1,0 +1,46 @@
+- generic [active] [ref=f3e1]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic "Pip": P
+          - generic: Day 1
+          - generic "20% resilience"
+          - generic: 20%
+        - generic:
+          - generic: 💰 $25
+          - generic: ⚡80
+          - generic: 🤝 40
+          - 'generic "Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day."': 😰 60%
+      - generic: South Quarter
+      - status:
+        - paragraph: 🛏 Sleeping rough — −5⚡ and +2% stress a night. Rent a room.
+      - button "Open settings" [ref=f3e105] [cursor=pointer]: ⚙
+    - generic:
+      - button "Goals — the five commons and the Safe Haven ending" [ref=f3e106] [cursor=pointer]: 🎯
+      - button "Daily Quests" [ref=f3e107] [cursor=pointer]: 📋
+      - button "Work — trade energy for cash" [ref=f3e108] [cursor=pointer]: 💼
+      - button "Open Crafting" [ref=f3e109] [cursor=pointer]: 🛠
+      - button "Open Living District Builder" [ref=f3e110] [cursor=pointer]: 🏗️
+      - button "Open World Map" [ref=f3e111] [cursor=pointer]: 🗺
+      - button "Open Common Grounds" [ref=f3e112] [cursor=pointer]: 🤝
+      - button "Open the Commons Bazaar" [ref=f3e113] [cursor=pointer]: 🏪
+      - button "Open Civic Journal — log a real-world deed" [ref=f3e114] [cursor=pointer]: 📓
+      - button "Open Found a Commons directory" [ref=f3e115] [cursor=pointer]: 📖
+      - button "Open Radio Free Commons" [ref=f3e116] [cursor=pointer]: 📻
+      - button "Share progress" [ref=f3e117] [cursor=pointer]: 📣
+      - button "Nearby Travelers — visit someone over the mesh" [ref=f3e118] [cursor=pointer]: 🌐
+      - button "Open Plugin Library" [ref=f3e119] [cursor=pointer]: 🧩
+      - button "Open off-grid mesh terminal" [ref=f3e120] [cursor=pointer]: 📻
+      - button "Open mutual credit trade terminal" [ref=f3e121] [cursor=pointer]: 🪙
+      - button "Open the off-grid walkie-talkie" [ref=f3e122] [cursor=pointer]: 📡
+    - button "End day and view morning dispatch" [ref=f3e123] [cursor=pointer]: End Day
+    - button "Read cookbook 📖 E" [ref=f3e17]:
+      - generic [ref=f3e124]: Read cookbook 📖
+      - generic [ref=f3e125]: E
+    - status [ref=f3e126]:
+      - paragraph [ref=f3e127]: 👋 Welcome to the neighbourhood! Move with WASD or the arrow keys — on a phone, drag on the left half of the screen. Press E (or the action button) to interact.
+      - generic [ref=f3e128]:
+        - generic [ref=f3e129]: 1/6
+        - button "Skip guide" [ref=f3e130] [cursor=pointer]
+        - button "Next" [ref=f3e131] [cursor=pointer]

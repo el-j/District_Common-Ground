@@ -50,6 +50,10 @@ func (h *Handler) LogDeed(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"invalid deed category or verification method"}`, http.StatusBadRequest)
 			return
 		}
+		if errors.Is(err, ErrDailyLimit) {
+			http.Error(w, `{"error":"daily deed limit reached — come back tomorrow"}`, http.StatusTooManyRequests)
+			return
+		}
 		http.Error(w, `{"error":"failed to log deed"}`, http.StatusInternalServerError)
 		return
 	}

@@ -82,12 +82,12 @@ export const ITEM_DEFINITIONS: Record<ItemToken, ItemDefinition> = {
   ITEM_WIRED_LAMP: { token: 'ITEM_WIRED_LAMP', label: 'Wired Salvage Lamp', kinds: ['furniture', 'sellable'], baseSellValue: 10, discipline: 'electronics' },
   ITEM_FORAGED_POUCH: { token: 'ITEM_FORAGED_POUCH', label: 'Foraged Goods Pouch', kinds: ['sellable'], baseSellValue: 6, discipline: 'horticulture' },
   ITEM_SIMPLE_STEW: { token: 'ITEM_SIMPLE_STEW', label: 'Simple Mushroom Stew', kinds: ['sellable'], baseSellValue: 5, discipline: 'culinary' },
-  ITEM_UPCYCLED_WORKBENCH: { token: 'ITEM_UPCYCLED_WORKBENCH', label: 'Upcycled Workbench', kinds: ['furniture', 'sellable'], baseSellValue: 30, discipline: 'metalwork' },
+  ITEM_UPCYCLED_WORKBENCH: { token: 'ITEM_UPCYCLED_WORKBENCH', label: 'Upcycled Workbench', kinds: ['furniture', 'sellable'], baseSellValue: 25, discipline: 'metalwork' },
   ITEM_BASIC_TOOLS: { token: 'ITEM_BASIC_TOOLS', label: 'Basic Tools', kinds: ['component'], baseSellValue: 0, discipline: 'metalwork' },
   ITEM_SALVAGE_RADIO: { token: 'ITEM_SALVAGE_RADIO', label: 'Salvage Radio', kinds: ['component', 'sellable'], baseSellValue: 18, discipline: 'electronics' },
   ITEM_CIRCUIT_BOARD: { token: 'ITEM_CIRCUIT_BOARD', label: 'Reclaimed Circuit Board', kinds: ['component'], baseSellValue: 0, discipline: 'electronics' },
-  ITEM_UPCYCLED_COMPUTER: { token: 'ITEM_UPCYCLED_COMPUTER', label: 'Upcycled Computer', kinds: ['sellable', 'usable'], baseSellValue: 60, discipline: 'electronics' },
-  ITEM_UPCYCLED_BIKE: { token: 'ITEM_UPCYCLED_BIKE', label: 'Upcycled Bike', kinds: ['sellable'], baseSellValue: 45, discipline: 'metalwork' },
+  ITEM_UPCYCLED_COMPUTER: { token: 'ITEM_UPCYCLED_COMPUTER', label: 'Upcycled Computer', kinds: ['sellable', 'usable'], baseSellValue: 55, discipline: 'electronics' },
+  ITEM_UPCYCLED_BIKE: { token: 'ITEM_UPCYCLED_BIKE', label: 'Upcycled Bike', kinds: ['sellable'], baseSellValue: 21, discipline: 'metalwork' },
 };
 
 // M40 §3. A small, pure, testable formula (mirrors EconomyMath.ts's style):
@@ -270,7 +270,7 @@ export const RECIPES: Record<RecipeId, Recipe> = {
 
 export const RECIPE_IDS: readonly RecipeId[] = Object.keys(RECIPES) as RecipeId[];
 
-export type CraftFailureReason = 'unknown-recipe' | 'insufficient-mastery' | 'missing-materials' | 'missing-item-inputs' | 'requires-crafting-station';
+export type CraftFailureReason = 'unknown-recipe' | 'insufficient-mastery' | 'missing-materials' | 'missing-item-inputs' | 'requires-crafting-station' | 'too-tired';
 
 export interface CraftCheckResult {
   ok: boolean;

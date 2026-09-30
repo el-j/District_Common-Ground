@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#1a2c18" />
     <meta name="description" content="A top-down community resilience game. Build solidarity, survive crises, shape the neighbourhood." />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -46,7 +46,43 @@
         position: relative;
         width: 100vw;
         height: 100vh;
+        height: 100dvh; /* no jump when the mobile address bar shows/hides */
         overflow: hidden;
+        touch-action: none; /* pinch-zoom still works on the HTML UI, not the canvas */
+      }
+
+      /* Boot screen — shown until the game is ready, or with a Retry button
+         if boot fails (a failure used to leave a blank page). */
+      #boot-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        background: #1a1a2e;
+        color: #e8eef6;
+        font-family: ui-monospace, monospace;
+      }
+      #boot-screen[hidden] { display: none; }
+      .boot-title { font-size: 1.3rem; margin: 0; color: #66dd88; }
+      .boot-status { margin: 0; font-size: 0.85rem; opacity: 0.8; }
+      .boot-spinner {
+        width: 2rem; height: 2rem;
+        border: 3px solid rgba(255,255,255,0.15);
+        border-top-color: #66dd88;
+        border-radius: 50%;
+        animation: boot-spin 0.9s linear infinite;
+      }
+      @keyframes boot-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .boot-spinner { animation: none; } }
+      .boot-retry {
+        font: inherit; padding: 0.6rem 1.2rem; border-radius: 999px;
+        border: 1px solid #55aa66; background: #14301c; color: #88ffaa; cursor: pointer;
       }
 
       /* Phaser canvas will be appended here — crisp pixel-art rendering is
@@ -88,6 +124,12 @@
   <body>
     <div id="game-container"></div>
     <div id="ui-root"></div>
+    <div id="boot-screen" role="status" aria-live="polite">
+      <p class="boot-title">District: Common Ground</p>
+      <div class="boot-spinner" aria-hidden="true"></div>
+      <p class="boot-status">Loading the neighbourhood…</p>
+      <noscript><p class="boot-status">This game needs JavaScript to run.</p></noscript>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

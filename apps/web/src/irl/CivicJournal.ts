@@ -21,10 +21,11 @@ type Step = 'form' | 'handshake' | 'result';
 
 /**
  * "Civic Journal" — log a real-world mutual-aid deed and earn Solidarity
- * Tokens / Civic Action Badges. Two verification paths: an honour-system
- * log (trusted, lower reward) or a local peer handshake — a 4-word code
- * shown on this device and re-entered by whoever is confirming, standing
- * in for the planning doc's QR handshake without needing camera access.
+ * Tokens / Civic Action Badges. Two paths: an honour-system log, or a local
+ * peer handshake — a 4-word code shown on this device and re-entered by
+ * whoever is confirming. The handshake is local only, so the server can't
+ * verify it; since the 2026-09-29 launch audit both paths pay the same and
+ * the server caps deeds at 3 a day.
  */
 export class CivicJournal {
 	private readonly el: HTMLElement;
@@ -100,14 +101,14 @@ export class CivicJournal {
 		return `
 			<p class="civic-directory-status">
 				Did some real-world mutual aid today? Log it here to earn Solidarity Tokens (ST)
-				and a Civic Action Badge (CAB) in your account.
+				and a Civic Action Badge (CAB) in your account — up to 3 deeds a day.
 			</p>
 			<div class="civic-journal-categories">${categoryButtons}</div>
 			<textarea class="civic-journal-note" placeholder="Optional note: what did you do?" rows="2">${escapeHtml(this.note)}</textarea>
 			${this.outboxCount > 0 ? `<p class="civic-directory-status">${this.outboxCount} deed(s) saved locally, waiting to sync. <button class="civic-journal-sync-btn" type="button">Sync now</button></p>` : ''}
 			<div class="civic-journal-actions">
-				<button class="civic-journal-submit" data-method="honor_system" type="button">✅ Log on Honour System (25 ST)</button>
-				<button class="civic-journal-submit" data-method="peer_verified" type="button">🤝 Verify With a Neighbor (50 ST)</button>
+				<button class="civic-journal-submit" data-method="honor_system" type="button">✅ Log it (25 ST)</button>
+				<button class="civic-journal-submit" data-method="peer_verified" type="button">🤝 Log it with a neighbour (25 ST)</button>
 			</div>
 		`;
 	}
@@ -224,7 +225,11 @@ export class CivicJournal {
 	private async submit(method: 'honor_system' | 'peer_verified'): Promise<void> {
 		const result = await awardForDeed(this.category, this.note, method);
 		this.synced = result.synced;
-		if (result.synced && result.wallet) {
+		if (result.rejected === 'daily-limit') {
+			this.resultMessage = "You've logged 3 deeds today — thank you! Come back tomorrow for more.";
+		} else if (result.rejected) {
+			this.resultMessage = "That deed couldn't be logged. Please check it and try again.";
+		} else if (result.synced && result.wallet) {
 			this.resultMessage = `Logged! You earned ${result.deed?.stAwarded ?? 0} ST and ${result.deed?.cabAwarded ?? 0} CAB. New balance: ${result.wallet.solidarityTokens} ST.`;
 			playSolidarityChime();
 		} else {

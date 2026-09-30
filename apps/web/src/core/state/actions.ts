@@ -1,9 +1,14 @@
 import {
   useGameStore, type ClassRole, type GameState, type PlacedFurniture,
-  type GenderIdentity, type AppearanceToken, type WorldQuestId,
+  type GenderIdentity, type AppearanceToken, type WorldQuestId, type BuildNodeKey,
+  type SettledDayReport, type DayStats,
 } from './useGameStore';
 import { saveToDB } from './persistence';
-import { computeResilienceScore, applyDailyTick, DEFAULT_MULTIPLIERS } from '../simulation/EconomyMath';
+import { computeResilienceScore, settleDay, DEFAULT_MULTIPLIERS } from '../simulation/EconomyMath';
+import {
+  planContribution, communityContributionPct, craftEnergyCost, saleMultiplier, MINIGAME_LIMITS, MAX_BUILD_BUFF, isNodeLocked,
+  type ContributionPlan,
+} from '../simulation/EconomyRules';
 import { initCrisisQueue, checkForCrisis } from '../simulation/CrisisEngine';
 import { recordAction } from '../offline/offlineRuntime';
 import { recordEconomicSnapshot } from '../../api/endpoints/district';
@@ -162,29 +167,71 @@ export function reduceStress(amount: number): void {
   }));
 }
 
-export function advanceDay(): void {
+/** Ends the day: settles income, food, rent, energy and stress (starving
+ *  and breakdown included — see `settleDay()`), lets neighbours pitch in on
+ *  the focus build, then rolls for a crisis and saves. Returns what
+ *  happened overnight so the UI can explain it. */
+export function advanceDay(): SettledDayReport {
+  const statsOf = (p: GameState['player']): DayStats => ({ cash: p.cash, energy: p.energy, stress: p.stressLevel, trust: p.socialTrust });
+  const statsBefore = statsOf(useGameStore.getState().player);
+  let report: SettledDayReport = {
+    day: 0, starving: false, unpaid: 0, breakdown: false, communityNode: null, communityPct: 0,
+    lines: [], before: statsBefore, after: statsBefore,
+  };
   useGameStore.setState(state => {
     const multipliers = state.pulseState?.multipliers ?? DEFAULT_MULTIPLIERS;
     // M43 §1 — recurring housing consequences, same "compute from state,
-    // pass into the pure tick function" shape `commons` already uses.
+    // pass into the pure function" shape `commons` already uses.
     const housingOption = getHousingOption(state.housing.currentFlatId);
-    const tick = applyDailyTick(
-      state.player.classRole,
-      state.commons,
-      state.player.socialTrust,
+    const out = settleDay({
+      classRole: state.player.classRole,
+      cash: state.player.cash,
+      energy: state.player.energy,
+      maxEnergy: state.player.maxEnergy,
+      stress: state.player.stressLevel,
+      trust: state.player.socialTrust,
+      starvingDays: state.economy.starvingDays,
+      commons: state.commons,
       multipliers,
-      housingOption?.consequences,
-    );
+      housing: housingOption?.consequences ?? null,
+      furnitureCount: housingOption ? state.housing.furniture.length : 0,
+    });
+    const day = state.meta.day + out.daysElapsed;
+    report = { ...report, day, starving: out.starving, unpaid: out.unpaid, breakdown: out.breakdown, lines: out.lines };
     return {
-      meta: { ...state.meta, day: state.meta.day + 1 },
+      meta: { ...state.meta, day },
       player: {
         ...state.player,
-        energy:      Math.min(state.player.maxEnergy, Math.max(0, state.player.energy + tick.energyDelta)),
-        cash:        Math.max(0, state.player.cash + tick.cashDelta),
-        stressLevel: Math.max(0, Math.min(100, state.player.stressLevel + tick.stressDelta)),
+        cash: out.cash,
+        energy: out.energy,
+        stressLevel: out.stress,
+        socialTrust: Math.max(0, Math.min(100, state.player.socialTrust + out.trustDelta)),
+      },
+      economy: {
+        ...state.economy,
+        starvingDays: out.starvingDays,
+        breakdowns: state.economy.breakdowns + (out.breakdown ? 1 : 0),
       },
     };
   });
+
+  // Neighbours pitch in overnight on the focus build.
+  const before = useGameStore.getState();
+  const focus = before.economy.focusNode;
+  if (focus && before.commons[focus] < 100) {
+    const pct = Math.min(100 - before.commons[focus], communityContributionPct(before.player.socialTrust, before.commons.constructionSpeedBuff));
+    updateCommonsProgress(focus, pct);
+    report = { ...report, communityNode: focus, communityPct: pct };
+  }
+  report = { ...report, after: statsOf(useGameStore.getState().player) };
+  useGameStore.setState(s => ({
+    economy: {
+      ...s.economy,
+      focusNode: s.economy.focusNode && s.commons[s.economy.focusNode] >= 100 ? null : s.economy.focusNode,
+      lastDayReport: report,
+    },
+  }));
+
   checkForCrisis();
   void saveToDB(useGameStore.getState());
 
@@ -195,9 +242,73 @@ export function advanceDay(): void {
   if (after.player.classRole) {
     recordEconomicSnapshot(after.meta.day, after.player.classRole, after.player.cash, after.player.energy);
   }
+  return report;
 }
 
-export function updateCommonsProgress(node: keyof GameState['commons'], amount: number): { nodeJustCompleted: boolean } {
+/** Crises, votes, minigames and District Builder parcels nudge resilience
+ *  through this persisted modifier. The score itself is always recomputed
+ *  (see `computeResilienceScore()`), so build contributions and these
+ *  nudges can never overwrite each other again (audit §1.4). */
+export const RESILIENCE_MODIFIER_LIMIT = 50;
+export function adjustResilience(delta: number): void {
+  if (!Number.isFinite(delta) || delta === 0) return;
+  useGameStore.setState(state => {
+    const resilienceModifier = Math.max(-RESILIENCE_MODIFIER_LIMIT, Math.min(RESILIENCE_MODIFIER_LIMIT, state.commons.resilienceModifier + delta));
+    const commons = { ...state.commons, resilienceModifier };
+    return { commons: { ...commons, resilienceScore: computeResilienceScore(commons) } };
+  });
+}
+
+/** Town Hall votes (and anything else) raise the construction speed buff
+ *  through here, sharing the solidarity buff's cap. */
+export function addBuildBuff(delta: number): void {
+  useGameStore.setState(state => ({
+    commons: { ...state.commons, constructionSpeedBuff: Math.max(0, Math.min(MAX_BUILD_BUFF, state.commons.constructionSpeedBuff + delta)) },
+  }));
+}
+
+export type ContributionResult = { ok: boolean; plan: ContributionPlan; nodeJustCompleted: boolean };
+
+/** The only way the player funds a build node: exact costs, no
+ *  overcharging near 100%, whole numbers only, and a per-node daily cap
+ *  (see `planContribution()`). The node becomes the neighbours' focus. */
+export function contributeToNode(node: BuildNodeKey, request: { cash: number; energy: number }): ContributionResult {
+  const state = useGameStore.getState();
+  const day = state.meta.day;
+  const today = state.economy.contributionsToday.day === day ? state.economy.contributionsToday.byNode : {};
+  if (isNodeLocked(node, state.commons)) {
+    return { ok: false, plan: planContribution({ currentPct: 100, cash: 0, energy: 0, contributedTodayPct: 0, speedBuff: 0 }, { cash: 0, energy: 0 }), nodeJustCompleted: false };
+  }
+  const plan = planContribution({
+    currentPct: state.commons[node],
+    cash: state.player.cash,
+    energy: state.player.energy,
+    contributedTodayPct: today[node] ?? 0,
+    speedBuff: state.commons.constructionSpeedBuff,
+  }, request);
+  if (plan.progressPct <= 0) return { ok: false, plan, nodeJustCompleted: false };
+
+  useGameStore.setState(s => ({
+    player: { ...s.player, cash: s.player.cash - plan.cashSpent, energy: s.player.energy - plan.energySpent },
+    economy: {
+      ...s.economy,
+      focusNode: node,
+      contributionsToday: { day, byNode: { ...today, [node]: (today[node] ?? 0) + plan.basePct } },
+    },
+  }));
+  const { nodeJustCompleted } = updateCommonsProgress(node, plan.progressPct);
+  if (nodeJustCompleted) {
+    useGameStore.setState(s => ({
+      economy: { ...s.economy, focusNode: s.economy.focusNode === node ? null : s.economy.focusNode },
+    }));
+  }
+  return { ok: true, plan, nodeJustCompleted };
+}
+
+/** Adds `amount` percentage points to a build node. Callers pass the final
+ *  amount — any construction speed buff is applied by the caller
+ *  (`contributeToNode()`, community help), not here. */
+export function updateCommonsProgress(node: BuildNodeKey, amount: number): { nodeJustCompleted: boolean } {
   let recordedAmount = 0;
   let nodeJustCompleted = false;
   let landTrustJustRatified = false;
@@ -205,27 +316,22 @@ export function updateCommonsProgress(node: keyof GameState['commons'], amount: 
   let resilienceAfter = 0;
   let trustAfter = 0;
   useGameStore.setState(state => {
-    const buffedAmount = amount * (1 + state.commons.constructionSpeedBuff);
-    recordedAmount = buffedAmount;
-    const wasNodeComplete = Number(state.commons[node]) >= 100;
+    recordedAmount = amount;
+    const wasNodeComplete = state.commons[node] >= 100;
     const wasLandTrustComplete = state.commons.landTrustProgress >= 100;
-    const nextCommons = {
+    const nextCommons: GameState['commons'] = {
       ...state.commons,
-      [node]: Math.min(100, Number(state.commons[node]) + buffedAmount),
-    } as GameState['commons'];
+      [node]: Math.max(0, Math.min(100, state.commons[node] + amount)),
+    };
 
-    const resilienceScore = computeResilienceScore({
-      kitchenProgress: nextCommons.kitchenProgress,
-      solarGridProgress: nextCommons.solarGridProgress,
-      legalFundProgress: nextCommons.legalFundProgress,
-    });
+    const resilienceScore = computeResilienceScore(nextCommons);
 
     // "Safe Haven" ending: unlocks once, the moment the Community Land Trust
     // (node E) first reaches 100% — see EPIC-11 Test 11.2.
     const safeHavenUnlocked = state.commons.safeHavenUnlocked
       || (node === 'landTrustProgress' && !wasLandTrustComplete && nextCommons.landTrustProgress >= 100);
 
-    nodeJustCompleted = !wasNodeComplete && Number(nextCommons[node]) >= 100;
+    nodeJustCompleted = !wasNodeComplete && nextCommons[node] >= 100;
     landTrustJustRatified = !state.commons.safeHavenUnlocked && safeHavenUnlocked;
     dayOfChange = state.meta.day;
     resilienceAfter = resilienceScore;
@@ -297,6 +403,13 @@ export function assignWorldQuest(id: WorldQuestId): void {
   useGameStore.setState({ worldQuests: { ...state.worldQuests, activeId: id } });
 }
 
+/** Frees the single quest slot without completing the quest (audit §1.6:
+ *  Mira's kitchen quest used to lock every other quest for hundreds of
+ *  days with no way out). The quest can be picked up again later. */
+export function abandonWorldQuest(): void {
+  useGameStore.setState(state => ({ worldQuests: { ...state.worldQuests, activeId: null } }));
+}
+
 /** Applies a WorldQuest's reward the same way `IrlQuestSystem.completeQuest()`
  *  applies its own — a direct `setState` for player stats — plus, when the
  *  definition carries one, a real `updateCommonsProgress()` call for the
@@ -348,7 +461,7 @@ export function checkTalkWorldQuestProgress(npcId: string): void {
   if (def?.target.kind === 'talk-to-npc' && def.target.npcId === npcId) completeActiveWorldQuest();
 }
 
-function checkBuildNodeWorldQuestProgress(node: keyof GameState['commons']): void {
+function checkBuildNodeWorldQuestProgress(node: BuildNodeKey): void {
   const state = useGameStore.getState();
   const def = state.worldQuests.activeId ? getWorldQuestDefinition(state.worldQuests.activeId) : undefined;
   if (def?.target.kind !== 'build-node-threshold' || def.target.node !== node) return;
@@ -442,6 +555,11 @@ export function craftRecipe(recipeId: RecipeId, atStation = false): { ok: boolea
     );
     result = check;
     if (!check.ok) return {};
+    const energyCost = craftEnergyCost(recipe);
+    if (state.player.energy < energyCost) {
+      result = { ok: false, reason: 'too-tired' };
+      return {};
+    }
 
     const nextMaterials = consumeRecipeInputs(recipe, state.inventory.materials);
     // M40 §3 — deep-chain recipes (e.g. the radio consuming basic tools, the
@@ -453,6 +571,7 @@ export function craftRecipe(recipeId: RecipeId, atStation = false): { ok: boolea
     const nextCraftedCount = (nextCraftedAfterInputs[recipe.output] ?? 0) + 1;
 
     return {
+      player: { ...state.player, energy: state.player.energy - energyCost },
       inventory: { ...state.inventory, materials: nextMaterials },
       crafting: {
         ...state.crafting,
@@ -465,6 +584,14 @@ export function craftRecipe(recipeId: RecipeId, atStation = false): { ok: boolea
 }
 
 export type SellFailureReason = 'not-sellable' | 'none-held';
+
+/** What one sale of `item` would pay right now (mastery × local demand). */
+export function currentSellValue(item: ItemToken): number {
+  const state = useGameStore.getState();
+  const def = ITEM_DEFINITIONS[item];
+  const soldToday = state.economy.salesToday.day === state.meta.day ? state.economy.salesToday.byItem : {};
+  return Math.round(sellValueFor(item, state.crafting.mastery[def.discipline] ?? 0) * saleMultiplier(soldToday[item] ?? 0));
+}
 
 // M40 §2. Mirrors M24's once-per-item "Work" action precedent — a direct,
 // player-initiated conversion, paid as ordinary cash (no new currency).
@@ -479,12 +606,16 @@ export function sellItem(item: ItemToken): { ok: boolean; reason?: SellFailureRe
     if (held <= 0) { result = { ok: false, reason: 'none-held' }; return {}; }
 
     const mastery = state.crafting.mastery[def.discipline] ?? 0;
-    const amount = sellValueFor(item, mastery);
+    const day = state.meta.day;
+    const soldToday = state.economy.salesToday.day === day ? state.economy.salesToday.byItem : {};
+    const alreadySold = soldToday[item] ?? 0;
+    const amount = Math.round(sellValueFor(item, mastery) * saleMultiplier(alreadySold));
     result = { ok: true, amount };
 
     return {
       player: { ...state.player, cash: state.player.cash + amount },
       crafting: { ...state.crafting, craftedItems: { ...state.crafting.craftedItems, [item]: held - 1 } },
+      economy: { ...state.economy, salesToday: { day, byItem: { ...soldToday, [item]: alreadySold + 1 } } },
     };
   });
   return result;
@@ -563,3 +694,29 @@ export function travelToRegion(regionId: string): void {
   }));
 }
 
+
+/** Scraps the cat: $1 for a treat, a little stress relief, once a day. */
+export const SCRAPS_STRESS_RELIEF = 3;
+export function feedScraps(): boolean {
+  const state = useGameStore.getState();
+  if (state.player.cash < 1 || state.economy.lastScrapsDay === state.meta.day) return false;
+  useGameStore.setState(s => ({
+    player: { ...s.player, cash: s.player.cash - 1, stressLevel: Math.max(0, s.player.stressLevel - SCRAPS_STRESS_RELIEF) },
+    economy: { ...s.economy, lastScrapsDay: s.meta.day },
+  }));
+  return true;
+}
+
+/** Charges a minigame run's energy before it starts (audit §1.3: runs used
+ *  to be free at 0 energy). Rewards are capped by `HostPlatformAPI`. */
+export function startMinigameRun(): { ok: true } | { ok: false; reason: 'too-tired' } {
+  const state = useGameStore.getState();
+  if (state.player.energy < MINIGAME_LIMITS.energyCost) return { ok: false, reason: 'too-tired' };
+  spendEnergy(MINIGAME_LIMITS.energyCost);
+  return { ok: true };
+}
+
+/** Commons Bazaar ownership, as reported by the server. */
+export function setOwnedShopItems(ids: readonly string[]): void {
+  useGameStore.setState(state => ({ shop: { ...state.shop, owned: [...new Set(ids)] } }));
+}

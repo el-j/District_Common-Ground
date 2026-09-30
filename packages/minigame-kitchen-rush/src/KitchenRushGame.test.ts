@@ -144,9 +144,8 @@ describe('KitchenRush Minigame Package', () => {
     (game as any).onGameOver();
 
     expect(sessionContext.host.grantRewards).toHaveBeenCalledWith({
-      cashDelta: 35, // 5 * 7
-      trustDelta: 2, // Math.min(20, comboMax * 2) = 2
-      energyDelta: -5,
+      cashDelta: 10, // min(20, 5 * 2)
+      trustDelta: 1, // min(3, comboMax) = 1
     });
     expect(sessionContext.host.notify).toHaveBeenCalled();
 

@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { inputManager } from './InputManager';
 import { setupTilemapCollision } from './CollisionSystem';
+import { DEFAULT_RENDERER } from './DefaultTextureRenderer';
+import { DayNightSystem } from './DayNightSystem';
+import { WeatherRenderer } from './WeatherRenderer';
 import { PlayerEntity } from './entities/PlayerEntity';
 import { NPCEntity } from './entities/NPCEntity';
 import { ScrapsEntity } from './entities/ScrapsEntity';
@@ -13,32 +16,32 @@ import { HistoryModal } from '../ui/HistoryModal';
 import { TownHallAssembly } from '../ui/TownHallAssembly';
 import { SafeHavenBanner } from '../ui/SafeHavenBanner';
 import { TopHUD } from '../ui/TopHUD';
-import { useGameStore, type AppearanceToken, type WorldQuestId } from '../core/state/useGameStore';
+import { useGameStore, type WorldQuestId } from '../core/state/useGameStore';
 import { BUILD_COMPLETION_THRESHOLD } from '../core/simulation/EconomyMath';
-import { addTrust, spendEnergy, collectMaterial, learnRecipe, collectCookbook, travelToRegion, assignWorldQuest, checkZoneWorldQuestProgress, checkTalkWorldQuestProgress } from '../core/state/actions';
-import { startBGMLoop, playRain, stopRain, setBgmPhase } from '../core/audio/SoundSynth';
-import { weatherTier, type WeatherTier } from './WeatherSystem';
+import { addTrust, spendEnergy, learnRecipe, travelToRegion, assignWorldQuest, checkZoneWorldQuestProgress, checkTalkWorldQuestProgress, feedScraps, SCRAPS_STRESS_RELIEF } from '../core/state/actions';
+import { startBGMLoop, playDayChime } from '../core/audio/SoundSynth';
+import { weatherTier } from './WeatherSystem';
 import { fetchDailyGossip } from '../api/narrativeGossip';
-import { MinigameLoader } from '../core/kernel/MinigameLoader';
+import { MinigameLoader, MinigameTooTiredError } from '../core/kernel/MinigameLoader';
+import { MINIGAME_LIMITS } from '../core/simulation/EconomyRules';
+import { facadeMarkers, ownsEffect } from '../core/shop/ShopEffects';
 import { computeViewportZoom } from './CameraViewport';
-import { getActiveWorldPalette, getActiveSkinId, getActiveManifest, type ResolvedWorldPalette } from '../skins/ThemeManager';
+import { getActiveWorldPalette, getActiveSkinId, getActiveManifest } from '../skins/ThemeManager';
 import { SkinRendererLoader } from '../skins/SkinRendererLoader';
 import type { SkinRenderer } from '../skins/SkinRendererInterface';
 import { INTERIORS, ALL_INTERIOR_IDS, type InteriorDefinition, type InteriorId } from './InteriorProps';
 import { getHousingOption } from '../core/simulation/HousingOptions';
 import type { InteriorSceneData } from './InteriorScene';
-import { resilienceTier, dressingTierFor, dressingPropsForTier, type DressingTier, type DressingPropToken } from './ResilienceDressing';
-import { OUTDOOR_DRESSING_PROPS, type OutdoorPropToken } from './OutdoorDressing';
-import { SCAVENGE_POINTS, type ScavengePointPlacement } from './ScavengePoints';
-import { COOKBOOK_PICKUPS, type CookbookPickupPlacement } from './CookbookPickups';
-import { RECIPES, type RecipeId } from '../core/simulation/Recipes';
+import { WorldDressingRenderer } from './WorldDressingRenderer';
+import { ScavengePickupRenderer, CookbookPickupRenderer } from './PickupRenderers';
+import type { RecipeId } from '../core/simulation/Recipes';
 import { InteractionPrompt } from './InteractionPrompt';
 import { AmbientLightLayer } from './AmbientLightLayer';
 import { DIALOGUES, pickDialogueKey } from './NpcDialogues';
-import { COLS, ROWS, T, TILE_FRAME_COUNT, BLOCKING_TILES, DOOR_TILES, buildMap, isWalkableTile } from './MapData';
+import { neighbourMemory, withMemoryOpener } from './NeighbourMemory';
+import { COLS, ROWS, T, BLOCKING_TILES, DOOR_TILES, buildMap, isWalkableTile } from './MapData';
 import type { RegionSceneData } from './regions/RegionScene';
 import { REGIONS, isRegionUnlocked, type RegionId } from './regions/RegionData';
-import { resolvePropColor } from '../skins/resolvePropColor';
 
 // M41/M44 — the minimal shape both InteriorScene.ts's and RegionScene.ts's
 // WAKE payloads satisfy — onWakeFromInterior() only ever reads returnX/
@@ -53,288 +56,6 @@ interface SceneReturnData {
 
 const TS = 16;
 
-// ── Tileset (7 tile types, 112×16 canvas) ─────────────────────────────────────
-
-/** Lightens (positive percent) or darkens (negative) a `#rrggbb` hex color — used to
- * derive secondary shades (mortar lines, brick courses, speckle) from the
- * skin's 9 world-tile palette fields without needing a dozen more fields. */
-function shadeColor(hex: string, percent: number): string {
-  const clean = hex.replace('#', '');
-  if (clean.length !== 6) return hex;
-  const num = parseInt(clean, 16);
-  const amt = Math.round(2.55 * percent);
-  const clamp = (v: number) => Math.max(0, Math.min(255, v));
-  const r = clamp((num >> 16) + amt);
-  const g = clamp(((num >> 8) & 0x00ff) + amt);
-  const b = clamp((num & 0x0000ff) + amt);
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-}
-
-function createTilesetTexture(scene: Phaser.Scene, palette: ResolvedWorldPalette): void {
-  let tex = scene.textures.exists('tileset')
-    ? (scene.textures.get('tileset') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('tileset', TS * TILE_FRAME_COUNT, TS);
-  if (!tex) throw new Error('tileset canvas failed');
-  const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * TILE_FRAME_COUNT, TS);
-
-  // T.FLOOR (0): indoor planks
-  (() => {
-    const ox = 0;
-    ctx.fillStyle = palette.worldFloor;
-    ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = shadeColor(palette.worldFloor, 4);
-    ctx.lineWidth = 0.5;
-    for (let y = 0; y < TS; y += 4) { ctx.beginPath(); ctx.moveTo(ox, y); ctx.lineTo(ox + TS, y); ctx.stroke(); }
-  })();
-
-  // T.WALL (1): brick wall
-  (() => {
-    const ox = TS;
-    ctx.fillStyle = palette.worldWall;
-    ctx.fillRect(ox, 0, TS, TS);
-    const bA = shadeColor(palette.worldWall, -8), bB = palette.worldWallShadow, mort = shadeColor(palette.worldWall, -25);
-    for (let row = 0; row < 2; row++) {
-      const ry = row * 8;
-      const sh = row % 2 === 0 ? 0 : 4;
-      ctx.fillStyle = mort; ctx.fillRect(ox, ry, TS, 1);
-      for (let bx = -sh; bx < TS; bx += 9) {
-        ctx.fillStyle = bx % 18 < 9 ? bA : bB;
-        const x1 = Math.max(0, bx), x2 = Math.min(bx + 8, TS);
-        if (x2 > x1) ctx.fillRect(ox + x1, ry + 1, x2 - x1, 6);
-        ctx.fillStyle = mort;
-        if (bx + 8 < TS) ctx.fillRect(ox + bx + 8, ry, 1, 8);
-      }
-    }
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(ox, 0, TS, 1);
-    ctx.fillRect(ox, TS - 1, TS, 1);
-  })();
-
-  // T.GRASS (2): varied outdoor green
-  (() => {
-    const ox = TS * 2;
-    ctx.fillStyle = palette.worldGrass;
-    ctx.fillRect(ox, 0, TS, TS);
-    const shades = [shadeColor(palette.worldGrass, 6), shadeColor(palette.worldGrass, -6), shadeColor(palette.worldGrass, 12), shadeColor(palette.worldGrass, -12)];
-    [[2,3],[5,1],[8,5],[11,2],[3,9],[7,12],[12,8],[4,13],[9,6],[14,10],[1,15],[13,14],[6,7],[0,11]].forEach(([gx, gy], i) => {
-      ctx.fillStyle = shades[i % shades.length];
-      ctx.fillRect(ox + gx, gy, 1, 1);
-    });
-  })();
-
-  // T.ROAD (3): paved
-  (() => {
-    const ox = TS * 3;
-    ctx.fillStyle = palette.worldRoad;
-    ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = palette.worldRoadBorder; ctx.fillRect(ox, 0, TS, 1); ctx.fillRect(ox, TS - 1, TS, 1);
-    ctx.fillStyle = shadeColor(palette.worldRoad, 10); ctx.fillRect(ox + 1, 1, TS - 2, 1);
-    ctx.fillStyle = shadeColor(palette.worldRoad, 20); ctx.fillRect(ox + 2, 7, 3, 2); ctx.fillRect(ox + 9, 7, 3, 2);
-  })();
-
-  // T.PLAZA (4): stone tiles with subtle grid
-  (() => {
-    const ox = TS * 4;
-    ctx.fillStyle = palette.worldPlaza;
-    ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = shadeColor(palette.worldPlaza, 5); ctx.lineWidth = 0.75;
-    const h = TS / 2;
-    [[0,0],[h,0],[0,h],[h,h]].forEach(([dx, dy]) => ctx.strokeRect(ox + dx + 0.5, dy + 0.5, h - 1, h - 1));
-    ctx.fillStyle = shadeColor(palette.worldPlaza, -8);
-    [[1,1],[h+1,1],[1,h+1],[h+1,h+1]].forEach(([dx, dy]) => ctx.fillRect(ox + dx, dy, 2, 1));
-  })();
-
-  // T.DOOR (5): entrance
-  (() => {
-    const ox = TS * 5;
-    ctx.fillStyle = shadeColor(palette.worldGrass, -15); ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = palette.worldDoor; ctx.fillRect(ox + 3, 1, 10, 14);
-    ctx.fillStyle = shadeColor(palette.worldDoor, -35); ctx.fillRect(ox + 5, 2, 6, 11);
-    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 9, 7, 2, 3);
-    ctx.fillStyle = shadeColor(palette.worldDoor, -45); ctx.fillRect(ox + 3, 14, 10, 2);
-  })();
-
-  // T.BUILT (6): completed build
-  (() => {
-    const ox = TS * 6;
-    ctx.fillStyle = shadeColor(palette.worldGrass, -30); ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = palette.worldHighlight; ctx.lineWidth = 1.5;
-    ctx.strokeRect(ox + 2, 2, TS - 4, TS - 4);
-    ctx.fillStyle = shadeColor(palette.worldHighlight, -25);
-    ctx.fillRect(ox + 6, 4, 4, 8); ctx.fillRect(ox + 4, 6, 8, 4);
-    ctx.fillStyle = palette.worldHighlight; ctx.fillRect(ox + 7, 7, 2, 2);
-  })();
-
-  // T.TREE (7): ground + a round canopy blob — blocks movement like WALL
-  (() => {
-    const ox = TS * 7;
-    ctx.fillStyle = palette.worldGrass; ctx.fillRect(ox, 0, TS, TS);
-    ctx.fillStyle = shadeColor(palette.worldTree, -20); ctx.fillRect(ox + 6, 10, 4, 6); // trunk
-    ctx.fillStyle = palette.worldTree;
-    ctx.beginPath(); ctx.arc(ox + 8, 7, 6.5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = shadeColor(palette.worldTree, 18);
-    ctx.beginPath(); ctx.arc(ox + 6, 5, 2.5, 0, Math.PI * 2); ctx.fill();
-  })();
-
-  // T.WATER (8): flat fill + horizontal ripple lines — blocks movement (no bridge tile yet)
-  (() => {
-    const ox = TS * 8;
-    ctx.fillStyle = palette.worldWater; ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = shadeColor(palette.worldWater, 16); ctx.lineWidth = 0.75;
-    [3, 7, 11].forEach((y, i) => {
-      ctx.beginPath();
-      ctx.moveTo(ox + (i % 2 === 0 ? 1 : 3), y);
-      ctx.lineTo(ox + TS - (i % 2 === 0 ? 3 : 1), y);
-      ctx.stroke();
-    });
-    ctx.fillStyle = shadeColor(palette.worldWater, -14); ctx.fillRect(ox, TS - 2, TS, 2);
-  })();
-
-  // T.DIRT_PATH (9): walkable, like FLOOR/ROAD — speckled tan-brown track
-  (() => {
-    const ox = TS * 9;
-    ctx.fillStyle = palette.worldDirtPath; ctx.fillRect(ox, 0, TS, TS);
-    const shades = [shadeColor(palette.worldDirtPath, 10), shadeColor(palette.worldDirtPath, -10)];
-    [[2,3],[6,1],[10,6],[13,3],[4,9],[9,11],[12,13],[1,12]].forEach(([gx, gy], i) => {
-      ctx.fillStyle = shades[i % shades.length];
-      ctx.fillRect(ox + gx, gy, 1, 1);
-    });
-  })();
-
-  // T.SIDEWALK (10): walkable — flat concrete slabs with a thin grid seam
-  (() => {
-    const ox = TS * 10;
-    ctx.fillStyle = palette.worldSidewalk; ctx.fillRect(ox, 0, TS, TS);
-    ctx.strokeStyle = shadeColor(palette.worldSidewalk, -10); ctx.lineWidth = 0.75;
-    ctx.beginPath(); ctx.moveTo(ox + TS / 2, 0); ctx.lineTo(ox + TS / 2, TS); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(ox, TS / 2); ctx.lineTo(ox + TS, TS / 2); ctx.stroke();
-  })();
-
-  tex.refresh();
-}
-
-// ── Player spritesheet (8 frames × 16px = 128×16) ────────────────────────────
-
-// M52 — EPIC-37 §2. M48 added `player.appearance` (4 skin-tone tokens) but
-// nothing ever consumed it; TONE_1 matches the pre-M52 hardcoded default
-// exactly so an unset/legacy save renders identically to before.
-const APPEARANCE_SKIN_TONES: Record<AppearanceToken, string> = {
-  APPEARANCE_TONE_1: '#f0c090',
-  APPEARANCE_TONE_2: '#d9a26b',
-  APPEARANCE_TONE_3: '#a86f3f',
-  APPEARANCE_TONE_4: '#6b4526',
-};
-
-function createPlayerTexture(scene: Phaser.Scene, appearance?: AppearanceToken): void {
-  // M30 — guarded the same way createTilesetTexture() already is: reuse the
-  // existing canvas texture on a re-render (skin switch) instead of always
-  // creating fresh, since Phaser's TextureManager rejects a second
-  // createCanvas() call for a key that already exists.
-  const tex = scene.textures.exists('player')
-    ? (scene.textures.get('player') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('player', TS * 8, TS);
-  if (!tex) throw new Error('player canvas failed');
-  const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 8, TS);
-
-  const skinTone = APPEARANCE_SKIN_TONES[appearance ?? 'APPEARANCE_TONE_1'];
-  const C = { hair: '#6644bb', skin: skinTone, shirt: '#4477dd', pants: '#2a44bb', shoe: '#111130', eye: '#180e08', shirtSh: '#3360cc' };
-
-  function down(ox: number, step: number): void {
-    ctx.fillStyle = C.hair; ctx.fillRect(ox+4,1,8,3); ctx.fillRect(ox+3,2,1,2); ctx.fillRect(ox+12,2,1,2);
-    ctx.fillStyle = C.skin; ctx.fillRect(ox+4,4,8,4); ctx.fillRect(ox+3,4,1,3); ctx.fillRect(ox+12,4,1,3);
-    ctx.fillStyle = C.eye; ctx.fillRect(ox+6,5,1,2); ctx.fillRect(ox+9,5,1,2);
-    ctx.fillStyle = C.shirt; ctx.fillRect(ox+4,8,8,4); ctx.fillStyle = C.shirtSh; ctx.fillRect(ox+4,11,8,1);
-    ctx.fillStyle = C.pants; ctx.fillRect(ox+5,12,6,2);
-    const la = step===0 ? 5 : 4, rb = step===0 ? 9 : 10;
-    ctx.fillStyle = C.pants; ctx.fillRect(ox+la,14,2,2); ctx.fillRect(ox+rb,14,2,2);
-    ctx.fillStyle = C.shoe;
-    ctx.fillRect(ox+(step===0?4:3),15,3,1); ctx.fillRect(ox+(step===0?9:10),15,3,1);
-  }
-
-  function up(ox: number, step: number): void {
-    ctx.fillStyle = C.hair; ctx.fillRect(ox+4,1,8,5); ctx.fillRect(ox+3,2,1,3); ctx.fillRect(ox+12,2,1,3);
-    ctx.fillStyle = C.skin; ctx.fillRect(ox+7,6,2,2);
-    ctx.fillStyle = C.shirt; ctx.fillRect(ox+4,8,8,4); ctx.fillStyle = C.shirtSh; ctx.fillRect(ox+4,11,8,1);
-    ctx.fillStyle = C.pants; ctx.fillRect(ox+5,12,6,2);
-    const la = step===0 ? 5 : 4, rb = step===0 ? 9 : 10;
-    ctx.fillStyle = C.pants; ctx.fillRect(ox+la,14,2,2); ctx.fillRect(ox+rb,14,2,2);
-    ctx.fillStyle = C.shoe;
-    ctx.fillRect(ox+(step===0?4:3),15,3,1); ctx.fillRect(ox+(step===0?9:10),15,3,1);
-  }
-
-  function side(ox: number, flip: boolean, step: number): void {
-    const p = (x: number, y: number, w: number, h: number, c: string) => {
-      ctx.fillStyle = c;
-      ctx.fillRect(ox + (flip ? TS - x - w : x), y, w, h);
-    };
-    p(3,1,7,3,C.hair); p(3,3,2,2,C.hair);
-    p(3,3,6,4,C.skin);
-    p(4,5,1,1,C.eye);
-    p(4,8,5,4,C.shirt); p(4,11,5,1,C.shirtSh);
-    p(9,9,2,3,C.shirt);
-    p(4,12,5,2,C.pants);
-    const fx = step === 0 ? 4 : 3, bx = step === 0 ? 6 : 7;
-    p(fx,14,3,2,C.pants); p(bx,14,3,2,C.pants);
-    p(3,15,5,1,C.shoe);
-  }
-
-  down(0, 0); down(TS, 1);
-  up(TS * 2, 0);   up(TS * 3, 1);
-  side(TS * 4, false, 0); side(TS * 5, false, 1);
-  side(TS * 6, true,  0); side(TS * 7, true,  1);
-
-  tex.refresh();
-  for (let i = 0; i < 8; i++) tex.add(i, 0, i * TS, 0, TS, TS);
-}
-
-// ── NPC spritesheet (3 characters × 16px = 48×16) ────────────────────────────
-
-function createNPCTextures(scene: Phaser.Scene): void {
-  // M30 — same reuse-on-re-render guard as createTilesetTexture()/createPlayerTexture().
-  const tex = scene.textures.exists('npcs')
-    ? (scene.textures.get('npcs') as Phaser.Textures.CanvasTexture)
-    : scene.textures.createCanvas('npcs', TS * 6, TS);
-  if (!tex) throw new Error('npc canvas failed');
-  const ctx = tex.getContext();
-  ctx.clearRect(0, 0, TS * 6, TS);
-
-  const cfgs = [
-    { hair: '#b05010', shirt: '#ee8830', pants: '#884422', skin: '#f0b878' }, // Mira: orange
-    { hair: '#335588', shirt: '#3388cc', pants: '#224466', skin: '#d8c8b8' }, // Leo: blue
-    { hair: '#553311', shirt: '#cc4422', pants: '#772211', skin: '#f8d0a8' }, // Elena: red
-    { hair: '#222222', shirt: '#889933', pants: '#443322', skin: '#e8b898' }, // Sal: olive apron
-    { hair: '#999999', shirt: '#556655', pants: '#333333', skin: '#d0a888' }, // Marcus: grey (workshop coveralls)
-    { hair: '#dddddd', shirt: '#886699', pants: '#554466', skin: '#e0c0a0' }, // Higgins: silver (violet shawl)
-  ];
-  cfgs.forEach((c, i) => {
-    const ox = i * TS;
-    ctx.fillStyle = c.hair; ctx.fillRect(ox+4,1,8,3);
-    ctx.fillStyle = c.skin;
-    ctx.fillRect(ox+4,4,8,4); ctx.fillRect(ox+3,4,1,3); ctx.fillRect(ox+12,4,1,3);
-    ctx.fillStyle = '#1a0e08'; ctx.fillRect(ox+6,5,1,2); ctx.fillRect(ox+9,5,1,2);
-    ctx.fillStyle = c.shirt; ctx.fillRect(ox+4,8,8,4);
-    ctx.fillStyle = c.pants;
-    ctx.fillRect(ox+5,12,6,2); ctx.fillRect(ox+5,14,2,2); ctx.fillRect(ox+9,14,2,2);
-    ctx.fillStyle = '#111130'; ctx.fillRect(ox+4,15,3,1); ctx.fillRect(ox+9,15,3,1);
-  });
-  tex.refresh();
-  for (let i = 0; i < 6; i++) tex.add(i, 0, i * TS, 0, TS, TS);
-}
-
-// M30 — the 3 functions above, grouped behind the SkinRenderer contract so
-// WorldScene can call through either this built-in implementation or a
-// dynamically-loaded hi-fi one interchangeably. This is the palette-only
-// look every pre-M30 skin already has and keeps forever; it also doubles as
-// the synchronous fallback used in preload() (which can't await a fetch)
-// and as the safety net a hi-fi renderer's load/import failure degrades to.
-export const DEFAULT_RENDERER: SkinRenderer = {
-  createTilesetTexture,
-  createPlayerTexture,
-  createNPCTextures,
-};
-
 // ── WorldScene ─────────────────────────────────────────────────────────────────
 
 
@@ -342,23 +63,6 @@ interface FlyerObject {
   sprite: Phaser.GameObjects.Rectangle;
   x: number;
   y: number;
-}
-
-// M38 §2 — a picked-up point is destroyed and removed from this array
-// exactly the way tearDownFlyer() already handles FlyerObject, plus an
-// InteractionPrompt bounce-bubble (flyers never got one).
-interface ScavengePointEntry {
-  data: ScavengePointPlacement;
-  sprite: Phaser.GameObjects.Rectangle;
-  prompt: InteractionPrompt;
-}
-
-// M39 §2 — EPIC-33. Same removable-pickup shape as ScavengePointEntry, one
-// level up (grants a known recipe instead of a material stack).
-interface CookbookPickupEntry {
-  data: CookbookPickupPlacement;
-  sprite: Phaser.GameObjects.Rectangle;
-  prompt: InteractionPrompt;
 }
 
 export class WorldScene extends Phaser.Scene {
@@ -390,19 +94,21 @@ export class WorldScene extends Phaser.Scene {
   // Arcade physics — see NPCEntity.ts's own doc comment for why.
   private mapGrid: number[][] = [];
   private flyers: FlyerObject[] = [];
-  private scavengePoints: ScavengePointEntry[] = [];
-  private cookbookPickups: CookbookPickupEntry[] = [];
   private divisionCrisisActive = false;
   private ticksSinceDay = 0;
   private bgmStarted = false;
-  private tintOverlay!: Phaser.GameObjects.Rectangle;
   private prevDay = 0;
-  private lastTintHash = -1;
-  private streetlamps: Phaser.GameObjects.Arc[] = [];
-  private weatherOverlay!: Phaser.GameObjects.Rectangle;
-  private rainDrops: Phaser.GameObjects.Rectangle[] = [];
-  private currentWeatherTier: WeatherTier = 'none';
-  private lastLampAlpha = -1;
+  // WorldScene De-escalation — the day/night tint+streetlamps, the
+  // frost/rain overlay+raindrops, the resilience-tier/dressing-prop
+  // rendering, and the scavenge/cookbook pickups, previously inline
+  // fields/methods here, now live in their own scene-owned renderer classes
+  // (same instantiate-in-create()/drive-from-update() shape as
+  // AmbientLightLayer).
+  private dayNight!: DayNightSystem;
+  private weather!: WeatherRenderer;
+  private dressing!: WorldDressingRenderer;
+  private scavenge!: ScavengePickupRenderer;
+  private cookbook!: CookbookPickupRenderer;
 
   // M30 — resolved SkinRenderer per skin id, so switching back to an
   // already-loaded hi-fi skin doesn't re-import() its bundle.
@@ -414,8 +120,6 @@ export class WorldScene extends Phaser.Scene {
   private nodePrompts: Map<string, InteractionPrompt> = new Map();
   private npcPrompts: Map<string, InteractionPrompt> = new Map();
   private bikePrompt!: InteractionPrompt;
-  private dressingSprites: Phaser.GameObjects.Rectangle[] = [];
-  private currentDressingTier: DressingTier | null = null;
   private ambientLight: AmbientLightLayer | null = null;
   private playerShadow!: Phaser.GameObjects.Ellipse;
   private npcShadows: Map<string, Phaser.GameObjects.Ellipse> = new Map();
@@ -538,6 +242,16 @@ export class WorldScene extends Phaser.Scene {
       this.nodePrompts.set(node.id, new InteractionPrompt(this, node.position.x, node.position.y, '🔨', () => WorldScene.hud?.triggerAction()));
     });
 
+    // Commons Bazaar cosmetics (core/shop/ShopEffects.ts) — drawn from the
+    // owned list and redrawn whenever it changes.
+    this.applyShopCosmetics(useGameStore.getState().shop.owned);
+    let lastOwned = useGameStore.getState().shop.owned;
+    useGameStore.subscribe(st => {
+      if (st.shop.owned === lastOwned) return;
+      lastOwned = st.shop.owned;
+      this.applyShopCosmetics(st.shop.owned);
+    });
+
     // NPCs
     this.npcs = [
       new NPCEntity({ id:'mira',    token:'NPC_NEIGHBOR',  name:'Mira',         position:{ x:27*TS+TS/2, y:53*TS+TS/2 }, proximity:38, dialogueKey:'mira_intro'    }, ()=>undefined),
@@ -572,7 +286,7 @@ export class WorldScene extends Phaser.Scene {
     });
 
     // Zone labels
-    const lStyle = { fontFamily: 'monospace', fontSize: '9px', color: '#555577', alpha: 0.6 };
+    const lStyle = { fontFamily: 'monospace', fontSize: '7px', color: '#555577', alpha: 0.6 };
     this.add.text(COLS/2*TS, 1*TS+4,  '— NORTH — TRANSIT HUB —', lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
     this.add.text(COLS/2*TS, 23*TS+4, '— CENTRAL PLAZA —',       lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
     this.add.text(COLS/2*TS, 44*TS+4, '— SOUTH QUARTER —',       lStyle).setOrigin(0.5,0).setDepth(2).setAlpha(0.4);
@@ -587,7 +301,7 @@ export class WorldScene extends Phaser.Scene {
     this.bikeMarker.strokeCircle(this.bikePortal.x, this.bikePortal.y, 14);
     this.bikeMarker.setDepth(4);
     this.add.text(this.bikePortal.x, this.bikePortal.y - 18, '🚲 Courier Rush', {
-      fontSize: '8px',
+      fontSize: '6px',
       color: '#38bdf8',
       backgroundColor: 'rgba(15,23,42,0.7)',
       padding: { x: 3, y: 1 },
@@ -605,7 +319,7 @@ export class WorldScene extends Phaser.Scene {
       marker.setDepth(4);
       const colorHex = `#${portal.color.toString(16).padStart(6, '0')}`;
       this.add.text(portal.position.x, portal.position.y - 18, `${portal.emoji} ${portal.label}`, {
-        fontSize: '8px',
+        fontSize: '6px',
         color: colorHex,
         backgroundColor: 'rgba(15,23,42,0.7)',
         padding: { x: 3, y: 1 },
@@ -638,11 +352,14 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.startFollow(sprite, true, 0.1, 0.1);
     this.cameras.main.setZoom(computeViewportZoom(this.scale.width, this.scale.height, TS));
+    // after create() finishes, so text made later in create() is included
+    this.time.delayedCall(0, () => this.sharpenWorldText());
     this.cameras.main.setDeadzone(16, 16);
     this.cameras.main.setRoundPixels(true);
     this.cameras.main.setBackgroundColor('#1a2c18');
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
       this.cameras.main.setZoom(computeViewportZoom(gameSize.width, gameSize.height, TS));
+      this.sharpenWorldText();
       this.ambientLight?.resize(gameSize.width, gameSize.height);
     });
 
@@ -685,9 +402,10 @@ export class WorldScene extends Phaser.Scene {
     // M21 §4: also swap the small set of street-front world-dressing props
     // (boarded shopfronts / market stalls / flower planters), layered
     // independently from these CSS filter classes, which stay exactly as-is.
+    this.dressing = new WorldDressingRenderer(this);
     this.lastResilienceScore = useGameStore.getState().commons.resilienceScore;
-    this.applyResilienceTier(this.lastResilienceScore);
-    this.updateWorldDressing(this.lastResilienceScore);
+    this.dressing.applyResilienceTier(this.lastResilienceScore);
+    this.dressing.updateWorldDressing(this.lastResilienceScore);
     useGameStore.subscribe((state) => {
       // M28: guarded on the score actually changing — this subscription has
       // no selector, so without the guard applyResilienceTier()'s
@@ -697,8 +415,8 @@ export class WorldScene extends Phaser.Scene {
       // never changed.
       if (state.commons.resilienceScore === this.lastResilienceScore) return;
       this.lastResilienceScore = state.commons.resilienceScore;
-      this.applyResilienceTier(state.commons.resilienceScore);
-      this.updateWorldDressing(state.commons.resilienceScore);
+      this.dressing.applyResilienceTier(state.commons.resilienceScore);
+      this.dressing.updateWorldDressing(state.commons.resilienceScore);
     });
 
     // M41 — EPIC-34 §1/§2. Interior props (Pip's Courier Room, Community
@@ -722,12 +440,14 @@ export class WorldScene extends Phaser.Scene {
     // M32 §3 — outdoor decoration (trees/bushes/benches/fences/parked
     // vehicles), independent of and additive to updateWorldDressing()'s
     // resilience-tier swap below — this layer never changes with score.
-    this.renderOutdoorDressing();
+    this.dressing.renderOutdoorDressing();
 
     // M38 §2 — deterministic material scavenging pickups, skipping any the
     // player already collected on a prior visit/session.
-    this.renderScavengePoints();
-    this.renderCookbookPickups();
+    this.scavenge = new ScavengePickupRenderer(this, () => WorldScene.hud?.triggerAction());
+    this.cookbook = new CookbookPickupRenderer(this, () => WorldScene.hud?.triggerAction());
+    this.scavenge.render();
+    this.cookbook.render();
 
     // M21 §5 — soft drop-shadow ellipse under the player
     this.playerShadow = this.add.ellipse(sprite.x, sprite.y + 6, 12, 5, 0x000000, 0.3).setDepth(4.5);
@@ -778,29 +498,13 @@ export class WorldScene extends Phaser.Scene {
       }
     });
 
-    this.spawnStreetlamps();
-
-    // Tint overlay for day/night lighting (depth 90, scrollFactor 0 = fixed to screen)
+    // Day/night tint + streetlamps (depth 90), and the frost/rain overlay +
+    // raindrop pool (depths 91/92, above the day/night tint so the two
+    // compose instead of one CSS filter clobbering the other) — see
+    // DayNightSystem.ts/WeatherRenderer.ts's own doc comments.
     const screenW = this.scale.width, screenH = this.scale.height;
-    this.tintOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0x220044, 0)
-      .setScrollFactor(0).setDepth(90);
-
-    // Weather overlay (M10 follow-up 2026-09-15): frost tint layers above the
-    // day/night tint (depth 91) so the two compose instead of one CSS filter
-    // clobbering the other. Rain is a small pool of falling streak rectangles
-    // (depth 92), animated in update() only while raining — same
-    // rectangle-primitive style as spawnStreetlamps()/spawnFlyers(), no new
-    // Phaser subsystem introduced for one effect.
-    this.weatherOverlay = this.add.rectangle(screenW / 2, screenH / 2, screenW * 4, screenH * 4, 0xaad4ff, 0)
-      .setScrollFactor(0).setDepth(91);
-    for (let i = 0; i < 40; i++) {
-      const drop = this.add.rectangle(
-        Math.random() * screenW,
-        Math.random() * screenH,
-        2, 12, 0xcfe8ff, 0,
-      ).setScrollFactor(0).setDepth(92).setAngle(12);
-      this.rainDrops.push(drop);
-    }
+    this.dayNight = new DayNightSystem(this);
+    this.weather = new WeatherRenderer(this);
 
     // M21 §5 — ambient warm-light "juice" layer: a separate multiply-blended
     // HTML canvas above the Phaser canvas (not a second CSS `filter:` rule —
@@ -812,9 +516,9 @@ export class WorldScene extends Phaser.Scene {
       this.ambientLight.resize(screenW, screenH);
     }
 
-    this.updateWeather(weatherTier(useGameStore.getState().pulseState?.multipliers.heat ?? 1.0));
+    this.weather.update(weatherTier(useGameStore.getState().pulseState?.multipliers.heat ?? 1.0));
     useGameStore.subscribe((state) => {
-      this.updateWeather(weatherTier(state.pulseState?.multipliers.heat ?? 1.0));
+      this.weather.update(weatherTier(state.pulseState?.multipliers.heat ?? 1.0));
     });
 
     // Track day advances for day/night cycle
@@ -900,8 +604,8 @@ export class WorldScene extends Phaser.Scene {
 
     // Day/night cycle: advance ticks, update camera tint every ~500ms
     this.ticksSinceDay += delta;
-    this.updateDayNight();
-    this.updateRainDrops(delta);
+    this.dayNight.update(this.ticksSinceDay);
+    this.weather.tick(delta, this.scale.width, this.scale.height);
 
     // M28: computed exactly once per frame and threaded through to
     // handleInteractions() below — Phaser's JustDown() clears its internal
@@ -911,7 +615,8 @@ export class WorldScene extends Phaser.Scene {
     // dead for every world interaction (Talk/Build/Town Hall/flyers/bike/
     // minigame portals) — only Space ever worked.
     const ePressed = Phaser.Input.Keyboard.JustDown(this.actionKey);
-    this.scraps.update(this.player.x, this.player.y, ePressed, delta);
+    this.scraps.update(this.player.x, this.player.y, delta);
+    this.playerCap?.setPosition(this.player.x, this.player.y - 9);
 
     // M34 §1 — EPIC-31. tick() advances wander state, update() re-derives
     // talkability from the (possibly now-moved) live position, then the
@@ -941,73 +646,6 @@ export class WorldScene extends Phaser.Scene {
     this.drawThumbstick();
   }
 
-  private spawnStreetlamps(): void {
-    // Evenly spaced glowing lamp posts along each road strip; only visible at night.
-    const roadRows = [21, 42, 64]; // North / South cross-streets + Solar Quarter border road
-    for (const row of roadRows) {
-      for (let col = 4; col < COLS - 2; col += 8) {
-        this.streetlamps.push(this.createLampGlow(col * TS + TS / 2, row * TS + TS / 2));
-      }
-    }
-    const canalCol = 50; // East Canal access road
-    for (let row = 4; row < ROWS - 2; row += 8) {
-      this.streetlamps.push(this.createLampGlow(canalCol * TS + TS / 2, row * TS + TS / 2));
-    }
-  }
-
-  private createLampGlow(x: number, y: number): Phaser.GameObjects.Arc {
-    return this.add.circle(x, y, TS * 1.5, 0xffdd88, 0.35)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(4)
-      .setAlpha(0);
-  }
-
-  private updateStreetlamps(nightStrength: number): void {
-    if (nightStrength === this.lastLampAlpha) return;
-    this.lastLampAlpha = nightStrength;
-    for (const lamp of this.streetlamps) lamp.setAlpha(nightStrength * 0.35);
-  }
-
-  private updateDayNight(): void {
-    const cycleDuration = 120_000;
-    const phase = (this.ticksSinceDay % cycleDuration) / cycleDuration;
-
-    // Per-channel lerp helper to avoid raw-integer colour corruption
-    const lerp = (a: number, b: number, t: number) => Math.round(a + (b - a) * t);
-    const rgb = (r: number, g: number, b: number) => (r << 16) | (g << 8) | b;
-
-    let color = 0x110022, alpha = 0;
-    if (phase < 0.25) {
-      const t = phase / 0.25;
-      color = rgb(lerp(0xff, 0x44, t), lerp(0xaa, 0x22, t), lerp(0x44, 0x66, t));
-      alpha = (1 - t) * 0.16;
-    } else if (phase < 0.5) {
-      const t = (phase - 0.25) / 0.25;
-      color = rgb(lerp(0x44, 0xcc, t), lerp(0x22, 0x66, t), lerp(0x66, 0x22, t));
-      alpha = t * 0.12;
-    } else if (phase < 0.75) {
-      const t = (phase - 0.5) / 0.25;
-      color = rgb(lerp(0xcc, 0x11, t), lerp(0x66, 0x00, t), lerp(0x22, 0x22, t));
-      alpha = 0.12 + t * 0.14;
-    } else {
-      const t = (phase - 0.75) / 0.25;
-      color = 0x110022;
-      alpha = 0.26 * (1 - t);
-    }
-
-    const nightStrength = Math.min(1, alpha / 0.26);
-    this.updateStreetlamps(nightStrength);
-    // M23 §6 — same overlay-darkness signal already driving the streetlamps
-    // now also selects the BGM's night progression on its next bar.
-    setBgmPhase(nightStrength > 0.5 ? 'night' : 'day');
-
-    // Only call setFillStyle when the value meaningfully changes (prevents 60fps redraws)
-    const hash = color * 1000 + Math.round(alpha * 500);
-    if (hash === this.lastTintHash) return;
-    this.lastTintHash = hash;
-    this.tintOverlay.setFillStyle(color, alpha);
-  }
-
   private checkCrisis(): void {
     if (this.crisisOpen) return;
     const { activeCrisisId } = useGameStore.getState().crisisState;
@@ -1029,7 +667,8 @@ export class WorldScene extends Phaser.Scene {
 
   private checkSafeHaven(): void {
     if (this.safeHavenShown || this.safeHavenOpen) return;
-    if (!useGameStore.getState().commons.safeHavenUnlocked) return;
+    const st = useGameStore.getState();
+    if (!st.commons.safeHavenUnlocked || st.economy.endingSeen) return;
     const uiRoot = document.getElementById('ui-root');
     if (!uiRoot) return;
     this.safeHavenOpen = true;
@@ -1105,12 +744,12 @@ export class WorldScene extends Phaser.Scene {
       if (Math.hypot(dx, dy) <= 38) prompt.show(); else prompt.hide();
     });
     // M38 §2 — scavenge-point proximity prompts
-    this.scavengePoints.forEach(entry => {
+    this.scavenge.entries.forEach(entry => {
       const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
       if (Math.hypot(dx, dy) <= 34) entry.prompt.show(); else entry.prompt.hide();
     });
     // M39 §2 — cookbook-pickup proximity prompts
-    this.cookbookPickups.forEach(entry => {
+    this.cookbook.entries.forEach(entry => {
       const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
       if (Math.hypot(dx, dy) <= 34) entry.prompt.show(); else entry.prompt.hide();
     });
@@ -1139,7 +778,6 @@ export class WorldScene extends Phaser.Scene {
     // Scraps feed (only when player has cash)
     const scrapsDist = Math.hypot(this.player.x - this.scraps['sprite']['x'], this.player.y - this.scraps['sprite']['y']);
     const scrapsInRange = scrapsDist < 48;
-    const hasCash = useGameStore.getState().player.cash > 0;
 
     // Nearest flyer
     const nearbyFlyer = this.flyers.find(f =>
@@ -1147,13 +785,13 @@ export class WorldScene extends Phaser.Scene {
     );
 
     // M38 §2 — nearest uncollected scavenge point
-    const nearScavenge = this.scavengePoints.find(entry => {
+    const nearScavenge = this.scavenge.entries.find(entry => {
       const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
       return Math.hypot(dx, dy) <= 34;
     });
 
     // M39 §2 — nearest uncollected cookbook pickup
-    const nearCookbook = this.cookbookPickups.find(entry => {
+    const nearCookbook = this.cookbook.entries.find(entry => {
       const dx = this.player.x - (entry.data.x * TS + TS / 2), dy = this.player.y - (entry.data.y * TS + TS / 2);
       return Math.hypot(dx, dy) <= 34;
     });
@@ -1187,9 +825,9 @@ export class WorldScene extends Phaser.Scene {
         if (nearbyFlyer) {
           this.tearDownFlyer(nearbyFlyer);
         } else if (nearScavenge) {
-          this.collectScavengePoint(nearScavenge);
+          this.scavenge.collect(nearScavenge);
         } else if (nearCookbook) {
-          this.collectCookbookPickup(nearCookbook);
+          this.cookbook.collect(nearCookbook);
         } else if (nearInteriorDoor) {
           this.enterInterior(nearInteriorDoor);
         } else if (nearTravelNode) {
@@ -1198,7 +836,7 @@ export class WorldScene extends Phaser.Scene {
           this.launchCourierRush();
         } else if (nearMinigamePortal) {
           this.launchWorldMinigame(nearMinigamePortal.id);
-        } else if (scrapsInRange && hasCash) {
+        } else if (scrapsInRange) {
           this.feedScraps();
         } else if (nearTownHall) {
           this.openHistory();
@@ -1215,9 +853,9 @@ export class WorldScene extends Phaser.Scene {
     } else if (nearbyFlyer) {
       WorldScene.hud?.setAction('Tear down flyer ✊', () => this.tearDownFlyer(nearbyFlyer));
     } else if (nearScavenge) {
-      WorldScene.hud?.setAction('Collect ♻️', () => this.collectScavengePoint(nearScavenge));
+      WorldScene.hud?.setAction('Collect ♻️', () => this.scavenge.collect(nearScavenge));
     } else if (nearCookbook) {
-      WorldScene.hud?.setAction('Read cookbook 📖', () => this.collectCookbookPickup(nearCookbook));
+      WorldScene.hud?.setAction('Read cookbook 📖', () => this.cookbook.collect(nearCookbook));
     } else if (nearInteriorDoor) {
       WorldScene.hud?.setAction(`Enter ${nearInteriorDoor.label} 🚪`, () => this.enterInterior(nearInteriorDoor));
     } else if (nearTravelNode) {
@@ -1231,11 +869,11 @@ export class WorldScene extends Phaser.Scene {
         () => this.travelToRegionScene('REGION_INDUSTRIAL_OUTSKIRTS'),
       );
     } else if (nearBike) {
-      WorldScene.hud?.setAction('Deliver Soup (Courier Rush) 🚲', () => this.launchCourierRush());
+      WorldScene.hud?.setAction(`Deliver Soup (Courier Rush) 🚲 · ⚡${MINIGAME_LIMITS.energyCost}`, () => this.launchCourierRush());
     } else if (nearMinigamePortal) {
-      WorldScene.hud?.setAction(`${nearMinigamePortal.label} ${nearMinigamePortal.emoji}`, () => this.launchWorldMinigame(nearMinigamePortal.id));
-    } else if (scrapsInRange && hasCash) {
-      WorldScene.hud?.setAction('Feed Scraps 🐟', () => this.feedScraps());
+      WorldScene.hud?.setAction(`${nearMinigamePortal.label} ${nearMinigamePortal.emoji} · ⚡${MINIGAME_LIMITS.energyCost}`, () => this.launchWorldMinigame(nearMinigamePortal.id));
+    } else if (scrapsInRange) {
+      WorldScene.hud?.setAction('Feed Scraps 🐟 · $1', () => this.feedScraps());
     } else if (nearTownHall) {
       WorldScene.hud?.setAction('Town Hall 📜', () => this.openHistory());
     } else if (nearbyBuild) {
@@ -1252,11 +890,7 @@ export class WorldScene extends Phaser.Scene {
     this.minigameOpen = true;
     WorldScene.hud?.hideAction();
 
-    void MinigameLoader.launchMinigame('courier-rush', {
-      onClose: () => {
-        this.minigameOpen = false;
-      },
-    });
+    this.startMinigame('courier-rush');
   }
 
   /** M27 — shared launcher for the 4 new minigame portals (courier-rush keeps
@@ -1266,24 +900,84 @@ export class WorldScene extends Phaser.Scene {
     this.minigameOpen = true;
     WorldScene.hud?.hideAction();
 
-    void MinigameLoader.launchMinigame(id, {
+    this.startMinigame(id);
+  }
+
+  /** Every run costs energy (charged at launch by MinigameLoader); a
+   *  refused launch explains why instead of silently doing nothing. */
+  private startMinigame(id: string): void {
+    MinigameLoader.launchMinigame(id, {
       onClose: () => {
         this.minigameOpen = false;
       },
+    }).catch((err: unknown) => {
+      this.minigameOpen = false;
+      if (err instanceof MinigameTooTiredError) {
+        this.floatText(`😮‍💨 Too tired — needs ⚡${MINIGAME_LIMITS.energyCost}`, '#ffb4a8');
+      } else {
+        console.error('[WorldScene] minigame failed to launch', err);
+        this.floatText('⚠️ Could not start this game', '#ffb4a8');
+      }
+    });
+  }
+
+  /** World text is drawn at 1× and then scaled up by the camera zoom
+   *  (~3–4×), which made every label blurry and oversized (audit §3.7).
+   *  Rendering text at the zoomed resolution keeps it crisp. */
+  private textResolution(): number {
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    return Math.min(8, Math.max(1, Math.ceil(this.cameras.main.zoom * dpr)));
+  }
+
+  private sharpenWorldText(): void {
+    const res = this.textResolution();
+    this.children.list.forEach(obj => {
+      if (obj instanceof Phaser.GameObjects.Text) obj.setResolution(res);
+    });
+  }
+
+  /** `${npcId}:${day}` — neighbours who already greeted the player today. */
+  private greetedToday = new Set<string>();
+  private shopDecorations: Phaser.GameObjects.Text[] = [];
+  private playerCap: Phaser.GameObjects.Text | null = null;
+
+  private applyShopCosmetics(owned: readonly string[]): void {
+    this.shopDecorations.forEach(d => d.destroy());
+    this.shopDecorations = facadeMarkers(owned).flatMap(f => {
+      const node = this.constructionNodes.find(n => n.progressKey === f.node);
+      if (!node) return [];
+      return [this.add.text(node.position.x + 12, node.position.y - 10, f.marker, { fontSize: '10px' })
+        .setOrigin(0.5).setDepth(5).setResolution(this.textResolution())];
+    });
+    this.playerCap?.destroy();
+    this.playerCap = ownsEffect(owned, 'player-cap')
+      ? this.add.text(this.player.x, this.player.y - 9, '🧢', { fontSize: '7px' }).setOrigin(0.5, 1).setDepth(11).setResolution(this.textResolution())
+      : null;
+  }
+
+  /** Short floating feedback text above the player. */
+  private floatText(text: string, color: string): void {
+    const txt = this.add.text(this.player.x, this.player.y - 18, text, {
+      fontSize: '7px', color, backgroundColor: '#1a1a24', padding: { x: 3, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(20).setResolution(this.textResolution());
+    this.tweens.add({
+      targets: txt, y: txt.y - 24, alpha: 0, duration: 1400,
+      ease: 'Power2', onComplete: () => txt.destroy(),
     });
   }
 
   private feedScraps(): void {
     const state = useGameStore.getState();
-    if (state.player.cash <= 0) return;
-    useGameStore.setState(s => ({
-      player: {
-        ...s.player,
-        cash: Math.max(0, s.player.cash - 1),
-        stressLevel: Math.max(0, s.player.stressLevel - 10),
-      },
-    }));
-    this.scraps['spawnHearts']();
+    if (state.economy.lastScrapsDay === state.meta.day) {
+      this.floatText('🐱 Scraps is full — come back tomorrow', '#ffd27a');
+      return;
+    }
+    if (!feedScraps()) {
+      this.floatText("🐱 You can't afford a treat ($1)", '#ffd27a');
+      return;
+    }
+    this.scraps.spawnHearts();
+    this.floatText(`🐱 −${SCRAPS_STRESS_RELIEF}% stress`, '#88ff88');
   }
 
   private tearDownFlyer(flyer: FlyerObject): void {
@@ -1344,6 +1038,8 @@ export class WorldScene extends Phaser.Scene {
     this.dialogueOpen = true;
 
     const day = useGameStore.getState().meta.day;
+    // Commons Bazaar "Brass Doorbell Chime"
+    if (ownsEffect(useGameStore.getState().shop.owned, 'dialogue-chime')) playDayChime();
     const dialogueKey = pickDialogueKey(npc.id, day);
     const baseTree = DIALOGUES[dialogueKey] ?? DIALOGUES['mira_intro'];
     const tree: typeof baseTree = { ...baseTree };
@@ -1353,7 +1049,9 @@ export class WorldScene extends Phaser.Scene {
       const gossipKey = `${dialogueKey}_rumor`;
       const startNode = tree[dialogueKey];
       if (startNode) {
-        tree[npc.dialogueKey] = {
+        // Bugfix: this used to write to `npc.dialogueKey` (the NPC's day-1
+        // intro key), so the gossip option only appeared on intro days.
+        tree[dialogueKey] = {
           ...startNode,
           responses: [
             ...startNode.responses,
@@ -1368,9 +1066,16 @@ export class WorldScene extends Phaser.Scene {
       };
     }
 
+    // Neighbours remember crisis choices and notice hunger/stress — once per
+    // neighbour per day, so it reads as a greeting, not a nag.
+    const memoryKey = `${npc.id}:${day}`;
+    const memory = this.greetedToday.has(memoryKey) ? null : neighbourMemory(npc.id, useGameStore.getState());
+    if (memory) this.greetedToday.add(memoryKey);
+    const talk = withMemoryOpener(tree, dialogueKey, memory);
+
     const playerTrust = useGameStore.getState().player.socialTrust;
     new DialogueOverlay(
-      uiRoot, tree, dialogueKey, npc.name,
+      uiRoot, talk.tree, talk.startKey, npc.name,
       () => {
         this.dialogueOpen = false;
         WorldScene.hud?.hideAction();
@@ -1383,157 +1088,6 @@ export class WorldScene extends Phaser.Scene {
       (recipeId) => learnRecipe(recipeId as RecipeId),
       (questId) => assignWorldQuest(questId as WorldQuestId),
     );
-  }
-
-  private updateWeather(tier: WeatherTier): void {
-    if (tier === this.currentWeatherTier) return;
-    this.currentWeatherTier = tier;
-
-    this.weatherOverlay.setFillStyle(0xaad4ff, tier === 'frost' ? 0.16 : 0);
-
-    const raining = tier === 'rain';
-    for (const drop of this.rainDrops) drop.setAlpha(raining ? 0.35 : 0);
-    if (raining) {
-      playRain();
-    } else {
-      stopRain();
-    }
-  }
-
-  private updateRainDrops(delta: number): void {
-    if (this.currentWeatherTier !== 'rain') return;
-    const screenW = this.scale.width, screenH = this.scale.height;
-    const fallSpeed = 0.4; // px/ms
-    for (const drop of this.rainDrops) {
-      drop.y += fallSpeed * delta;
-      drop.x -= fallSpeed * 0.25 * delta;
-      if (drop.y > screenH) {
-        drop.y = -10;
-        drop.x = Math.random() * screenW;
-      }
-      if (drop.x < -10) drop.x = screenW + 10;
-    }
-  }
-
-  private applyResilienceTier(score: number): void {
-    const container = document.getElementById('game-container');
-    if (!container) return;
-    container.classList.remove('world--thriving', 'world--stabilising', 'world--crisis', 'world--emergency');
-    container.classList.add(`world--${resilienceTier(score)}`);
-  }
-
-  /** M21 §4 — swaps the small, fixed set of street-front dressing props (boarded
-   * shopfronts / market stalls / flower planters) for the current resilience tier. */
-  private updateWorldDressing(score: number): void {
-    const tier = dressingTierFor(score);
-    if (tier === this.currentDressingTier) return;
-    this.currentDressingTier = tier;
-
-    this.dressingSprites.forEach(s => s.destroy());
-    this.dressingSprites = [];
-
-    const drawSpec: Record<DressingPropToken, { w: number; h: number; color: number }> = {
-      PROP_BOARDED_WINDOW: { w: 12, h: 10, color: resolvePropColor('PROP_BOARDED_WINDOW') },
-      PROP_CRACKED_ASPHALT: { w: 14, h: 4, color: resolvePropColor('PROP_CRACKED_ASPHALT') },
-      PROP_MARKET_STALL: { w: 16, h: 10, color: resolvePropColor('PROP_MARKET_STALL') },
-      PROP_FLOWER_PLANTER: { w: 10, h: 6, color: resolvePropColor('PROP_FLOWER_PLANTER') },
-      PROP_BUNTING: { w: 16, h: 4, color: resolvePropColor('PROP_BUNTING') },
-    };
-    dressingPropsForTier(tier).forEach(placement => {
-      const spec = drawSpec[placement.token];
-      const px = placement.x * TS + TS / 2, py = placement.y * TS + TS / 2;
-      this.dressingSprites.push(this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3));
-    });
-  }
-
-  /** M32 §3 — one-shot outdoor decoration pass (trees/bushes/benches/
-   *  fences/parked cars), same hand-drawn-primitive technique as
-   *  InteriorScene.ts's renderProps()/updateWorldDressing(). Fixed for the whole
-   *  session — unlike updateWorldDressing()'s resilience-tier swap, this
-   *  layer doesn't change and so needs no stored/destroyable references. */
-  private renderOutdoorDressing(): void {
-    const drawSpec: Record<OutdoorPropToken, { w: number; h: number; color: number }> = {
-      PROP_ACCENT_TREE: { w: 12, h: 14, color: resolvePropColor('PROP_ACCENT_TREE') },
-      PROP_BUSH: { w: 10, h: 7, color: resolvePropColor('PROP_BUSH') },
-      PROP_STREET_BENCH: { w: 14, h: 5, color: resolvePropColor('PROP_STREET_BENCH') },
-      PROP_FENCE: { w: 16, h: 4, color: resolvePropColor('PROP_FENCE') },
-      PROP_PARKED_CAR: { w: 15, h: 9, color: resolvePropColor('PROP_PARKED_CAR') },
-      PROP_PARKED_BIKE: { w: 10, h: 6, color: resolvePropColor('PROP_PARKED_BIKE') },
-    };
-    OUTDOOR_DRESSING_PROPS.forEach(placement => {
-      const spec = drawSpec[placement.token];
-      const px = placement.x * TS + TS / 2, py = placement.y * TS + TS / 2;
-      this.add.rectangle(px, py, spec.w, spec.h, spec.color).setDepth(3);
-    });
-  }
-
-  /** M38 §2 — EPIC-33. Deterministic material pickups, same hand-drawn-
-   *  primitive technique as renderOutdoorDressing(), but interactive
-   *  (proximity prompt + [E]/click to collect) and removable, so it's
-   *  tracked in `this.scavengePoints` rather than drawn and forgotten. */
-  private renderScavengePoints(): void {
-    const collected = new Set(useGameStore.getState().inventory.collectedScavengePoints);
-    SCAVENGE_POINTS.forEach(point => {
-      if (collected.has(point.id)) return;
-      const px = point.x * TS + TS / 2, py = point.y * TS + TS / 2;
-      const sprite = this.add.rectangle(px, py, 8, 8, 0x8a9a4a).setDepth(3);
-      const entry: ScavengePointEntry = {
-        data: point,
-        sprite,
-        prompt: new InteractionPrompt(this, px, py, '♻️', () => WorldScene.hud?.triggerAction()),
-      };
-      this.scavengePoints.push(entry);
-    });
-  }
-
-  private collectScavengePoint(entry: ScavengePointEntry): void {
-    collectMaterial(entry.data.id, entry.data.material, entry.data.amount);
-    entry.sprite.destroy();
-    entry.prompt.destroy();
-    this.scavengePoints = this.scavengePoints.filter(e => e !== entry);
-
-    const label = entry.data.material.replace('MATERIAL_', '').replace(/_/g, ' ').toLowerCase();
-    const txt = this.add.text(entry.data.x * TS + TS / 2, entry.data.y * TS + TS / 2 - 12, `+${entry.data.amount} ${label}`, {
-      fontSize: '9px', color: '#dfffb0', backgroundColor: '#1a2a1a', padding: { x: 3, y: 2 },
-    }).setOrigin(0.5, 1).setDepth(20);
-    this.tweens.add({
-      targets: txt, y: txt.y - 20, alpha: 0, duration: 900,
-      ease: 'Power2', onComplete: () => txt.destroy(),
-    });
-  }
-
-  /** M39 §2 — EPIC-33. Same technique as renderScavengePoints(), a distinct
-   *  color/icon so the two pickup types read as different things in the
-   *  world (recipe cookbook vs. raw material). */
-  private renderCookbookPickups(): void {
-    const collected = new Set(useGameStore.getState().crafting.collectedCookbookPoints);
-    COOKBOOK_PICKUPS.forEach(point => {
-      if (collected.has(point.id)) return;
-      const px = point.x * TS + TS / 2, py = point.y * TS + TS / 2;
-      const sprite = this.add.rectangle(px, py, 8, 8, 0xd8a13a).setDepth(3);
-      const entry: CookbookPickupEntry = {
-        data: point,
-        sprite,
-        prompt: new InteractionPrompt(this, px, py, '📖', () => WorldScene.hud?.triggerAction()),
-      };
-      this.cookbookPickups.push(entry);
-    });
-  }
-
-  private collectCookbookPickup(entry: CookbookPickupEntry): void {
-    collectCookbook(entry.data.id, entry.data.recipe);
-    entry.sprite.destroy();
-    entry.prompt.destroy();
-    this.cookbookPickups = this.cookbookPickups.filter(e => e !== entry);
-
-    const label = RECIPES[entry.data.recipe]?.label ?? entry.data.recipe;
-    const txt = this.add.text(entry.data.x * TS + TS / 2, entry.data.y * TS + TS / 2 - 12, `📖 Learned: ${label}`, {
-      fontSize: '9px', color: '#ffe9b0', backgroundColor: '#2a2214', padding: { x: 3, y: 2 },
-    }).setOrigin(0.5, 1).setDepth(20);
-    this.tweens.add({
-      targets: txt, y: txt.y - 20, alpha: 0, duration: 1200,
-      ease: 'Power2', onComplete: () => txt.destroy(),
-    });
   }
 
   /** M41 — EPIC-34 §1/§2. Walking onto (or near) a DOOR tile that has a

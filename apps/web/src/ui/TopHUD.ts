@@ -1,10 +1,18 @@
 import { useGameStore, type GameState } from '../core/state/useGameStore';
-import { advanceDay } from '../core/state/actions';
+import { advanceDay, abandonWorldQuest, setOwnedShopItems } from '../core/state/actions';
+import { statusWarnings, describeDayReport } from './hudStatus';
+import { SignInPrompt } from './SignInPrompt';
+import { GoalsModal } from './GoalsModal';
+import { TutorialCoach } from './TutorialCoach';
+import { getToken } from '../core/state/persistence';
 import { SettingsModal } from './SettingsModal';
 import { QuestModal } from './QuestModal';
 import { WorkModal } from './WorkModal';
 import { openShareSheet } from './ShareModal';
 import { BroadsheetModal } from './BroadsheetModal';
+import { showMorningLedger } from './MorningLedger';
+import { attachStatPops } from './StatPops';
+import { attachBuildCelebrations } from './BuildCelebration';
 import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { PluginManagerModal } from './PluginManagerModal';
@@ -17,7 +25,7 @@ import { CivicDirectoryModal } from './CivicDirectoryModal';
 import { CivicJournal } from '../irl/CivicJournal';
 import { ProximityVisitModal } from './ProximityVisitModal';
 import { getWorldQuestDefinition } from '../core/simulation/WorldQuests';
-import { getWallet } from '../api/endpoints/shop';
+import { getWallet, getInventory } from '../api/endpoints/shop';
 import { fetchDailyNarrative } from '../api/narrativeGossip';
 import type { Kernel, HudSink } from '../core/kernel/Kernel';
 import type { KernelHudButtonDescriptor } from '@district-cg/shared-types';
@@ -32,6 +40,8 @@ export class TopHUD implements HudSink {
   private statsEl: HTMLElement;
   private zoneEl: HTMLElement;
   private objectiveEl: HTMLElement;
+  private statusEl: HTMLElement;
+  private lastObjectiveId: string | null = null;
   private barometerEl: HTMLElement;
   private pulseBadgeEl: HTMLElement;
   private actionButton: HTMLButtonElement | null = null;
@@ -73,6 +83,25 @@ export class TopHUD implements HudSink {
     this.objectiveEl.id = 'hud-objective';
     this.objectiveEl.hidden = true;
     this.el.appendChild(this.objectiveEl);
+    // 2026-09-29 launch audit §1.6 — a quest could lock the only quest slot
+    // for hundreds of days. Two-step "drop" so it can't be hit by accident.
+    this.objectiveEl.addEventListener('click', e => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.hud-objective-drop');
+      if (!btn) return;
+      if (btn.dataset['confirm'] === '1') {
+        abandonWorldQuest();
+      } else {
+        btn.dataset['confirm'] = '1';
+        btn.textContent = 'Drop quest?';
+      }
+    });
+
+    // Consequence warnings (stress, starving, sleeping rough) — D2.
+    this.statusEl = document.createElement('div');
+    this.statusEl.id = 'hud-status';
+    this.statusEl.setAttribute('role', 'status');
+    this.statusEl.hidden = true;
+    this.el.appendChild(this.statusEl);
 
     this.barometerEl = document.createElement('div');
     this.barometerEl.id = 'hud-barometer';
@@ -139,9 +168,11 @@ export class TopHUD implements HudSink {
     // kernel plugin's) is a gameplay shortcut and lands directly in the
     // always-visible toolbar. The mute button is gone entirely — folded
     // into SettingsModal (Section 3).
+    // Ordered by how often a player needs them: the core loop first, so on
+    // a phone (one scrollable row) those are visible without scrolling.
     this.registerButton({
-      id: 'radio', icon: '📻', label: 'Open Radio Free Commons',
-      onClick: () => this.radio.show(),
+      id: 'goals', icon: '🎯', label: 'Goals — the five commons and the Safe Haven ending',
+      onClick: () => new GoalsModal(root),
     });
     this.registerButton({
       id: 'quest', icon: '📋', label: 'Daily Quests',
@@ -152,24 +183,12 @@ export class TopHUD implements HudSink {
       onClick: () => new WorkModal(root),
     });
     this.registerButton({
-      id: 'share', icon: '📣', label: 'Share progress',
-      onClick: () => openShareSheet(root),
+      id: 'craft', icon: '🛠', label: 'Open Crafting',
+      onClick: () => new CraftingModal(root),
     });
     this.registerButton({
       id: 'builder', icon: '🏗️', label: 'Open Living District Builder',
       onClick: () => new DistrictBuilderModal(root),
-    });
-    this.registerButton({
-      id: 'plugins', icon: '🧩', label: 'Open Plugin Library',
-      onClick: () => new PluginManagerModal(root),
-    });
-    this.registerButton({
-      id: 'shop', icon: '🏪', label: 'Open the Commons Bazaar',
-      onClick: () => new ShopModal(root, () => this.fetchWalletBalance()),
-    });
-    this.registerButton({
-      id: 'craft', icon: '🛠', label: 'Open Crafting',
-      onClick: () => new CraftingModal(root),
     });
     this.registerButton({
       id: 'worldmap', icon: '🗺', label: 'Open World Map',
@@ -177,19 +196,39 @@ export class TopHUD implements HudSink {
     });
     this.registerButton({
       id: 'social', icon: '🤝', label: 'Open Common Grounds',
-      onClick: () => new SocialHubModal(root),
+      onClick: () => getToken()
+        ? new SocialHubModal(root)
+        : new SignInPrompt(root, '🤝 Common Grounds', 'Friends, caravans and trades connect you with other players, so they need an account.'),
+    });
+    this.registerButton({
+      id: 'shop', icon: '🏪', label: 'Open the Commons Bazaar',
+      onClick: () => new ShopModal(root, () => this.fetchWalletBalance()),
+    });
+    this.registerButton({
+      id: 'journal', icon: '📓', label: 'Open Civic Journal — log a real-world deed',
+      onClick: () => getToken()
+        ? new CivicJournal(root)
+        : new SignInPrompt(root, '📓 Civic Journal', 'Real-world deeds earn Solidarity Tokens that are kept on your account.'),
     });
     this.registerButton({
       id: 'civic', icon: '📖', label: 'Open Found a Commons directory',
       onClick: () => new CivicDirectoryModal(root),
     });
     this.registerButton({
-      id: 'journal', icon: '📓', label: 'Open Civic Journal — log a real-world deed',
-      onClick: () => new CivicJournal(root),
+      id: 'radio', icon: '📻', label: 'Open Radio Free Commons',
+      onClick: () => this.radio.show(),
+    });
+    this.registerButton({
+      id: 'share', icon: '📣', label: 'Share progress',
+      onClick: () => openShareSheet(root),
     });
     this.registerButton({
       id: 'proximity', icon: '🌐', label: 'Nearby Travelers — visit someone over the mesh',
       onClick: () => new ProximityVisitModal(root),
+    });
+    this.registerButton({
+      id: 'plugins', icon: '🧩', label: 'Open Plugin Library',
+      onClick: () => new PluginManagerModal(root),
     });
 
     // Solidarity Token wallet balance chip (only shown once fetched for a signed-in user)
@@ -204,6 +243,9 @@ export class TopHUD implements HudSink {
 
     this.render(useGameStore.getState());
     useGameStore.subscribe(s => this.render(s));
+    attachStatPops(root);
+    attachBuildCelebrations(root);
+    new TutorialCoach(root);
 
     // Fetch district resilience badge (non-blocking)
     this.fetchPulseBadge();
@@ -232,6 +274,12 @@ export class TopHUD implements HudSink {
   }
 
   private fetchWalletBalance(): void {
+    if (!getToken()) {
+      this.walletChipEl.hidden = true;
+      return;
+    }
+    // Owned Bazaar items drive in-game effects (core/shop/ShopEffects.ts).
+    getInventory().then(inv => setOwnedShopItems(inv.ownedItemIds)).catch(() => { /* keep last known */ });
     getWallet()
       .then(wallet => {
         this.walletChipEl.textContent = `🪙 ${wallet.solidarityTokens} ST`;
@@ -311,7 +359,10 @@ export class TopHUD implements HudSink {
       energyIndex: energyIdx,
       dayNumber: day,
       civicHeadlines: this.civicTicker.getHeadlines(),
-    }, () => advanceDay());
+    }, () => {
+      const report = advanceDay();
+      showMorningLedger(document.getElementById('ui-root') ?? document.body, report, describeDayReport(report));
+    });
   }
 
   /** M28 — every context action is triggered by the same [E] key
@@ -386,6 +437,7 @@ export class TopHUD implements HudSink {
 
     const energyPct = Math.round((player.energy / player.maxEnergy) * 100);
     const stressClass = player.stressLevel > 74 ? ' hud-stat--danger' : player.stressLevel > 49 ? ' hud-stat--warn' : '';
+    const stressTitle = 'Stress: at 75%+ you sleep badly (less energy); at 100% you break down and lose a day.';
 
     this.statsEl.innerHTML = `
       <div class="hud-row hud-top">
@@ -394,13 +446,13 @@ export class TopHUD implements HudSink {
         <div class="hud-res-bar" title="${commons.resilienceScore}% resilience">
           <div class="hud-res-fill" style="width:${commons.resilienceScore}%"></div>
         </div>
-        <span class="hud-res-pct">${commons.resilienceScore}%</span>
+        <span class="hud-res-pct" data-stat="resilience">${commons.resilienceScore}%</span>
       </div>
       <div class="hud-row hud-stats">
-        <span class="hud-stat">💰 $${player.cash}</span>
-        <span class="hud-stat hud-energy-stat">⚡<span class="hud-ebar"><span class="hud-ebar-fill" style="width:${energyPct}%"></span></span>${player.energy}</span>
-        <span class="hud-stat">🤝 ${player.socialTrust}</span>
-        <span class="hud-stat${stressClass}">😰 ${player.stressLevel}%</span>
+        <span class="hud-stat" data-stat="cash">💰 $${player.cash}</span>
+        <span class="hud-stat hud-energy-stat" data-stat="energy">⚡<span class="hud-ebar"><span class="hud-ebar-fill" style="width:${energyPct}%"></span></span>${player.energy}</span>
+        <span class="hud-stat" data-stat="trust">🤝 ${player.socialTrust}</span>
+        <span class="hud-stat${stressClass}" data-stat="stress" title="${stressTitle}">😰 ${player.stressLevel}%</span>
       </div>
     `;
 
@@ -409,14 +461,25 @@ export class TopHUD implements HudSink {
     // separately-tracked UI-only copy that could drift from real state.
     const activeQuest = state.worldQuests.activeId ? getWorldQuestDefinition(state.worldQuests.activeId) : undefined;
     if (activeQuest) {
-      this.objectiveEl.innerHTML = `
-        <span class="hud-objective-icon">${activeQuest.icon}</span>
-        <span class="hud-objective-title">${activeQuest.title}</span>
-      `;
+      // Re-rendered only when the quest changes, so a pending "Drop
+      // quest?" confirmation survives unrelated stat updates.
+      if (this.lastObjectiveId !== activeQuest.id) {
+        this.objectiveEl.innerHTML = `
+          <span class="hud-objective-icon">${activeQuest.icon}</span>
+          <span class="hud-objective-title">${activeQuest.title}</span>
+          <button class="hud-objective-drop interactive" type="button" title="Drop this quest (you can pick it up again later)">✕</button>
+        `;
+        this.lastObjectiveId = activeQuest.id;
+      }
       this.objectiveEl.hidden = false;
     } else {
+      this.lastObjectiveId = null;
       this.objectiveEl.hidden = true;
     }
+
+    const warnings = statusWarnings(state);
+    this.statusEl.innerHTML = warnings.map(w => `<p class="hud-status-line">${w}</p>`).join('');
+    this.statusEl.hidden = warnings.length === 0;
 
     // Economic barometer chip
     if (pulseState) {

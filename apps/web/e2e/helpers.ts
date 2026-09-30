@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 /** Shared by every spec that needs a loaded world, not just character-creation.spec.ts's own coverage of the flow itself. */
 export async function createCharacterAndEnterWorld(page: Page): Promise<void> {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Play offline (no account)' }).click();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
 
   const familyCards = page.locator('[data-template]');
   await expect(familyCards.first()).toBeVisible();

@@ -140,9 +140,8 @@ describe('CourierRush Minigame Package', () => {
     (game as any).onGameOver();
 
     expect(sessionContext.host.grantRewards).toHaveBeenCalledWith({
-      cashDelta: 32, // 4 * 8
-      trustDelta: 9, // 5 + 4
-      energyDelta: -5,
+      cashDelta: 12, // min(20, 4 * 3)
+      trustDelta: 2, // min(3, 1 + floor(4 / 3))
     });
     expect(sessionContext.host.notify).toHaveBeenCalled();
 

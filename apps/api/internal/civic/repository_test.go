@@ -2,7 +2,9 @@ package civic_test
 
 import (
 	"context"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/district-cg/api/internal/civic"
 	"github.com/district-cg/api/testutil"
@@ -82,5 +84,48 @@ func TestListChapters_FiltersByRegionAndOrdersByDistance(t *testing.T) {
 	}
 	if len(none) != 0 {
 		t.Errorf("got %d chapters for an unknown region, want 0", len(none))
+	}
+}
+
+// 2026-09-29 launch audit §3.12 — seeded entries are the game's fictional
+// places: flagged in-fiction, no placeholder links, and never stale.
+func TestSeededCivicDataIsInFictionAndNeverStale(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test — requires Docker")
+	}
+	pool := testutil.NewPostgres(t)
+	repo := civic.NewRepository(pool)
+	ctx := context.Background()
+
+	// Age the seed so every original start date is in the past.
+	if _, err := pool.Exec(ctx, `UPDATE civic_actions SET start_time = NOW() - INTERVAL '40 days' WHERE in_fiction`); err != nil {
+		t.Fatalf("age seed: %v", err)
+	}
+
+	actions, err := repo.ListUpcomingActions(ctx, "GENERIC")
+	if err != nil {
+		t.Fatalf("ListUpcomingActions: %v", err)
+	}
+	if len(actions) != 4 {
+		t.Fatalf("got %d actions, want the 4 recurring in-fiction ones", len(actions))
+	}
+	now := time.Now().Add(-time.Minute).UTC().Format(time.RFC3339)
+	for _, a := range actions {
+		if !a.InFiction || a.SourceURL != "" {
+			t.Errorf("seeded action not marked in-fiction or still linked: %+v", a)
+		}
+		if a.StartTime < now {
+			t.Errorf("stale start time %s for %q", a.StartTime, a.Title)
+		}
+	}
+
+	chapters, err := repo.ListChapters(ctx, "GENERIC")
+	if err != nil {
+		t.Fatalf("ListChapters: %v", err)
+	}
+	for _, c := range chapters {
+		if !c.InFiction || strings.Contains(c.WebsiteURL, "example.org") {
+			t.Errorf("seeded chapter not marked in-fiction or still linked: %+v", c)
+		}
 	}
 }

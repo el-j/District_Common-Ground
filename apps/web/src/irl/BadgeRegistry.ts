@@ -2,6 +2,7 @@ import { get, set } from 'idb-keyval';
 import { logDeed } from '../api/endpoints/irl';
 import { getToken } from '../core/state/persistence';
 import { recordAction } from '../core/offline/offlineRuntime';
+import { ApiError } from '../api/client';
 import type { IrlDeedCategory, IrlVerificationMethod, IrlDeed, IrlWallet } from '@district-cg/shared-types';
 
 /**
@@ -25,6 +26,16 @@ export interface AwardResult {
 	synced: boolean;
 	deed?: IrlDeed;
 	wallet?: IrlWallet;
+	/** The server refused the deed; it is not queued for retry. */
+	rejected?: 'daily-limit' | 'invalid';
+}
+
+/** A 4xx other than 401 means the server will never accept this deed. */
+function rejectionOf(err: unknown): AwardResult['rejected'] | null {
+	if (!(err instanceof ApiError)) return null;
+	if (err.status === 429) return 'daily-limit';
+	if (err.status >= 400 && err.status < 500 && err.status !== 401) return 'invalid';
+	return null;
 }
 
 async function readOutbox(): Promise<PendingDeed[]> {
@@ -56,7 +67,9 @@ export async function awardForDeed(
 	try {
 		const result = await logDeed(category, note, verificationMethod);
 		return { synced: true, deed: result.deed, wallet: result.wallet };
-	} catch {
+	} catch (err) {
+		const rejected = rejectionOf(err);
+		if (rejected) return { synced: false, rejected };
 		await queueOffline(pending);
 		return { synced: false };
 	}
@@ -76,8 +89,9 @@ export async function flushOutbox(): Promise<{ flushed: number; remaining: numbe
 		try {
 			await logDeed(deed.category, deed.note, deed.verificationMethod);
 			flushed++;
-		} catch {
-			stillPending.push(deed);
+		} catch (err) {
+			// rejected for good (e.g. daily limit) — retrying can't succeed
+			if (!rejectionOf(err)) stillPending.push(deed);
 		}
 	}
 	await set(OUTBOX_KEY, stillPending);

@@ -436,13 +436,14 @@ export class TenantMatchGame {
 
   private onGameOver(): void {
     const completed = this.round + 1 >= ROUND_SYMBOLS.length && this.pairsFound >= this.totalPairs;
-    const cashEarned = this.pairsFound * 6 + (completed ? 30 : 0);
-    const trustEarned = Math.min(20, this.comboMax * 2);
+    // Scaled to the host's per-run caps (2026-09-29 launch audit: $20,
+    // 3 trust; the run's energy is charged by the host at launch).
+    const cashEarned = Math.min(20, this.pairsFound * 2 + (completed ? 6 : 0));
+    const trustEarned = Math.min(3, this.comboMax);
 
     void this.context.host.grantRewards({
       cashDelta: cashEarned,
       trustDelta: trustEarned,
-      energyDelta: -5,
     });
 
     this.context.host.notify(

@@ -10,7 +10,7 @@ vi.mock('phaser', () => ({
   },
 }));
 
-import { ScrapsEntity } from './ScrapsEntity';
+import { ScrapsEntity, scrapsPrompt } from './ScrapsEntity';
 import { useGameStore } from '../../core/state/useGameStore';
 
 function createMockScene() {
@@ -83,34 +83,22 @@ describe('ScrapsEntity', () => {
     expect(promptText.setVisible).toHaveBeenCalledWith(false);
   });
 
-  it('shows prompt when in range and feeds when interacted with cash', () => {
+  it('shows the prompt in range but never changes stats itself (WorldScene\'s feedScraps() does)', () => {
     const { scene, promptText } = createMockScene();
     const scraps = new ScrapsEntity(scene, 80, 220);
 
-    // Player in range (x: 82, y: 220) with playerInteract = true
-    scraps.update(82, 220, true, 16);
+    scraps.update(82, 220, 16);
 
     expect(promptText.setVisible).toHaveBeenCalledWith(true);
-    // Player had 10 cash, spent 2 -> 8 cash, stress reduced from 30 to 20
-    expect(useGameStore.getState().player.cash).toBe(8);
-    expect(useGameStore.getState().player.stressLevel).toBe(20);
-    expect(scene.tweens.add).toHaveBeenCalled();
+    expect(useGameStore.getState().player.cash).toBe(10);
+    expect(useGameStore.getState().player.stressLevel).toBe(30);
   });
 
-  it('pets scraps for reduced stress benefit when broke', () => {
-    useGameStore.setState({
-      player: {
-        ...useGameStore.getState().player,
-        cash: 0,
-        stressLevel: 30,
-      },
-    });
-
-    const { scene } = createMockScene();
-    const scraps = new ScrapsEntity(scene, 80, 220);
-
-    scraps.update(82, 220, true, 16);
-    expect(useGameStore.getState().player.cash).toBe(0);
-    expect(useGameStore.getState().player.stressLevel).toBe(25); // reduced by 5
+  it('the prompt reflects cash and whether Scraps was already fed today', () => {
+    expect(scrapsPrompt()).toContain('Feed Scraps');
+    useGameStore.setState(s => ({ player: { ...s.player, cash: 0 } }));
+    expect(scrapsPrompt()).toContain('$1');
+    useGameStore.setState(s => ({ economy: { ...s.economy, lastScrapsDay: s.meta.day } }));
+    expect(scrapsPrompt()).toContain('fed today');
   });
 });

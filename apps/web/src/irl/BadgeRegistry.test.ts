@@ -20,6 +20,7 @@ vi.mock('../core/state/persistence', () => ({
 }));
 
 import { awardForDeed, flushOutbox, getOutboxCount } from './BadgeRegistry';
+import { ApiError } from '../api/client';
 
 beforeEach(() => {
 	store.clear();
@@ -85,5 +86,22 @@ describe('BadgeRegistry', () => {
 		const flush = await flushOutbox();
 		expect(flush).toEqual({ flushed: 1, remaining: 1 });
 		expect(await getOutboxCount()).toBe(1);
+	});
+
+	// 2026-09-29 launch audit §1.8 — the server now rejects a 4th deed a day
+	// with 429. A rejection must not be queued and retried forever.
+	it('does not queue a deed the server rejected (daily limit)', async () => {
+		logDeedMock.mockRejectedValueOnce(new ApiError(429, 'daily deed limit reached'));
+		const result = await awardForDeed('eldercare', 'x', 'honor_system');
+		expect(result).toEqual({ synced: false, rejected: 'daily-limit' });
+		expect(await getOutboxCount()).toBe(0);
+	});
+
+	it('flushOutbox drops queued deeds the server rejects instead of retrying forever', async () => {
+		tokenValue = null;
+		await awardForDeed('eldercare', 'a', 'honor_system');
+		tokenValue = 'signed-in-token';
+		logDeedMock.mockRejectedValueOnce(new ApiError(429, 'limit'));
+		expect(await flushOutbox()).toEqual({ flushed: 0, remaining: 0 });
 	});
 });

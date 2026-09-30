@@ -6,6 +6,8 @@ export interface CivicAction {
   locationSummary: string;
   sourceUrl: string;
   regionCode: string;
+  /** One of the game's own fictional events — never shown as a real listing. */
+  inFiction?: boolean;
 }
 
 export type LocalChapterType = 'tool_library' | 'community_fridge' | 'land_trust';
@@ -17,4 +19,6 @@ export interface LocalChapter {
   distanceKm: number;
   address: string;
   websiteUrl: string;
+  /** One of the game's own fictional places — never shown as a real listing. */
+  inFiction?: boolean;
 }

@@ -29,8 +29,15 @@ async function endDay(page: Page): Promise<void> {
   }
   const vote = page.locator('.assembly-btn:not([disabled])').first();
   while (await appears(vote, 500)) await vote.click();
-  const report = page.locator('.hud-day-report');
-  if (await report.isVisible().catch(() => false)) await report.click();
+  // A quiet morning may bring a neighbour moment: answer it, then continue.
+  const eventOption = page.locator('.event-option:not([disabled])').first();
+  if (await appears(eventOption, 500)) {
+    await eventOption.click();
+    await page.locator('.event-continue').click();
+    await expect(page.locator('.neighbour-event')).toHaveCount(0);
+  }
+  const ledger = page.locator('.ledger-close');
+  if (await ledger.isVisible().catch(() => false)) await ledger.click();
 }
 
 test.setTimeout(90_000);

@@ -335,4 +335,14 @@ Goal: every action and every night is felt and explained. All uncommitted, TDD.
 | Bugfix: the "Heard anything lately?" gossip option was attached to each NPC's day-1 tree, so it only appeared on intro days | `WorldScene.openTalk` |
 | Desktop camera shows 13 tiles of height (was 10); phones unchanged | `world/CameraViewport.ts` |
 
-Next candidates: more crises/quests (Phase 7), stress- and trust-driven events, achievements/milestones, richer world art.
+**Batch 2 (same day)**
+
+| Change | Where |
+|---|---|
+| Neighbour events: 12 small two-option moments on quiet mornings (no crisis), chosen by the player's state — hunger (Sal's bread), stress (tea with Mrs. Higgins), cash (Leo short on rent), low energy (carpool), trust (thank-you card), a scapegoat streak (cold shoulder), the kitchen (potluck), the focus build (work day, real progress) and more. At most one a day, 55% chance, urgent needs first, 7-day cooldown per event. The pending event is saved, so a reload can't skip or re-roll it | `core/simulation/NeighbourEvents.ts`, `ui/NeighbourEventCard.ts`, new `neighbourEvents` state slice |
+| 12 new crises (23 → 35), covering every existing category: renovation evictions, mould, clinic and library closures, insulin prices, wage theft, a cancelled bus route, wildfire smoke, a storm blackout, a deepfake rumour, surveillance cameras and a "report your neighbour" app | `src/data/crisis_scenarios.json` (+ the `public/` copy) |
+| e2e day loop answers neighbour events and closes the ledger | `e2e/launch-loop.spec.ts` |
+
+Note: `BalanceSimulator` doesn't model neighbour events. Their stakes are small (every effect ≤ 25, most ≤ 12).
+
+Next candidates: achievements/milestones, more world quests, richer world art.

@@ -735,5 +735,389 @@
         "worldEffect": "bloom"
       }
     }
+  },
+  {
+    "id": "renoviction-notice",
+    "archetype": "HOUSING_SPECULATE",
+    "title": "The Renovation Notice",
+    "context": "Every tenant in Block C gets the same letter: the building will be 'modernised' and everyone must leave for eighteen months. Nobody believes the rents will be the same when they come back. The landlord's agent quietly offers a few long-term tenants a cash payment to sign first and encourage their neighbours to follow.",
+    "choiceA": {
+      "label": "Sign early and take the payment",
+      "type": "authoritarian",
+      "description": "You sign and tell the others it's hopeless anyway. The payment helps this month. Block C empties one family at a time, and the new listings go up at double the rent.",
+      "consequences": {
+        "cashDelta": 40,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -20,
+        "stressDelta": -8,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organise a tenants' union in Block C",
+      "type": "solidarity",
+      "description": "You knock on every door. Forty signatures later, the union demands a written right to return at the same rent. The city's housing office takes notice, and the agent stops calling.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -20,
+        "trustDelta": 25,
+        "resilienceDelta": 25,
+        "stressDelta": 8,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "black-mould-block",
+    "archetype": "HOUSING_SPECULATE",
+    "title": "Black Mould in the Stairwell",
+    "context": "Children in the east stairwell keep coming down with coughs. The walls are black with mould and the landlord says tenants 'don't air their flats properly'. A rumour spreads that one large family is to blame.",
+    "choiceA": {
+      "label": "Complain about the large family",
+      "type": "authoritarian",
+      "description": "You add your name to a letter blaming the family's 'lifestyle'. The landlord sends them a warning and does nothing about the walls. The coughing continues.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -15,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Document it together and demand repairs",
+      "type": "solidarity",
+      "description": "You photograph every flat, collect doctors' notes and file a joint complaint. The housing inspector orders repairs within thirty days.",
+      "consequences": {
+        "cashDelta": -5,
+        "energyDelta": -15,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "clinic-closure",
+    "archetype": "FOOD_HEALTH",
+    "title": "The Clinic Shuts Its Doors",
+    "context": "The only walk-in clinic in the district is closing, 'for financial reasons'. The nearest one is an hour away by bus. Some say the clinic was overwhelmed by 'people who don't pay in'.",
+    "choiceA": {
+      "label": "Blame the uninsured for the closure",
+      "type": "authoritarian",
+      "description": "You repeat the line about freeloaders. Someone thanks you for 'saying what everyone thinks'. The clinic still closes, and the bus to the next one is packed.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -20,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Start a volunteer health day at Town Hall",
+      "type": "solidarity",
+      "description": "You help recruit a retired nurse, two medical students and a folding table. Every Saturday the queue is long, but nobody is turned away.",
+      "consequences": {
+        "cashDelta": -5,
+        "energyDelta": -20,
+        "trustDelta": 25,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "pharmacy-price-spike",
+    "archetype": "FOOD_HEALTH",
+    "title": "Insulin Prices Jump Overnight",
+    "context": "The chain pharmacy raises the price of insulin by a third. Mr. Okafor from the second floor has started skipping doses. A post online claims 'some people resell their prescriptions' and that's why prices went up.",
+    "choiceA": {
+      "label": "Share the reselling rumour",
+      "type": "authoritarian",
+      "description": "You forward the post. It gets a lot of reactions. The price stays where it is, and Mr. Okafor stops coming down to the courtyard.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -15,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organise a group purchase through the co-op",
+      "type": "solidarity",
+      "description": "The co-op negotiates a bulk price with an independent pharmacy. It takes a week of phone calls, but twelve households now pay less than before the spike.",
+      "consequences": {
+        "cashDelta": -10,
+        "energyDelta": -15,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "wage-theft-warehouse",
+    "archetype": "LABOR_TRANSIT",
+    "title": "The Missing Overtime",
+    "context": "Workers at the distribution centre notice their overtime has vanished from their payslips for three months. Management says it's a 'system error' and hints that those who complain loudest might find their shifts cut.",
+    "choiceA": {
+      "label": "Stay quiet and keep your shifts",
+      "type": "authoritarian",
+      "description": "You keep your head down. Your hours stay safe. The 'system error' is never fixed, and next month it's a little bigger.",
+      "consequences": {
+        "cashDelta": 10,
+        "energyDelta": 0,
+        "trustDelta": -15,
+        "resilienceDelta": -15,
+        "stressDelta": 5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "File a collective wage claim",
+      "type": "solidarity",
+      "description": "Twenty-six workers file together. The labour office audits the payroll, and back pay arrives with interest. The warehouse gets a new shift steward: you.",
+      "consequences": {
+        "cashDelta": 15,
+        "energyDelta": -20,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "bus-route-cut",
+    "archetype": "LABOR_TRANSIT",
+    "title": "Route 14 Is Cancelled",
+    "context": "The transit authority cancels Route 14, the only bus from the South Quarter to the hospital and the industrial park. The official reason is 'low ridership'. The comments section blames fare dodgers.",
+    "choiceA": {
+      "label": "Agree it's the fare dodgers' fault",
+      "type": "authoritarian",
+      "description": "You leave a comment about fare dodgers. It's the top comment for a day. Route 14 stays cancelled; your commute doubles.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -10,
+        "trustDelta": -15,
+        "resilienceDelta": -15,
+        "stressDelta": 8,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Count the riders and pack the hearing",
+      "type": "solidarity",
+      "description": "You and your neighbours ride Route 14 all week with clipboards. The ridership numbers were wrong. After a packed public hearing, the route is restored.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -20,
+        "trustDelta": 25,
+        "resilienceDelta": 20,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "wildfire-smoke",
+    "archetype": "CLIMATE_EXTREME",
+    "title": "Smoke Over the District",
+    "context": "Wildfire smoke turns the sky orange for five days. The air is unsafe to breathe. Air purifiers sell out in hours, and a man on the corner is reselling them at triple the price.",
+    "choiceA": {
+      "label": "Buy a purifier from the reseller",
+      "type": "authoritarian",
+      "description": "You pay the markup. Your flat is clean. Your neighbours' flats are not, and the reseller comes back the next day with more.",
+      "consequences": {
+        "cashDelta": -15,
+        "energyDelta": 5,
+        "trustDelta": -10,
+        "resilienceDelta": -10,
+        "stressDelta": -8,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Build box-fan filters for the whole block",
+      "type": "solidarity",
+      "description": "A video, some tape and forty box fans. You run a filter-building workshop in the courtyard. Every flat with a child or an elder gets one first.",
+      "consequences": {
+        "cashDelta": -10,
+        "energyDelta": -15,
+        "trustDelta": 25,
+        "resilienceDelta": 20,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "storm-blackout",
+    "archetype": "CLIMATE_EXTREME",
+    "title": "Three Days Without Power",
+    "context": "A storm knocks out power across the district. Freezers thaw, phones die and the lifts in the high-rise stop. The power company restores the richer postcode north of the canal first.",
+    "choiceA": {
+      "label": "Look after your own flat",
+      "type": "authoritarian",
+      "description": "You buy a small generator and keep your fridge running. Across the landing, Mrs. Higgins sits in the dark for three days.",
+      "consequences": {
+        "cashDelta": -10,
+        "energyDelta": 5,
+        "trustDelta": -15,
+        "resilienceDelta": -15,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Open a community warming and charging point",
+      "type": "solidarity",
+      "description": "The kitchen's gas stove and a borrowed generator turn Town Hall into a warm, lit room with phone chargers. Volunteers carry water up to the top floors.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -20,
+        "trustDelta": 25,
+        "resilienceDelta": 25,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "deepfake-rumour",
+    "archetype": "CIVIC_DISINFO",
+    "title": "The Video That Wasn't Real",
+    "context": "A video goes round the neighbourhood group chat: Elena, the tenant organiser, seemingly taking money from a developer. It looks convincing. The meeting where tenants were due to vote on a rent strike is tomorrow.",
+    "choiceA": {
+      "label": "Forward the video",
+      "type": "authoritarian",
+      "description": "You forward it with 'just asking questions'. The meeting falls apart. Two days later the video is shown to be fake, but the vote never happens.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": 0,
+        "trustDelta": -25,
+        "resilienceDelta": -20,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Check it before sharing, and say so",
+      "type": "solidarity",
+      "description": "You and Marcus find the original footage in an hour. You post both side by side. The meeting goes ahead, and the vote passes.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -10,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "smart-camera-grid",
+    "archetype": "CIVIC_DISINFO",
+    "title": "Cameras on Every Corner",
+    "context": "The council proposes 'smart' cameras on every corner of the South Quarter, paid for by a private security firm. The firm's pitch says the cameras will 'identify outsiders'. Neighbours argue about who counts as an outsider.",
+    "choiceA": {
+      "label": "Support the cameras",
+      "type": "authoritarian",
+      "description": "You speak in favour at the council meeting. The cameras go up. Within a month, the firm is selling footage-based 'risk scores' to landlords.",
+      "consequences": {
+        "cashDelta": 10,
+        "energyDelta": 0,
+        "trustDelta": -20,
+        "resilienceDelta": -20,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Propose street lights and a night bus instead",
+      "type": "solidarity",
+      "description": "You gather a petition for better lighting, a night bus and a community safety team. The council funds the lights. The camera contract is shelved.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": -15,
+        "trustDelta": 20,
+        "resilienceDelta": 20,
+        "stressDelta": 5,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "snitch-app",
+    "archetype": "DIVISION_AGITATION",
+    "title": "The 'Report Your Neighbour' App",
+    "context": "A new app lets residents anonymously report 'suspicious activity' to building management, with points and rewards. Within a week it is full of reports about people's accents, cooking smells and visitors.",
+    "choiceA": {
+      "label": "Join in and collect the rewards",
+      "type": "authoritarian",
+      "description": "You file a few reports and get a discount on your service charges. The building grows quieter and more careful. People stop leaving their doors open.",
+      "consequences": {
+        "cashDelta": 15,
+        "energyDelta": 0,
+        "trustDelta": -25,
+        "resilienceDelta": -20,
+        "stressDelta": -5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Start a 'meet your neighbour' evening instead",
+      "type": "solidarity",
+      "description": "You print flyers for a Friday courtyard dinner. At first only six people come. By the third week it's forty, and the app sits unused.",
+      "consequences": {
+        "cashDelta": -5,
+        "energyDelta": -15,
+        "trustDelta": 25,
+        "resilienceDelta": 25,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
+  },
+  {
+    "id": "library-closure",
+    "archetype": "FOOD_HEALTH",
+    "title": "The Library Is Up for Sale",
+    "context": "The council plans to sell the canal-side library to a developer. It is the only free place with Wi-Fi, heating and homework help. Supporters of the sale say the library 'mostly serves people who don't pay local taxes'.",
+    "choiceA": {
+      "label": "Accept the sale as a budget reality",
+      "type": "authoritarian",
+      "description": "You shrug and say the city has to save money. The library closes. Homework help moves to the laundromat, where it is loud and crowded.",
+      "consequences": {
+        "cashDelta": 0,
+        "energyDelta": 0,
+        "trustDelta": -15,
+        "resilienceDelta": -15,
+        "stressDelta": 5,
+        "worldEffect": "desaturate"
+      }
+    },
+    "choiceB": {
+      "label": "Organise a read-in and a community bid",
+      "type": "solidarity",
+      "description": "Three hundred people read in silence on the library steps. The press comes. A community land trust bid keeps the building public.",
+      "consequences": {
+        "cashDelta": -5,
+        "energyDelta": -20,
+        "trustDelta": 25,
+        "resilienceDelta": 25,
+        "stressDelta": 0,
+        "worldEffect": "bloom"
+      }
+    }
   }
 ]

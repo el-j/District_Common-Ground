@@ -3970,6 +3970,94 @@ input:focus-visible {
   .confetti { display: none; }
 }
 
+/* ── Neighbour moments: a knock at the door on quiet mornings ─────────── */
+.neighbour-event {
+  position: absolute;
+  inset: 0;
+  z-index: 32;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 10, 16, 0.55);
+  pointer-events: auto;
+  animation: celebration-fade 0.3s ease-out both;
+}
+.event-card {
+  width: min(430px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 1.1rem 1.1rem 1rem;
+  border-radius: 18px;
+  color: #f3efe6;
+  background: linear-gradient(170deg, #3a2a1f, #1f1812 75%);
+  border: 1px solid rgba(255, 196, 120, 0.4);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 30px rgba(255, 170, 80, 0.12);
+  animation: event-knock 0.55s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+@keyframes event-knock {
+  0% { opacity: 0; transform: translateY(18px) rotate(-1deg); }
+  60% { transform: translateY(-3px) rotate(0.6deg); }
+  100% { opacity: 1; transform: none; }
+}
+.event-head { display: flex; align-items: center; gap: 0.75rem; }
+.event-icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  background: rgba(255, 196, 120, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(255, 196, 120, 0.35);
+}
+.event-who { margin: 0; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: #ffc98a; }
+.event-title { margin: 0.1rem 0 0; font-size: 1.15rem; }
+.event-text { margin: 0.8rem 0 0.9rem; font-size: 0.88rem; line-height: 1.5; color: #e9e1d2; }
+.event-options { display: grid; gap: 0.5rem; }
+.event-option {
+  display: grid;
+  gap: 0.3rem;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.event-option:hover:not(:disabled), .event-option:focus-visible {
+  background: rgba(255, 196, 120, 0.14);
+  border-color: rgba(255, 196, 120, 0.55);
+}
+.event-option:disabled { opacity: 0.5; cursor: not-allowed; }
+.event-option-label { font-weight: 700; font-size: 0.9rem; }
+.event-option .ledger-chips { justify-content: flex-start; }
+.event-option-why { font-size: 0.7rem; color: #fca5a5; }
+.event-outcome {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border-left: 3px solid #facc15;
+  border-radius: 6px;
+  background: rgba(250, 204, 21, 0.08);
+  font-style: italic;
+  line-height: 1.5;
+}
+.event-continue {
+  width: 100%;
+  padding: 0.65rem;
+  border: none;
+  border-radius: 999px;
+  font-weight: 800;
+  color: #10231a;
+  background: linear-gradient(90deg, #4ade80, #facc15);
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .neighbour-event, .event-card { animation: none; }
+}
+
 /* ── Floating stat deltas ("+$12", "−10⚡") under the HUD numbers ───────── */
 .stat-pop {
   position: fixed;

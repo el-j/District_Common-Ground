@@ -13,6 +13,8 @@ import { BroadsheetModal } from './BroadsheetModal';
 import { showMorningLedger } from './MorningLedger';
 import { attachStatPops } from './StatPops';
 import { attachBuildCelebrations } from './BuildCelebration';
+import { attachNeighbourEvents } from './NeighbourEventCard';
+import { rollNeighbourEvent } from '../core/simulation/NeighbourEvents';
 import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
 import { PluginManagerModal } from './PluginManagerModal';
@@ -245,6 +247,7 @@ export class TopHUD implements HudSink {
     useGameStore.subscribe(s => this.render(s));
     attachStatPops(root);
     attachBuildCelebrations(root);
+    attachNeighbourEvents(root);
     new TutorialCoach(root);
 
     // Fetch district resilience badge (non-blocking)
@@ -362,6 +365,8 @@ export class TopHUD implements HudSink {
     }, () => {
       const report = advanceDay();
       showMorningLedger(document.getElementById('ui-root') ?? document.body, report, describeDayReport(report));
+      // A quiet morning (no crisis) may bring a knock at the door.
+      rollNeighbourEvent();
     });
   }
 

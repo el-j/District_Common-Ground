@@ -232,6 +232,15 @@ export interface GameState {
   /** Commons Bazaar items this account owns (server is the source of truth;
    *  refreshed on boot and after a purchase). See core/shop/ShopEffects.ts. */
   shop: { owned: string[] };
+  /** Small neighbour moments on quiet mornings (NeighbourEvents.ts).
+   *  `pendingId` is saved so a reload can't re-roll an unanswered event. */
+  neighbourEvents: {
+    /** The last day an event was rolled (at most one per day). */
+    lastDay: number;
+    /** Event id → the day it was last shown (per-event cooldown). */
+    seen: Record<string, number>;
+    pendingId: string | null;
+  };
   /** First-day guide progress (ui/TutorialCoach.ts). */
   tutorial: { step: number; done: boolean };
   /** District Builder parcels (audit §2.2 — they used to be rebuilt from
@@ -364,6 +373,7 @@ export const INITIAL_STATE: GameState = {
     endingSeen: false,
   },
   shop: { owned: [] },
+  neighbourEvents: { lastDay: 0, seen: {}, pendingId: null },
   tutorial: { step: 0, done: false },
   district: {
     parcels: [],

@@ -345,4 +345,13 @@ Goal: every action and every night is felt and explained. All uncommitted, TDD.
 
 Note: `BalanceSimulator` doesn't model neighbour events. Their stakes are small (every effect ≤ 25, most ≤ 12).
 
-Next candidates: achievements/milestones, more world quests, richer world art.
+**Batch 3 (2026-10-01)**
+
+| Change | Where |
+|---|---|
+| Milestones & Achievements: 14 civic and solidarity milestones across survival, commons building, mutual aid, craftwork, and community power. Automated unlock evaluation during overnight tick and goal inspection, granting stat perks (cash, trust, energy) without interfering with telemetry. | `core/simulation/Milestones.ts`, `core/state/useGameStore.ts`, `core/state/actions.ts` |
+| Milestone celebrations & UI: Rich celebratory toast notification with fanfare chime upon unlock, plus interactive dual-tab view ("🎯 Commons" vs "🏆 Milestones") in the Goals modal tracking criteria, perks, and status. | `ui/MilestoneCelebration.ts`, `ui/GoalsModal.ts`, `ui/TopHUD.ts`, `style.css` |
+| World Quests expansion (3 → 12): Expanded from 3 starter quests to 12 character-driven quests across Sal, Elena, Marcus, Leo, Higgins, and Mira. Hooked into dialogue progression across all world hubs. | `core/simulation/WorldQuests.ts`, `world/NpcDialogues.ts` |
+
+Next candidates: richer world art / visual dressing, operator legal/privacy details (`privacy.html`, `imprint.html`).
+

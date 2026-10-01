@@ -14,6 +14,7 @@ import { showMorningLedger } from './MorningLedger';
 import { attachStatPops } from './StatPops';
 import { attachBuildCelebrations } from './BuildCelebration';
 import { attachNeighbourEvents } from './NeighbourEventCard';
+import { attachMilestoneCelebrations } from './MilestoneCelebration';
 import { rollNeighbourEvent } from '../core/simulation/NeighbourEvents';
 import { RadioWidget } from './RadioWidget';
 import { DistrictBuilderModal } from './DistrictBuilderModal';
@@ -248,6 +249,7 @@ export class TopHUD implements HudSink {
     attachStatPops(root);
     attachBuildCelebrations(root);
     attachNeighbourEvents(root);
+    attachMilestoneCelebrations(root);
     new TutorialCoach(root);
 
     // Fetch district resilience badge (non-blocking)

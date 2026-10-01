@@ -20,6 +20,7 @@ import {
 import { getHousingOption } from '../simulation/HousingOptions';
 import { getFamilyTemplate, type FamilyTemplateId } from '../simulation/FamilyTemplates';
 import { getWorldQuestDefinition } from '../simulation/WorldQuests';
+import { evaluateMilestones, type MilestoneDefinition } from '../simulation/Milestones';
 
 // Exported so BalanceSimulator.test.ts (M13) can start its solvency sweeps
 // from the exact same per-archetype Day-1 numbers the real game seeds,
@@ -242,6 +243,7 @@ export function advanceDay(): SettledDayReport {
   if (after.player.classRole) {
     recordEconomicSnapshot(after.meta.day, after.player.classRole, after.player.cash, after.player.energy);
   }
+  checkMilestones();
   return report;
 }
 
@@ -466,6 +468,46 @@ function checkBuildNodeWorldQuestProgress(node: BuildNodeKey): void {
   const def = state.worldQuests.activeId ? getWorldQuestDefinition(state.worldQuests.activeId) : undefined;
   if (def?.target.kind !== 'build-node-threshold' || def.target.node !== node) return;
   if (Number(state.commons[node]) >= def.target.threshold) completeActiveWorldQuest();
+}
+
+/**
+ * Evaluates state against all defined civic milestones and unlocks any newly
+ * satisfied ones, awarding bonuses.
+ */
+export function checkMilestones(): MilestoneDefinition[] {
+  const state = useGameStore.getState();
+  const unlocked = evaluateMilestones(state, state.milestones?.unlockedIds ?? []);
+  if (unlocked.length === 0) return [];
+
+  const now = Date.now();
+  const newIds = unlocked.map(m => m.id);
+  const newAt: Record<string, number> = {};
+  newIds.forEach(id => { newAt[id] = now; });
+
+  let totalCash = 0;
+  let totalTrust = 0;
+  let totalEnergy = 0;
+
+  unlocked.forEach(m => {
+    if (m.reward?.cashDelta) totalCash += m.reward.cashDelta;
+    if (m.reward?.trustDelta) totalTrust += m.reward.trustDelta;
+    if (m.reward?.energyDelta) totalEnergy += m.reward.energyDelta;
+  });
+
+  useGameStore.setState(s => ({
+    milestones: {
+      unlockedIds: [...(s.milestones?.unlockedIds ?? []), ...newIds],
+      unlockedAt: { ...s.milestones?.unlockedAt, ...newAt },
+    },
+    player: {
+      ...s.player,
+      cash: s.player.cash + totalCash,
+      socialTrust: Math.max(0, Math.min(100, s.player.socialTrust + totalTrust)),
+      energy: Math.max(0, Math.min(s.player.maxEnergy, s.player.energy + totalEnergy)),
+    },
+  }));
+
+  return unlocked;
 }
 
 // M38 §2 — EPIC-33 §1. Called with a specific pickup's own material/amount

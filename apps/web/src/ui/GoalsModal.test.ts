@@ -40,4 +40,39 @@ describe('GoalsModal', () => {
     expect(text).toContain('Striped awning');
     expect(document.querySelectorAll('.goal-plaque')).toHaveLength(1); // only the finished kitchen
   });
+
+  it('switches between Commons and Milestones tabs', () => {
+    useGameStore.setState(() => ({
+      milestones: {
+        unlockedIds: ['first-dawn'],
+        unlockedAt: { 'first-dawn': Date.now() },
+      },
+    }));
+
+    new GoalsModal(document.body);
+    const commonsTab = document.querySelector<HTMLButtonElement>('.goals-tab-btn[data-tab="commons"]')!;
+    const milestonesTab = document.querySelector<HTMLButtonElement>('.goals-tab-btn[data-tab="milestones"]')!;
+    const commonsContent = document.querySelector<HTMLElement>('.goals-tab-content--commons')!;
+    const milestonesContent = document.querySelector<HTMLElement>('.goals-tab-content--milestones')!;
+
+    expect(commonsContent.hidden).toBe(false);
+    expect(milestonesContent.hidden).toBe(true);
+
+    // Switch to milestones tab
+    milestonesTab.click();
+    expect(commonsContent.hidden).toBe(true);
+    expect(milestonesContent.hidden).toBe(false);
+    expect(milestonesTab.classList.contains('goals-tab-btn--active')).toBe(true);
+
+    // Verify milestone rows are rendered
+    const rows = document.querySelectorAll('.milestone-row');
+    expect(rows.length).toBeGreaterThanOrEqual(14);
+    expect(document.querySelector('.milestone-row--done')?.textContent).toContain('First Morning');
+    expect(document.querySelector('.milestone-row--done')?.textContent).toContain('✅ Completed');
+
+    // Switch back to commons tab
+    commonsTab.click();
+    expect(commonsContent.hidden).toBe(false);
+    expect(milestonesContent.hidden).toBe(true);
+  });
 });

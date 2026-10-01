@@ -50,13 +50,30 @@ export interface QuestState {
 // are — `IrlQuestSystem.ts` is a separate, still-valid self-attested daily
 // buff mechanic, not being replaced. See `core/simulation/WorldQuests.ts`
 // for the full type/data set; only the 2 store-shape pieces live here.
-export type WorldQuestId = 'scout-the-transit-hub' | 'deliver-higgins-letter' | 'fund-the-kitchen';
+export type WorldQuestId =
+  | 'scout-the-transit-hub'
+  | 'deliver-higgins-letter'
+  | 'fund-the-kitchen'
+  | 'inspect-solar-grid'
+  | 'sal-bread-run'
+  | 'marcus-salvage-run'
+  | 'legal-fund-rally'
+  | 'tool-library-stocking'
+  | 'mira-garden-scout'
+  | 'canal-water-watch'
+  | 'higgins-plaza-covenant'
+  | 'sal-kitchen-support';
 
 export interface WorldQuestState {
   /** At most one active at a time — Section 3's HUD objective chip shows
    *  either exactly this one or nothing, never a list to pick from. */
   activeId: WorldQuestId | null;
   completedIds: WorldQuestId[];
+}
+
+export interface MilestoneState {
+  unlockedIds: string[];
+  unlockedAt: Record<string, number>;
 }
 
 export interface CrisisLogEntry {
@@ -250,6 +267,8 @@ export interface GameState {
     /** Building types already harvested on `day` (one harvest per type). */
     harvestedToday: { day: number; types: DistrictBuildingType[] };
   };
+  /** In-game civic milestones & achievements. */
+  milestones: MilestoneState;
 }
 
 export type BuildNodeKey = 'kitchenProgress' | 'solarGridProgress' | 'legalFundProgress' | 'toolLibraryProgress' | 'landTrustProgress';
@@ -378,6 +397,10 @@ export const INITIAL_STATE: GameState = {
   district: {
     parcels: [],
     harvestedToday: { day: 0, types: [] },
+  },
+  milestones: {
+    unlockedIds: [],
+    unlockedAt: {},
   },
 };
 

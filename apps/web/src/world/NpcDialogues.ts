@@ -132,9 +132,13 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     mira_day5b: {
-      text: "Everyone brings something. That's the trick — nobody has to carry it alone. Come by sometime, there's always a seat.",
+      text: "Everyone brings something. That's the trick — nobody has to carry it alone. Could you walk down to the South Solar Quarter to see how our planter greens are coming along?",
       mood: 'determined',
-      responses: [{ label: 'I will', next: null }],
+      responses: [
+        { label: "I'll inspect the greenhouse", next: null },
+        { label: 'I will', next: null },
+      ],
+      assignsQuest: 'mira-garden-scout',
     },
   },
 
@@ -204,9 +208,10 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     leo_fund: {
-      text: "Hit the Legal Fund build node in the plaza. Every dollar we raise is one more letter their lawyer has to answer.",
+      text: "Hit the Legal Fund build node in the plaza. If we get the fund to 40%, we can file an injunction and protect the block from arbitrary evictions.",
       mood: 'determined',
       responses: [{ label: "On it", next: null }],
+      assignsQuest: 'legal-fund-rally',
     },
   },
   leo_day4: {
@@ -256,11 +261,12 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     elena_help: {
-      text: "Find the solar node nearby. Cash buys panels. Your energy buys installation time. Every bit lowers stress across the district.",
+      text: "Find the solar node nearby. Cash buys panels. Your energy buys installation time. Help us push the Solar Co-op to 40% and we'll have emergency batteries online.",
       mood: 'determined',
       responses: [{ label: "I'm on it", next: null }],
       teachesRecipe: 'RECIPE_WIRED_LAMP',
       minTrust: 20,
+      assignsQuest: 'inspect-solar-grid',
     },
   },
   elena_day2: {
@@ -316,9 +322,13 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       responses: [{ label: 'Ha, love it', next: 'elena_day4b' }],
     },
     elena_day4b: {
-      text: "Small joys keep this work sustainable. Twelve panels closer to twenty percent, and one very good panel name.",
+      text: "Small joys keep this work sustainable. Say, if you're taking a walk, could you check the canal water runoff by the East Canal? We're tracking drainage.",
       mood: 'happy',
-      responses: [{ label: 'Onward to thirteen', next: null }],
+      responses: [
+        { label: "I'll check the canal", next: null },
+        { label: 'Onward to thirteen', next: null },
+      ],
+      assignsQuest: 'canal-water-watch',
     },
   },
   elena_day5: {
@@ -353,9 +363,10 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     sal_fridge: {
-      text: "Simple. Every night, whatever doesn't sell goes straight in the Community Fridge out back. Keeps the shelves honest and the block fed.",
+      text: "Simple. Every night, whatever doesn't sell goes straight in the Community Fridge out back. Keeps the shelves honest and the block fed. In fact, I've got an extra sourdough loaf for Mrs. Higgins — mind taking it by her place?",
       mood: 'determined',
-      responses: [{ label: "That's good of you", next: null }],
+      responses: [{ label: "I'll take it over", next: null }],
+      assignsQuest: 'sal-bread-run',
     },
   },
   sal_day2: {
@@ -395,9 +406,13 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       responses: [{ label: "What'd you do?", next: 'sal_rescue' }],
     },
     sal_rescue: {
-      text: "Grabbed a cart, walked it all over myself, split what didn't sell between three doorsteps and the Fridge. Good arms day.",
+      text: "Grabbed a cart, walked it all over myself, split what didn't sell between three doorsteps and the Fridge. Actually, I have a surplus crate of flour for Mira's lunch prep. Mind letting her know it's ready?",
       mood: 'determined',
-      responses: [{ label: "That's a lot of walking", next: null }],
+      responses: [
+        { label: "I'll let Mira know", next: null },
+        { label: "That's a lot of walking", next: null },
+      ],
+      assignsQuest: 'sal-kitchen-support',
     },
   },
   sal_day5: {
@@ -424,12 +439,13 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     marcus_library: {
-      text: "Borrow what you need, return it clean, and don't be a stranger about the arthritis jokes. Every fixed appliance is a small act of defiance.",
+      text: "Borrow what you need, return it clean, and don't be a stranger about the arthritis jokes. We're stocking up the Tool Library, but I need discarded bike cables from the East Canal if you're heading that way.",
       mood: 'determined',
       responses: [
         { label: 'Defiance against what?', next: 'marcus_defiance' },
-        { label: 'Got it', next: null },
+        { label: "I'll look along the canal", next: null },
       ],
+      assignsQuest: 'marcus-salvage-run',
     },
     marcus_defiance: {
       text: "Disposable everything, kid. They want you to throw it out and buy new. I want you to fix it and keep the twenty bucks.",
@@ -449,9 +465,10 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       ],
     },
     marcus_slow: {
-      text: "Slowing down's not really on the menu. Taught two neighbors how to do the basic repairs themselves instead — spreads the load, keeps the shop running.",
+      text: "Slowing down's not really on the menu. Taught two neighbors how to do the basic repairs instead. If you can help stock the Tool Library to 30%, we'll open tool loans to the whole block.",
       mood: 'determined',
-      responses: [{ label: 'Smart move', next: null }],
+      responses: [{ label: 'Smart move, I will help', next: null }],
+      assignsQuest: 'tool-library-stocking',
     },
   },
   marcus_day3: {
@@ -549,9 +566,13 @@ export const DIALOGUES: Record<string, Record<string, DialogueNode>> = {
       responses: [{ label: "What's in it?", next: 'higgins_covenant' }],
     },
     higgins_covenant: {
-      text: "Rights this block fought for decades ago that landlords keep hoping we've forgotten. I made three copies. Everyone should have one.",
+      text: "Rights this block fought for decades ago that landlords keep hoping we've forgotten. I'm taking a copy down to the Central Plaza assembly. Would you meet us there?",
       mood: 'determined',
-      responses: [{ label: "That's powerful history", next: null }],
+      responses: [
+        { label: "I'll meet you at the plaza", next: null },
+        { label: "That's powerful history", next: null },
+      ],
+      assignsQuest: 'higgins-plaza-covenant',
     },
   },
   higgins_day5: {

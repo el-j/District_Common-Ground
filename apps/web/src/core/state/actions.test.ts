@@ -5,6 +5,7 @@ import {
   learnRecipe, collectCookbook, craftRecipe, sellItem, rentFlat, moveOut, placeFurniture, removeFurniture, travelToRegion,
   sanitizePlayerName, setPlayerName, setPlayerGender, setPlayerAppearance, beginFromFamilyTemplate, setHousingVisitable,
   adjustResilience, contributeToNode, feedScraps, startMinigameRun, abandonWorldQuest, assignWorldQuest,
+  checkMilestones,
 } from './actions';
 import {
   CASH_PER_PCT, DAILY_PLAYER_CONTRIBUTION_CAP_PCT, MINIGAME_LIMITS, communityContributionPct, craftEnergyCost, saleMultiplier,
@@ -857,5 +858,40 @@ describe('the Land Trust unlocks last', () => {
   it('can be funded once they are', () => {
     useGameStore.setState(s => ({ commons: { ...s.commons, kitchenProgress: 100, solarGridProgress: 100, legalFundProgress: 100, toolLibraryProgress: 100 } }));
     expect(contributeToNode('landTrustProgress', { cash: 50, energy: 0 }).ok).toBe(true);
+  });
+});
+
+describe('checkMilestones', () => {
+  beforeEach(() => {
+    resetStore();
+    setPlayer({ classRole: 'pip', cash: 50, energy: 80, socialTrust: 40 });
+  });
+
+  it('unlocks milestones and awards their bonuses when state meets criteria', () => {
+    // Advance day to 2
+    useGameStore.setState(s => ({
+      meta: { ...s.meta, phase: 'playing', day: 2 },
+    }));
+
+    const unlocked = checkMilestones();
+    expect(unlocked.map(m => m.id)).toContain('first-dawn');
+
+    const state = useGameStore.getState();
+    expect(state.milestones.unlockedIds).toContain('first-dawn');
+    expect(state.milestones.unlockedAt['first-dawn']).toBeGreaterThan(0);
+    // Reward for first-dawn: trust +5, energy +5
+    expect(state.player.socialTrust).toBe(45);
+    expect(state.player.energy).toBe(85);
+  });
+
+  it('does not re-award already unlocked milestones', () => {
+    useGameStore.setState(s => ({
+      meta: { ...s.meta, phase: 'playing', day: 2 },
+      milestones: { unlockedIds: ['first-dawn'], unlockedAt: { 'first-dawn': 12345 } },
+    }));
+
+    const unlocked = checkMilestones();
+    expect(unlocked.map(m => m.id)).not.toContain('first-dawn');
+    expect(useGameStore.getState().player.socialTrust).toBe(40);
   });
 });

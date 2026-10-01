@@ -6,12 +6,12 @@ import { WORLD_QUEST_DEFINITIONS, ZONE_BUILD_NODE, getWorldQuestDefinition } fro
 // came indirectly through actions.test.ts's completeActiveWorldQuest()
 // exercises, which never assert on this module's own pure data/helpers.
 describe('WORLD_QUEST_DEFINITIONS', () => {
-  it('has exactly 3 quests, one per target kind, each with a unique id', () => {
-    expect(WORLD_QUEST_DEFINITIONS.length).toBe(3);
+  it('has 12 quests, covering all target kinds, each with a unique id', () => {
+    expect(WORLD_QUEST_DEFINITIONS.length).toBe(12);
     const kinds = new Set(WORLD_QUEST_DEFINITIONS.map(q => q.target.kind));
     expect(kinds).toEqual(new Set(['reach-zone', 'talk-to-npc', 'build-node-threshold']));
     const ids = new Set(WORLD_QUEST_DEFINITIONS.map(q => q.id));
-    expect(ids.size).toBe(3);
+    expect(ids.size).toBe(12);
   });
 
   it('every quest declares a giver NPC and a non-empty reward', () => {
